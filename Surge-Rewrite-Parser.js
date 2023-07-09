@@ -9,7 +9,7 @@
 const isEgern = 'object' == typeof egern;
 const isLanceX = 'undefined' != typeof $native;
 if (isEgern){
-	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"}
+	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"};
 };
 if (isEgern){
 	$rocket = [object DLWScriptRocket];
