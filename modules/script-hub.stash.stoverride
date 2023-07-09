@@ -8,28 +8,28 @@ http:
       type: request
       timeout: 30
 
-    - match: ^(https?:\/\/)?script\.hub.+&type=qx-rewrite&target=stash-stoverride
+    - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite
       name: "QX转换Stash"
       type: request
       timeout: 30
       require-body: true
       max-size: 3145728
 
-    - match: ^(https?:\/\/)?script\.hub.+&type=loon-plugin&target=stash-stoverride
+    - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=loon-plugin
       name: "Loon转换Stash"
       type: request
       timeout: 30
       require-body: true
       max-size: 3145728
 
-    - match: ^(https?:\/\/)?script\.hub.+&type=surge-module&target=stash-stoverride
+    - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=surge-module
       name: "Surge转换Stash"
       type: request
       timeout: 30
       require-body: true
       max-size: 3145728
 
-    - match: ^(https?:\/\/)?script\.hub.+&type=[^&]+&target=rule-set
+    - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set
       name: "规则集转换"
       type: request
       timeout: 30
