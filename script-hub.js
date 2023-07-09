@@ -249,7 +249,9 @@ const html = `
 
         navigator.clipboard.writeText(copyText.value);
 
-        alert("✅ 已复制");
+        if (this.isHttps) {
+          alert("✅ 已复制");
+        }
       }
     },
     watch: {
