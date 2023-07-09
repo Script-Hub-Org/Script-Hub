@@ -9,21 +9,21 @@ http:
       type: request
       timeout: 30
 
-    - match: ^(https?:\/\/)?script\.hub.+&type=qx-rewrite&target=surge-module
+    - match: ^(https?:\/\/)?script\.hub.+&type=qx-rewrite&target=stash-stoverride
       name: "QX转换Surge"
       type: request
       timeout: 30
       require-body: true
       max-size: 3145728
 
-    - match: ^(https?:\/\/)?script\.hub.+&type=loon-plugin&target=surge-module
+    - match: ^(https?:\/\/)?script\.hub.+&type=loon-plugin&target=stash-stoverride
       name: "Loon转换Surge"
       type: request
       timeout: 30
       require-body: true
       max-size: 3145728
 
-    - match: ^(https?:\/\/)?script\.hub.+&type=surge-module&target=surge-module
+    - match: ^(https?:\/\/)?script\.hub.+&type=surge-module&target=stash-stoverride
       name: "Surge模块控制器"
       type: request
       timeout: 30
