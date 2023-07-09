@@ -110,7 +110,7 @@ const html = `
       </details>
 
 
-      <details v-if="!target || target === 'qx-rewrite'">
+      <details v-if="!target || type === 'qx-rewrite'">
         <summary>启用脚本转换(仅在转换 QX 资源时可用)</summary>
         <details>
           <summary>启用脚本转换 1(仅在转换 QX 资源时可用)</summary>
@@ -253,16 +253,7 @@ const html = `
       }
     },
     watch: {
-      jsc_all(v) {
-        if(v){
-        this.jsc='.'
-        }
-      },
-     jsc2_all(v) {
-      if(v){
-      this.jsc2='.'
-      }
-    },
+    
     type(v) {
       if(v === 'rule-set' && this.target !== 'rule-set'){
         this.target='rule-set'
@@ -276,19 +267,27 @@ const html = `
   },
     computed: {
       result: function () {
-				const fields = []
+				const fields = {}
         const _fields = ['src', 'type', 'target', 'n', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'del', 'nore']
         _fields.forEach(field => {
          if (this[field]!==''&&this[field]!==false) {
-            fields.push(field)
+            fields[field] = this[field]
           }
         })
+
+        if (this.jsc_all) {
+          fields.jsc = '.'
+        }
+        if (this.jsc2_all) {
+          fields.jsc2 = '.'
+        }
+
         const type = this.types.find(i => i.value === this.type)
         const target = this.targets.find(i => i.value === this.target)
         if (this.src && target && type) {
           const suffix = target.suffix
           const filename = this.filename || this.src.substring(this.src.lastIndexOf('/') + 1).split('.')[0]
-          return this.baseUrl + filename + suffix + '?' + fields.map(i => i + '=' + encodeURIComponent(this[i])).join('&')
+          return this.baseUrl + filename + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
         }
 
         return ''
