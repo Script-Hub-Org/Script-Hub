@@ -13,11 +13,11 @@
 
 http-request ^https?:\/\/script\.hub\/$ script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js, tag=Script-hub
 
-http-request ^(https?:\/\/)?script\.hub.+&type=qx-rewrite&target=surge-module script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js, requires-body=true, tag=QX转换Surge
+http-request ^(https?:\/\/)?script\.hub.+&type=qx-rewrite&target=loon-plugin script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js, requires-body=true, tag=QX转换Surge
 
-http-request ^(https?:\/\/)?script\.hub.+&type=loon-plugin&target=surge-module script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.js, requires-body=true, tag=Loon转换Surge
+http-request ^(https?:\/\/)?script\.hub.+&type=loon-plugin&target=loon-plugin script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.js, requires-body=true, tag=Loon转换Surge
 
-http-request ^(https?:\/\/)?script\.hub.+&type=surge-module&target=surge-module script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.js, requires-body=true, tag=Surge模块控制器
+http-request ^(https?:\/\/)?script\.hub.+&type=surge-module&target=loon-plugin script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.js, requires-body=true, tag=Surge模块控制器
 
 http-request ^(https?:\/\/)?script\.hub.+&type=[^&]+&target=rule-set script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.js, requires-body=true, tag=规则集转换
 
