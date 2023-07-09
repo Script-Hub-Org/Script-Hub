@@ -239,7 +239,7 @@ const html = `
         Object.keys(initData).map(key => {
           this[key] = initData[key]
         })
-        alert("✅ 已重置");
+        // alert("✅ 已重置");
       },
       copy(){
         const copyText = document.getElementById("result");
@@ -248,10 +248,10 @@ const html = `
         copyText.setSelectionRange(0, 99999); // For mobile devices
 
         navigator.clipboard.writeText(copyText.value);
-
-        if (this.isHttps) {
-          alert("✅ 已复制");
-        }
+        // if (this.isHttps) {
+        //   alert("✅ 已复制");
+        // }
+      
       }
     },
     watch: {
