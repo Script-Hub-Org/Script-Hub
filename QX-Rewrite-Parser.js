@@ -254,8 +254,9 @@ var urlArg
     req = decodeURIComponent($request.url.split(/https?:\/\/script\.hub\/file\/.+\?src=/)[1].split(/&type=/)[0]);
 	//console.log(req);
     if ($request.url.search(/&target=.+&.+/) != -1){
-        urlArg = "&" + $request.url.split(/&target=[^&]+&/)[1];
+        urlArg = "&" + decodeURIComponent($request.url.split(/&target=[^&]+&/)[1]);
     }else{urlArg = ""};
+//console.log(urlArg);
 
 var rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
 //获取参数
@@ -300,11 +301,11 @@ if (nName === null){
 	desc = nName[1] != undefined ? nName[1] : name;
 };
 if (isShadowrocket || isLooniOS ||isSurgeiOS){
-	name = "#!name=" + decodeURIComponent(name);
-	desc = "#!desc=" + decodeURIComponent(desc);
+	name = "#!name=" + name;
+	desc = "#!desc=" + desc;
 }else if (isStashiOS){
-	name = 'name: ' + '"' + decodeURIComponent(name) + '"';
-	desc = 'desc: ' + '"' + decodeURIComponent(desc) + '"';
+	name = 'name: ' + '"' + name + '"';
+	desc = 'desc: ' + '"' + desc + '"';
 };
 let npluginDesc = name + "\n" + desc;
 
@@ -322,7 +323,7 @@ console.log("插件图标：" + pluginIcon);
 
 !(async () => {
   let body
-  
+  
   if (oCache == null){
     //console.log("一个缓存也没有")
   body = await http(req);
@@ -384,15 +385,15 @@ if (body.match(/\/\*+\n[\s\S]*\n\*+\/\n/)){
 body = body.replace(/[\s\S]*(\/\*+\n[\s\S]*\n\*+\/\n)[\s\S]*/,"$1").match(/[^\r\n]+/g);
 }else{
     body = body.match(/[^\r\n]+/g);};
-    
+    
 let pluginDesc = [];
 let httpFrame = "";
 let URLRewrite = [];
 let script = [];
 let MapLocal = [];
 let MITM = "";
-let cron = []; 
-let providers = [];  
+let cron = []; 
+let providers = [];  
 let others = [];       //不支持的内容
 
 
@@ -519,17 +520,17 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 
 	if (type) {
 		switch (type) {
-//简介            
+//简介            
 			case "#!":
                if (isStashiOS){
                x = x.replace(/^#! *(name|desc) *= *(.*)/,'$1: "$2"');
-            
+            
             if (nName != null){
                 x = x.replace(/^name:.*/,name).replace(/^desc:.*/,desc);
             };
             pluginDesc.push(x);
             };
-            
+            
 			if (isLooniOS && iconStatus == "启用" && iconLibrary2 == "Pokemon"){
 				if (nName != null){
                 x = x.replace(/^#!name *=.*/,name).replace(/^#!desc *=.*/,desc);};
@@ -548,9 +549,9 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
             };
             pluginDesc.push(x);
             };
-            
+            
             break;
-            
+            
 			case " url script-":
 //脚本
 
@@ -564,13 +565,13 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					ptn = ptn.replace(/(.+,.+)/,'"$1"');};
 
 				js = x.replace(/\x20{2,}/g," ").split(" ")[urlInNum + 2];
-                
+                
 				rebody = x.match(/\x20script[^\s]*(-body|-analyze)/) ? ', requires-body=true' : '';
 				
 				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? ', max-size=3145728' : '';
 				
 				proto = js.match(/proto\.js/i) ? ', binary-body-mode=true' : '';
-                
+                
                 if (isStashiOS){
 					
 				rebody = x.match(/\x20script[^\s]*(-body|-analyze)/) ? 'require-body: true' : '';
@@ -611,7 +612,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				URLRewrite.push(x.replace(/\x20{2,}/g," ").replace(/(^#)?(.*?)\x20url\x20(reject-200|reject-img|reject-dict|reject-array)/, `${noteK}$2 - $3`));
 				}else if(isSurgeiOS){
 					z[y - 1]?.match(/^#/) && MapLocal.push(z[y - 1]);
-                    
+                    
 				if (x.match(/dict$/)){
 					rejectType = "https://raw.githubusercontent.com/mieqq/mieqq/master/reject-dict.json"
 				}else if (x.match(/array$/)){
@@ -629,7 +630,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				break;
 				
 				case " url reject":
-                
+                
 				if (isSurgeiOS || isShadowrocket || isLooniOS){
 				z[y - 1]?.match(/^#/) && URLRewrite.push(z[y - 1]);
 				
@@ -638,7 +639,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				z[y - 1]?.match(/^#/) && URLRewrite.push("    " + z[y - 1]);
 				
 				URLRewrite.push(x.replace(/\x20{2,}/g," ").replace(/(^#)?(.+?)\x20url\x20reject$/, `${noteK4}- >-${noteKn6}$2 - reject`));
-				}; 
+				}; 
 				break;
 				
 //(request|response)-header
@@ -677,7 +678,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				urlInNum = x.replace(/\x20{2,}/g," ").split(" ").indexOf("url");
 				
 				ptn = x.replace(/\x20{2,}/g," ").split(" ")[urlInNum - 1].replace(/^#/,"");
-                
+                
 				scname = arg.substring(arg.lastIndexOf('/') + 1, arg.lastIndexOf('.') );
 				if (isLooniOS){
 				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
@@ -705,7 +706,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				providers.push(
 							`${noteK2}${scname}_${y}:${noteKn4}url: https://raw.githubusercontent.com/xream/scripts/main/surge/modules/echo-response/index.js${noteKn4}interval: 86400`);
-				}; 
+				}; 
 
 			}else{others.push(x)};
 			
@@ -740,9 +741,9 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				break;
 		
 			default:
-            
+            
             if (type.match(/\x20(request|response)-body/)){
-                
+                
 //(response|request)-body
 				reBdType = x.match(' response-body ') ? 'response' : 'request';
 				
@@ -770,7 +771,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 							`${noteK2}replaceBody_${y}:${noteKn4}url: https://gitlab.com/lodepuly/vpn_tool/-/raw/main/Resource/Script/CommonScript/replace-body.js${noteKn4}interval: 86400`);	
 					};
                     }else if (type.match(/\x20(https?|ftp|file)/)){
-//定时任务                    
+//定时任务                    
 				
 				if (isSurgeiOS || isShadowrocket || isLooniOS){
 				cronExp = x.replace(/\x20{2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/^#/,'');
@@ -782,9 +783,9 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 	for (let i=0; i < nCron.length; i++) {
   const elem = nCron[i];
 	if (x.indexOf(elem) != -1){
-        cronExp = nCronExp[i];   
+        cronExp = nCronExp[i];   
             };};};
-                
+                
 				cronJs = x.split("://")[0].replace(/.+\x20([^\s]+)$/,"$1") + "://" + x.split("://")[1].split(",")[0];
 				
 				croName = cronJs.substring(cronJs.lastIndexOf('/') + 1, cronJs.lastIndexOf('.') );
@@ -811,12 +812,12 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 
 if (isLooniOS){
     pluginDesc = (pluginDesc[0] || '') && `${pluginDesc.join("\n")}`;
-    
+    
     if (pluginDesc !="" && pluginDesc.search(/#! *name *=/) != -1){
         //没有图标的插入图标
         if (pluginDesc.search(/#! *icon *= *.+/) == -1){
         pluginDesc = pluginDesc + "\n" + pluginIcon;
-            
+            
         }else{pluginDesc = pluginDesc;};
 		
         //Pokemon没有作者的插入作者
@@ -836,10 +837,10 @@ if (isLooniOS){
                     pluginDesc = npluginDesc + "\n" + pluginIcon;
         };
     };
-    
+    
     if (iconReplace == "启用" && pluginDesc.search(/#!icon=/) == -1 ){
         pluginDesc = pluginDesc + "\n" + pluginIcon};
-    
+    
 	script = (script[0] || '') && `[Script]\n\n${script.join("\n\n")}`;
 	
 	URLRewrite = (URLRewrite[0] || '') && `[Rewrite]\n\n${URLRewrite.join("\n")}`;
@@ -859,15 +860,15 @@ ${MITM}`
 		.replace(/(#.+\n)\n+(?!\[)/g,'$1')
 		.replace(/\n{2,}/g,'\n\n')
 }else if (isSurgeiOS || isShadowrocket){
-    
+    
     pluginDesc = (pluginDesc[0] || '') && `${pluginDesc.join("\n")}`;
-    
+    
     if (pluginDesc !="" && pluginDesc.search(/#! *name *=/) != -1){
         pluginDesc = pluginDesc;
     }else{
         pluginDesc = npluginDesc;
     };
-    
+    
 	script = (script[0] || '') && `[Script]\n\n${script.join("\n\n")}`;
 	
 	URLRewrite = (URLRewrite[0] || '') && `[URL Rewrite]\n\n${URLRewrite.join("\n")}`;
@@ -892,9 +893,9 @@ ${MITM}`
 		.replace(/(#.+\n)\n+(?!\[)/g,'$1')
 		.replace(/\n{2,}/g,'\n\n')
 }else if (isStashiOS){
-    
+    
     pluginDesc = (pluginDesc[0] || '') && `${pluginDesc.join("\n")}`;
-    
+    
     if (pluginDesc !="" && pluginDesc.search(/name: /) != -1){
         pluginDesc = pluginDesc;
     }else{
@@ -902,9 +903,9 @@ ${MITM}`
     };
 	
 	URLRewrite = (URLRewrite[0] || '') && `  rewrite:\n${URLRewrite.join("\n")}`;
-    
+    
 	script = (script[0] || '') && `  script:\n${script.join("\n\n")}`;
-    
+    
     	MITM = MITM.replace(/\x20/g,'')
            .replace(/\,/g,'"\n    - "')
 		   .replace(/t&2;/g,'  ')
