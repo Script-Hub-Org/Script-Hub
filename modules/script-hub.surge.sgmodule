@@ -5,13 +5,13 @@
 
 Script-hub = type=http-request,pattern=^https?:\/\/script\.hub\/$,script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js
 
-QX转换Surge = type=http-request, pattern=^(https?:\/\/)?script\.hub.+&type=qx-rewrite&target=surge-module, requires-body=1, max-size=0, script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js, timeout=120
+QX转换Surge = type=http-request, pattern=^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite, requires-body=1, max-size=0, script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js, timeout=120
 
-Loon转换Surge = type=http-request, pattern=^(https?:\/\/)?script\.hub.+&type=loon-plugin&target=surge-module, requires-body=1, max-size=0, script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.js, timeout=120
+Loon转换Surge = type=http-request, pattern=^https?:\/\/script\.hub\/file\/_start_\/.+type=loon-plugin, requires-body=1, max-size=0, script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.js, timeout=120
 
-Surge模块控制器 = type=http-request, pattern=^(https?:\/\/)?script\.hub.+&type=surge-module&target=surge-module, requires-body=1, max-size=0, script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.js, timeout=120
+Surge模块控制器 = type=http-request, pattern=^https?:\/\/script\.hub\/file\/_start_\/.+type=surge-module, requires-body=1, max-size=0, script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.js, timeout=120
 
-规则集转换 = type=http-request, pattern=^(https?:\/\/)?script\.hub.+&type=[^&]+&target=rule-set, requires-body=1, max-size=0, script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.js, timeout=120
+规则集转换 = type=http-request, pattern=^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set, requires-body=1, max-size=0, script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.js, timeout=120
 
 脚本转换1 = type=http-request, pattern=_script-converter-(stash|surge|loon|shadowrocket)\.js$, requires-body=1, max-size=0, script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/script-converter/script-converter.js, timeout=120
 
