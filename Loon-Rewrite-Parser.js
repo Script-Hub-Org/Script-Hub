@@ -11,9 +11,7 @@ const isLanceX = 'undefined' != typeof $native;
 if (isEgern){
 	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"};
 };
-if (isEgern){
-	$rocket = [object DLWScriptRocket];
-};
+if (isEgern){$rocket = [];};
 const isStashiOS = 'undefined' !== typeof $environment && $environment['stash-version'];
 const isSurgeiOS = 'undefined' !== typeof $environment && $environment['surge-version'];
 const isShadowrocket = 'undefined' !== typeof $rocket;
@@ -240,28 +238,26 @@ var desc = "";
 var req
 var urlArg
 
-    req = decodeURIComponent($request.url.split(/https?:\/\/script\.hub\/file\/.+\?src=/)[1].split(/&type=/)[0]);
-	//console.log(req);
-    if ($request.url.search(/&target=.+&.+/) != -1){
-        urlArg = "&" + decodeURIComponent($request.url.split(/&target=[^&]+&/)[1]);
-    }else{urlArg = ""};
-//console.log(urlArg);
+    req = $request.url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
+	console.log(req);
+        urlArg = "?" + decodeURIComponent($request.url.split(/_end_\/[^?]+\?/)[1]);
+console.log(urlArg);
 	
 var rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
 
 //获取参数
-var nName = urlArg.search(/&n=/) != -1 ? (urlArg.split(/&n=/)[1].split("&")[0].split("+")) : null;
-var Pin0 = urlArg.search(/&y=/) != -1 ? (urlArg.split(/&y=/)[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
-var Pout0 = urlArg.search(/&x=/) != -1 ? (urlArg.split(/&x=/)[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
-var hnAdd = urlArg.search(/&hnadd=/) != -1 ? (urlArg.split(/&hnadd=/)[1].split("&")[0].replace(/%20/g,"").split(",")) : null;
-var hnDel = urlArg.search(/&hndel=/) != -1 ? (urlArg.split(/&hndel=/)[1].split("&")[0].replace(/%20/g,"").split(",")) : null;
-var delNoteSc = urlArg.search(/&del=/) != -1 ? true : false;
-var nCron = urlArg.search(/&cron=/) != -1 ? (urlArg.split(/&cron=/)[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
-var nCronExp = urlArg.search(/&cronexp=/) != -1 ? (urlArg.split(/&cronexp=/)[1].split("&")[0].replace(/\./g," ").split("+")).map(decodeURIComponent) : null;
-var nArgTarget = urlArg.search(/&arg=/) != -1 ? (urlArg.split(/&arg=/)[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
-var nArg = urlArg.search(/&argv=/) != -1 ? (urlArg.split(/&argv=/)[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
+var nName = urlArg.search(/\?n=|&n=/) != -1 ? (urlArg.split(/\?n=|&n=/)[1].split("&")[0].split("+")) : null;
+var Pin0 = urlArg.search(/\?y=|&y=/) != -1 ? (urlArg.split(/\?y=|&y=/)[1].split("&")[0].split("+")) : null;
+var Pout0 = urlArg.search(/\?x=|&x=/) != -1 ? (urlArg.split(/\?x=|&x=/)[1].split("&")[0].split("+")) : null;
+var hnAdd = urlArg.search(/\?hnadd=|&hnadd=/) != -1 ? (urlArg.split(/\?hnadd=|&hnadd=/)[1].split("&")[0].replace(/ /g,"").split(",")) : null;
+var hnDel = urlArg.search(/\?hndel=|&hndel=/) != -1 ? (urlArg.split(/\?hndel=|&hndel=/)[1].split("&")[0].replace(/ /g,"").split(",")) : null;
+var delNoteSc = urlArg.search(/\?del=|&del=/) != -1 ? true : false;
+var nCron = urlArg.search(/\?cron=|&cron=/) != -1 ? (urlArg.split(/\?cron=|&cron=/)[1].split("&")[0].split("+")) : null;
+var nCronExp = urlArg.search(/\?cronexp=|&cronexp=/) != -1 ? (urlArg.split(/\?cronexp=|&cronexp=/)[1].split("&")[0].replace(/\./g," ").split("+")) : null;
+var nArgTarget = urlArg.search(/\?arg=|&arg=/) != -1 ? (urlArg.split(/\?arg=|&arg=/)[1].split("&")[0].split("+")) : null;
+var nArg = urlArg.search(/\?argv=|&argv=/) != -1 ? (urlArg.split(/\?argv=|&argv=/)[1].split("&")[0].split("+")) : null;
 var icon = "";
-var cachExp = urlArg.search(/&cachexp=/) != -1 ? (urlArg.split(/&cachexp=/)[1].split("&")[0]) : null;
+var cachExp = urlArg.search(/\?cachexp=|&cachexp=/) != -1 ? (urlArg.split(/\?cachexp=|&cachexp=/)[1].split("&")[0]) : null;
 
 //缓存有效期相关
 var currentTime = new Date();
