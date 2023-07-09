@@ -8,8 +8,11 @@
 ***************************/
 const isEgern = 'object' == typeof egern;
 const isLanceX = 'undefined' != typeof $native;
-if (isEgern || isLanceX){
+if (isEgern){
 	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"}
+};
+if (isEgern){
+	$rocket = [object DLWScriptRocket];
 };
 const isStashiOS = 'undefined' !== typeof $environment && $environment['stash-version'];
 const isLooniOS = 'undefined' != typeof $loon;
