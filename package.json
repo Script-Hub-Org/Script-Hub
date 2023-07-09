@@ -1,0 +1,17 @@
+{
+  "name": "script-hub",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "preview": "nodemon preview.js"
+  },
+  "license": "GPL-3.0",
+  "dependencies": {
+    "koa": "^2.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
