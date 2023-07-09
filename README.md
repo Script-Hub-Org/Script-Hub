@@ -1,8 +1,17 @@
-# Script Hub
+<div align="center">
+<br>
+<img width="200" src="https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/icon-dark.png" alt="Script Hub">
+<br>
+<br>
+<h1 align="center">Script Hub<h1>
+</div>
 
+<p align="center" color="#6a737d">
 Advanced Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and ShadowRocket
-
+</p>
+<p align="center" color="#6a737d">
 重写 & 规则集转换
+</p>
 
 ## 社群
 
