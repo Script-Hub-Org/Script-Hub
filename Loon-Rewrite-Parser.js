@@ -240,8 +240,9 @@ var urlArg
     req = decodeURIComponent($request.url.split(/https?:\/\/script\.hub\/file\/.+\?src=/)[1].split(/&type=/)[0]);
 	//console.log(req);
     if ($request.url.search(/&target=.+&.+/) != -1){
-        urlArg = "&" + $request.url.split(/&target=[^&]+&/)[1];
+        urlArg = "&" + decodeURIComponent($request.url.split(/&target=[^&]+&/)[1]);
     }else{urlArg = ""};
+//console.log(urlArg);
 	
 var rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
 
@@ -287,11 +288,11 @@ if (nName === null){
 	desc = nName[1] != undefined ? nName[1] : name;
 };
 if (isLooniOS || isSurgeiOS || isShadowrocket){
-	name = "#!name=" + decodeURIComponent(name);
-	desc = "#!desc=" + decodeURIComponent(desc);
+	name = "#!name=" + name;
+	desc = "#!desc=" + desc;
 }else if (isStashiOS){
-	name = 'name: ' + '"' + decodeURIComponent(name) + '"';
-	desc = 'desc: ' + '"' + decodeURIComponent(desc) + '"';
+	name = 'name: ' + '"' + name + '"';
+	desc = 'desc: ' + '"' + desc + '"';
 };
 
 let npluginDesc = name + "\n" + desc;
@@ -310,7 +311,7 @@ console.log("插件图标：" + pluginIcon);
 
 !(async () => {
   let body
-  
+  
   if (oCache == null){
     //console.log("一个缓存也没有")
   body = await http(req);
@@ -483,13 +484,13 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 			case "#!":
                if (isStashiOS){
                x = x.replace(/^#! *(name|desc) *= *(.*)/,'$1: "$2"');
-            
+            
             if (nName != null){
                 x = x.replace(/^name:.*/,name).replace(/^desc:.*/,desc);
             };
             pluginDesc.push(x);
             };
-            
+            
 			if (isLooniOS && iconStatus == "启用" && iconLibrary2 == "Pokemon"){
 				if (nName != null){
                 x = x.replace(/^#!name *=.*/,name).replace(/^#!desc *=.*/,desc);};
@@ -508,16 +509,16 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
             };
             pluginDesc.push(x);
             };
-            
+            
             break;
-            
+            
             case "generic script-path":
-            
+            
           if (isLooniOS){
             z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
             script.push(x);};
             break;
-            
+            
 			case "http-re":		
 
 				if (x.match(/http-(response|request)\x20/)){
@@ -562,16 +563,16 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				}else{};
 
 				};
-                
+                
 				if (isLooniOS){
 				
 				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
-                
+                
             if (nArgTarget != null){
 	for (let i=0; i < nArgTarget.length; i++) {
   const elem = nArgTarget[i];
 	if (x.indexOf(elem) != -1){
-        arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
+        arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
             };};};
 
 				script.push(
@@ -580,12 +581,12 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				}else if (isSurgeiOS || isShadowrocket){
 				
 				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
-                
+                
             if (nArgTarget != null){
 	for (let i=0; i < nArgTarget.length; i++) {
   const elem = nArgTarget[i];
 	if (x.indexOf(elem) != -1){
-        arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
+        arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
             };};};
 
 				script.push(
@@ -598,12 +599,12 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				rebody = x.replace(/\x20/g,'').match('requires-body=(true|1)') ? 'require-body: true' : '';
 				
 				size = x.replace(/\x20/g,'').match('requires-body=(true|1)') ? 'max-size: 3145728' : '';
-                
+                
             if (nArgTarget != null){
 	for (let i=0; i < nArgTarget.length; i++) {
   const elem = nArgTarget[i];
 	if (x.indexOf(elem) != -1){
-        arg = `${noteKn6}argument: |-${noteKn8}` + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
+        arg = `${noteKn6}argument: |-${noteKn8}` + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
 
 				script.push(
@@ -643,30 +644,30 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 			case "cron ":
 
             cronExp = x.split('"')[1];
-            
+            
             if (isStashiOS){
-                
+                
 				cronExp = cronExp.replace(/[^\s]+ ([^\s]+ [^\s]+ [^\s]+ [^\s]+ [^\s]+)/,'$1');
             };
-            
+            
             if (nCron != null){
 	for (let i=0; i < nCron.length; i++) {
   const elem = nCron[i];
 	if (x.indexOf(elem) != -1){
-        cronExp = nCronExp[i];   
+        cronExp = nCronExp[i];   
             };};};
-            
+            
             cronJs = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
-                
+                
             if (x.search(/, *tag *=/) != -1){
 				croName = x.replace(/\x20/g,"").split("tag=")[1].split(",")[0];
             }else{
 				croName = cronJs.substring(cronJs.lastIndexOf('/') + 1, cronJs.lastIndexOf('.'));};
-                
+                
 				if (isLooniOS){
-                    
+                    
 				script.push(`${noteK}cron "${cronExp}" script-path=${cronJs}, timeout=60, tag=${croName}`);
-                
+                
                 }else if (isStashiOS){
 				
 				cron.push(
@@ -675,7 +676,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				providers.push(
 						`${noteK2}${croName}:${noteKn4}url: ${cronJs}${noteKn4}interval: 86400`
 				);
-                    
+                    
                 }else if (isSurgeiOS || isShadowrocket){
                     script.push(
                         `${noteK}${croName} = type=cron, cronexp="${cronExp}", script-path=${cronJs}, timeout=60, wake-system=1`
@@ -686,40 +687,40 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 //REJECT
 
 			case " reject":
-            
+            
             rejectType = x.split(" ")[x.split(" ").length - 1].toLowerCase().replace(/video/,"img");
-            
+            
             rejectPtn = x.split(" ")[0].replace(/^#/,"");
-            
+            
             if (x.search(/ reject(-200|-img|-dict|-array|-video)?$/i) == -1){
-                
+                
             }else if (isLooniOS){
-                
+                
 				z[y - 1]?.match(/^#/) && URLRewrite.push(z[y - 1]);
-                
+                
 				URLRewrite.push(x);
-                
+                
             }else if (isStashiOS){
-                
+                
 				z[y - 1]?.match(/^#/) && URLRewrite.push("    " + z[y - 1]);
 				
 				URLRewrite.push(
                     `${noteK4}- >-${noteKn6}${rejectPtn} - ${rejectType}`);
-                
+                
             }else if (isShadowrocket){
-                
+                
 				z[y - 1]?.match(/^#/) && URLRewrite.push(z[y - 1]);
 				
 				URLRewrite.push(
                     `${noteK}${rejectPtn} - ${rejectType}`);
-                
+                
             }else if (isSurgeiOS){
-                
+                
                 if (rejectType.match("-")){
-//reject-                    
-                
+//reject-                    
+                
 				z[y - 1]?.match(/^#/) && MapLocal.push(z[y - 1]);
-                    
+                    
 				if (rejectType.match(/dict$/)){
 					rejectType = "https://raw.githubusercontent.com/mieqq/mieqq/master/reject-dict.json"
 				}else if (rejectType.match(/array$/)){
@@ -731,22 +732,22 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				};
                 MapLocal.push(
                     `${rejectPtn} data="${rejectType}"`);
-                    
+                    
                 }else{//reject
-                
+                
 				z[y - 1]?.match(/^#/) && URLRewrite.push(z[y - 1]);
 				
 				URLRewrite.push(
                     `${noteK}${rejectPtn} - reject`);
-                    
+                    
                 }
-                
+                
             };
 				break;
 				
 //hostname				
 			case "hostname":
-            
+            
             if (isLooniOS){
                 MITM = "[MITM]\n\n" + x.replace(/ *= */," = ").replace(/= ,+/,"= ").replace(/,*\x20*$/,"");
             }else if (isSurgeiOS || isShadowrocket){
@@ -756,10 +757,10 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
             };
 				break;
 
-//general          
+//general          
 
             case "force-http-engine-hosts":
-            
+            
             if (isLooniOS){
                 General.push(x);
             }else if(isSurgeiOS || isShadowrocket){
@@ -768,18 +769,18 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
                 General.push(x.replace(/%.*%/g,"").replace(/\x20/g,"").replace(/,{2,}/g,",").replace(/,*\x20*$/,"").replace(/force-http-engine-hosts=(.*)/, `t&2;force-http-engine:\nt&hn;"$1"`).replace(/",+/,'"'))
             };
 				break;
-                                
+                                
             case "skip-proxy":
-            
+            
             if (isLooniOS){
                 General.push(x.replace(/%.*%/g,"").replace(/ *= */," = "));
             }else if(isSurgeiOS || isShadowrocket){
                 General.push(x.replace(/\x20/g,"").replace(/=/," = %APPEND% "))
             }else if (isStashiOS){};
 				break;
-           
+           
             case "real-ip":
-            
+            
             if (isLooniOS){
                 General.push(x.replace(/%.*%/g,"").replace(/ *= */," = "));
             }else if(isSurgeiOS || isShadowrocket){
@@ -797,9 +798,9 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
                         z[y - 1]?.match(/^#/)  && URLRewrite.push(z[y - 1]);
 				
 					URLRewrite.push(x);
-                    
+                    
                     }else if (isStashiOS){
-                        
+                        
                       z[y - 1]?.match(/^#/)  && URLRewrite.push("    " + z[y - 1]);
 				
 					URLRewrite.push(`${noteK4}- >-${noteKn6}` + x.replace(/^#/,"").replace(/ (302|307|header) */," ").replace(/(.+)/,`$1 ${rewType}`).replace(/\x20{2,}/g," "));
@@ -807,26 +808,26 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
                       z[y - 1]?.match(/^#/)  && URLRewrite.push(z[y - 1]);
 				
 					URLRewrite.push(x.replace(/ (302|307|header) */," ").replace(/(.+)/,`$1 ${rewType}`).replace(/\x20{2,}/g," "));
-                        
+                        
                     };
 				
 				}else{
-                    
+                    
                     if (isLooniOS){
                     z[y - 1]?.match(/^#/)  && rules.push(z[y - 1]);
 					rules.push(x);
-                    
+                    
                     }else if (isSurgeiOS || isShadowrocket){
                     if (x.match(/^#?(DOM|USER|URL|IP|GEO)[^,]+,[^,]+$/i) || x.match(/proxy$/i)){
 	x = "";}else{rules.push(x.replace(/, *REJECT.*/i,",REJECT"));};
-                        
+                        
                     }else if(isStashiOS){
-                        
+                        
                         if (type.match(/URL-REGEX/i) && x.match(/,\x20*REJECT/i)){
-                
+                
                     z[y - 1]?.match(/^#/) && URLRewrite.push("    " + z[y - 1]);
                 x = x.replace(/\x20/,"");
-                
+                
                 if (x.match(/DICT$/i)){
                     Urx2Reject = '-dict';
                 }else if (x.match(/ARRAY$/i)){
@@ -842,11 +843,11 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				URLRewrite.push(
 					x.replace(/.*URL-REGEX,([^\s]+),[^,]+/,
 					`${noteK4}- >-${noteKn6}$1 - reject${Urx2Reject}`)
-				);       
+				);       
                         }else if (x.match(/^#?(DOM|USER|URL|IP|GEO)[^,]+,[^,]+$/i) || x.match(/proxy$/i)){ x = "";}else if(type.match(/^#?(USER-AGENT|IP-CIDR|GEOIP|IP-ASN|DOMAIN)/)){
                             z[y - 1]?.match(/^#/)  && rules.push("    " + z[y - 1]);
 					
-					rules.push(x.replace(/\x20/g,"").replace(/.*DOMAIN-SET.+/,"").replace(/,REJECT.+/,",REJECT").replace(/^#?(.+)/,`${noteK2}- $1`))    
+					rules.push(x.replace(/\x20/g,"").replace(/.*DOMAIN-SET.+/,"").replace(/,REJECT.+/,",REJECT").replace(/^#?(.+)/,`${noteK2}- $1`))    
                         }else{others.push(x)};
                     }//Stash rules处理完毕
                 }//rules处理完毕
@@ -856,12 +857,12 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 
 if (isLooniOS){
     pluginDesc = (pluginDesc[0] || '') && `${pluginDesc.join("\n")}`;
-    
+    
     if (pluginDesc !="" && pluginDesc.search(/#! *name *=/) != -1){
         //没有图标的插入图标
         if (pluginDesc.search(/#! *icon *= *.+/) == -1){
         pluginDesc = pluginDesc + "\n" + pluginIcon;
-            
+            
         }else{pluginDesc = pluginDesc;};
 		
         //Pokemon没有作者的插入作者
@@ -881,12 +882,12 @@ if (isLooniOS){
                     pluginDesc = npluginDesc + "\n" + pluginIcon;
         };
     };
-    
+    
     if (iconReplace == "启用" && pluginDesc.search(/#!icon=/) == -1 ){
         pluginDesc = pluginDesc + "\n" + pluginIcon};
-    
+    
     General = (General[0] || '') && `[General]\n\n${General.join("\n\n")}`;
-    
+    
     script = (script[0] || '') && `[Script]\n\n${script.join("\n\n")}`;
 
 URLRewrite = (URLRewrite[0] || '') && `[Rewrite]\n\n${URLRewrite.join("\n")}`;
@@ -916,15 +917,15 @@ ${MITM}`
 		.replace(/\n{2,}/g,'\n\n')
 }else if (isStashiOS){
     pluginDesc = (pluginDesc[0] || '') && `${pluginDesc.join("\n")}`;
-    
+    
     if (pluginDesc !="" && pluginDesc.search(/name: /) != -1){
         pluginDesc = pluginDesc;
     }else{
         pluginDesc = npluginDesc;
     };
-    
+    
     General = (General[0] || '') && `${General.join("\n")}`;
-    
+    
     rules = (rules[0] || '') && `rules:\n${rules.join("\n")}`;
 
 script = (script[0] || '') && `  script:\n${script.join("\n\n")}`;
@@ -980,20 +981,20 @@ ${providers}`
 		.replace(/      \n/g,"")
 		.replace(/(#.+\n)\n+(?!\[)/g,'$1')
 		.replace(/\n{2,}/g,'\n\n')
-        
+        
 }else if (isSurgeiOS || isShadowrocket){
     pluginDesc = (pluginDesc[0] || '') && `${pluginDesc.join("\n")}`;
-    
+    
     if (pluginDesc !="" && pluginDesc.search(/#! *name *=/) != -1){
         pluginDesc = pluginDesc;
     }else{
         pluginDesc = npluginDesc;
     };
-    
+    
     General = (General[0] || '') && `[General]\n\n${General.join("\n\n")}`;
-    
+    
     rules = (rules[0] || '') && `[Rule]\n\n${rules.join("\n")}`;
-    
+    
 	script = (script[0] || '') && `[Script]\n\n${script.join("\n\n")}`;
 	
 	HeaderRewrite = (HeaderRewrite[0] || '') && `[Header Rewrite]\n\n${HeaderRewrite.join("\n")}`;
