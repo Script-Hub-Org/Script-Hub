@@ -7,9 +7,7 @@ const isLanceX = 'undefined' != typeof $native;
 if (isEgern){
 	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"};
 };
-if (isEgern){
-	$rocket = [object DLWScriptRocket];
-};
+if (isEgern){$rocket = [];};
 const isStashiOS = 'undefined' !== typeof $environment && $environment['stash-version'];
 const isSurgeiOS = 'undefined' !== typeof $environment && $environment['surge-version'];
 const isShadowrocket = 'undefined' !== typeof $rocket;
@@ -18,19 +16,16 @@ const isLooniOS = 'undefined' != typeof $loon;
 var req = $request.url.replace(/r_parser.list$|r_parser.list\?.+/,'');
 var urlArg
 
-    req = decodeURIComponent($request.url.split(/https?:\/\/script\.hub\/file\/.+\?src=/)[1].split(/&type=/)[0]);
-	//console.log(req);
-    if ($request.url.search(/&target=.+&.+/) != -1){
-        urlArg = "&" + decodeURIComponent($request.url.split(/&target=[^&]+&/)[1]);
-    }else{urlArg = ""};
-//console.log(urlArg);
-	
-var original = [];//用于获取原文行号
+    req = $request.url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
+	console.log(req);
+        urlArg = "?" + decodeURIComponent($request.url.split(/_end_\/[^?]+\?/)[1]);
+console.log(urlArg);
+
 //获取参数
-var Rin0 = urlArg.search(/&y=/) != -1 ? (urlArg.split(/&y=/)[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
-var Rout0 = urlArg.search(/&x=/) != -1 ? (urlArg.split(/&x=/)[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
-var ipNoResolve = urlArg.search(/&nore=/) != -1 ? true : false;
-var cachExp = urlArg.search(/&cachexp=/) != -1 ? (urlArg.split(/&cachexp=/)[1].split("&")[0]) : null;
+var Rin0 = urlArg.search(/\?y=|&y=/) != -1 ? (urlArg.split(/\?y=|&y=/)[1].split("&")[0].split("+")) : null;
+var Rout0 = urlArg.search(/\?x=|&x=/) != -1 ? (urlArg.split(/\?x=|&x=/)[1].split("&")[0].split("+")) : null;
+var ipNoResolve = urlArg.search(/\?nore=|&nore=/) != -1 ? true : false;
+var cachExp = urlArg.search(/\?cachexp=|&cachexp=/) != -1 ? (urlArg.split(/\?cachexp=|&cachexp=/)[1].split("&")[0]) : null;
 
 //缓存有效期相关
 var currentTime = new Date();
@@ -110,7 +105,6 @@ if(body == null || body == ""){if(isSurgeiOS || isStashiOS){
 }//识别客户端通知
 }else{//以下开始规则集解析
 
-original = body.replace(/^ *(#|;|\/\/)/g,'#').replace(/  - /g,'').replace(/(^[^#].+)\x20+\/\/.+/g,'$1').replace(/(\{[0-9]+)\,([0-9]*\})/g,'$1t&zd;$2').replace(/^host-wildcard/gi,'HO-ST-WILDCARD').replace(/^dest-port/gi,'DST-PORT').split("\n");
 	body = body.match(/[^\r\n]+/g);
 	
 let others = [];       //不支持的规则
@@ -120,7 +114,6 @@ let outRules = [];     //被排除的规则
 let noResolve          //ip规则是否开启不解析域名
 let ruleType           //规则类型
 let ruleValue          //规则
-let lineNum            //行数
 
 body.forEach((x, y, z) => {
 	x = x.replace(/^payload:/,'').replace(/^ *(#|;|\/\/)/,'#').replace(/  - /,'').replace(/(^[^#].+)\x20+\/\/.+/,'$1').replace(/(\{[0-9]+)\,([0-9]*\})/g,'$1t&zd;$2').replace(/^[^,]+$/,"").replace(/(^[^U].*(\[|=|{|\\|\/.*\.js).*)/i,"");
@@ -157,12 +150,10 @@ if(ipNoResolve === true){
 	if (isStashiOS){
 	
 	if (x.match(/^;#/)){
-        lineNum = original.indexOf(x.replace(/^;#/,"")) + 1;
-		outRules.push("原文第" + lineNum + "行 " + x.replace(/^HO-ST/i,'HOST'))
+		outRules.push(x.replace(/^;#/,"").replace(/^HO-ST/i,'HOST'))
 	}else if (x.match(/^(HO-ST|U|PROTOCOL)/i)){
 		
-		lineNum = original.indexOf(x) + 1;
-		others.push("原文第" + lineNum + "行 " + x.replace(/^HO-ST/i,'HOST'))
+		others.push(x.replace(/^HO-ST/i,'HOST'))
 
 	}else if (x!=""){
 		
@@ -181,12 +172,10 @@ if(ipNoResolve === true){
 	}else if (isLooniOS){
 	
 	if (x.match(/^;#/)){
-		lineNum = original.indexOf(x.replace(/^;#/,"")) + 1;
-		outRules.push("原文第" + lineNum + "行 " + x.replace(/^HO-ST/i,'HOST'))
-	}else if (x.match(/^(HO-ST|DST-PORT|PROTOCOL|PROCESS-NAME)/i)){
 		
-		lineNum = original.indexOf(x) + 1;
-		others.push(lineNum + "行 " + x.replace(/^HO-ST/i,'HOST'))
+		outRules.push(x.replace(/^;#/,"").replace(/^HO-ST/i,'HOST'))
+	}else if (x.match(/^(HO-ST|DST-PORT|PROTOCOL|PROCESS-NAME)/i)){
+		others.push(x.replace(/^HO-ST/i,'HOST'))
 
 	}else if (x!=""){
 		
@@ -203,11 +192,11 @@ if(ipNoResolve === true){
 	}else if (isSurgeiOS || isShadowrocket){
 		
 		if (x.match(/^;#/)){
-		lineNum = original.indexOf(x.replace(/^;#/,"")) + 1;
-		outRules.push("原文第" + lineNum + "行 " + x.replace(/^HO-ST/i,'HOST'))
+		
+		outRules.push(x.replace(/^;#/,"").replace(/^HO-ST/i,'HOST'))
 	}else if (x.match(/^HO-ST/i)){
-		lineNum = original.indexOf(x) + 1;
-		others.push(lineNum + "行 " + x.replace(/^HO-ST/i,'HOST'))
+		
+		others.push(x.replace(/^HO-ST/i,'HOST'))
 
 	}else if (x!=""){
 		
