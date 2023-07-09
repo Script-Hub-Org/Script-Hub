@@ -193,9 +193,9 @@ const html = `
       </div>
 
       <div style="padding: 1rem; position: fixed; bottom: 1rem; margin-right: 1rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
-        <a v-if="result" :href="result">打开链接</a>
+        <a v-if="result" :href="result">打开链接</a>&nbsp;
         <a v-if="result && target === 'shadowrocket-module' " :href=" 'https://api.boxjs.app/shadowrocket/install?module=' + encodeURIComponent(result) ">一键导入(Shadowrocket)</a>&nbsp;
-        <a v-if="result && target === 'loon-plugin' " :href=" 'https://www.nsloon.com/openloon/import?plugin=' + encodeURIComponent(result) ">一键导入(Loon)</a>&nbsp;
+        <a v-if="result && target === 'loon-plugin' " :href=" 'https://www.nsloon.com/openloon/import?plugin=' + encodeURIComponent(result) ">一键导入(Loon)</a>
         <textarea id="result" :value="result" placeholder="结果"></textarea>
         
         <button v-if="copyInfo">{{copyInfo}}</button>
