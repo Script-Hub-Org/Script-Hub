@@ -190,9 +190,11 @@ const html = `
 
       <div style="padding: 1rem; position: fixed; bottom: 1rem; margin-right: 1rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
         <textarea id="result" :value="result" placeholder="结果"></textarea>
-        <button @click="copy">全选{{isHttps ? "&复制" : " https://script.hub 可复制"}}</button>
+        <button v-if="copyInfo">{{copyInfo}}</button>
+        <button v-else @click="copy">全选{{isHttps ? "&复制" : " https://script.hub 可复制"}}</button>
         &nbsp;
-        <button @click="reset">重置</button>
+        <button v-if="resetInfo">{{resetInfo}}</button>
+        <button v-else @click="reset">重置</button>
       </div>
 
       
@@ -227,6 +229,8 @@ const html = `
     tiles: '',
     tcolor: '',
     cachexp: '',
+    copyInfo: '',
+    resetInfo: '',
     nore: false
   }
   createApp({
@@ -240,6 +244,10 @@ const html = `
           this[key] = initData[key]
         })
         // alert("✅ 已重置");
+        this.resetInfo = '✅'
+        setTimeout(() => {
+          this.resetInfo = ''
+        }, 1000)
       },
       copy(){
         const copyText = document.getElementById("result");
@@ -248,6 +256,10 @@ const html = `
         copyText.setSelectionRange(0, 99999); // For mobile devices
 
         navigator.clipboard.writeText(copyText.value);
+        this.copyInfo = '✅'
+        setTimeout(() => {
+          this.copyInfo = ''
+        }, 1000)
         // if (this.isHttps) {
         //   alert("✅ 已复制");
         // }
