@@ -1,3 +1,7 @@
+const NAME = `script-hub`
+
+const $ = new Env(NAME)
+
 const html = `
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -234,17 +238,30 @@ const html = `
     cachexp: '',
     copyInfo: '',
     resetInfo: '',
-    nore: false
+    nore: false,
+    env: "${$.getEnv() || ''}"
   }
+  if (init.env === 'Surge') {
+    init.target = 'surge-module'
+  } else if (init.env === 'Loon') {
+    init.target = 'loon-plugin'
+  } else if (init.env === 'Stash') {
+    init.target = 'stash-stoverride'
+  } else if (init.env === 'Shadowrocket') {
+    init.target = 'shadowrocket-module'
+  }
+
   createApp({
     data() {
-      return {...init}
+      return { ...init }
     },
     methods: {
       reset(){
         const initData = { ...init }
         Object.keys(initData).map(key => {
-          this[key] = initData[key]
+          if (key !== 'type' && key !== 'target') {
+            this[key] = initData[key]
+          }
         })
         // alert("✅ 已重置");
         this.resetInfo = '✅'
@@ -270,17 +287,16 @@ const html = `
       }
     },
     watch: {
-    
-    type(v) {
-      if(v === 'rule-set' && this.target !== 'rule-set'){
-        this.target='rule-set'
+      type(v) {
+        if(v === 'rule-set' && this.target !== 'rule-set'){
+          this.target='rule-set'
+        }
+      },
+      target(v) {
+        if(v === 'rule-set' && this.type !== 'rule-set'){
+          this.type='rule-set'
+        }
       }
-    },
-    target(v) {
-      if(v === 'rule-set' && this.type !== 'rule-set'){
-        this.type='rule-set'
-      }
-    }
   },
     computed: {
       result: function () {
@@ -319,10 +335,6 @@ const html = `
 
 </html>
 `
-
-const NAME = `script-hub`
-
-const $ = new Env(NAME)
 
 $.done({
   response: {
