@@ -10,21 +10,21 @@ http:
       timeout: 30
 
     - match: ^(https?:\/\/)?script\.hub.+&type=qx-rewrite&target=stash-stoverride
-      name: "QX转换Surge"
+      name: "QX转换Stash"
       type: request
       timeout: 30
       require-body: true
       max-size: 3145728
 
     - match: ^(https?:\/\/)?script\.hub.+&type=loon-plugin&target=stash-stoverride
-      name: "Loon转换Surge"
+      name: "Loon转换Stash"
       type: request
       timeout: 30
       require-body: true
       max-size: 3145728
 
     - match: ^(https?:\/\/)?script\.hub.+&type=surge-module&target=stash-stoverride
-      name: "Surge模块控制器"
+      name: "Surge转换Stash"
       type: request
       timeout: 30
       require-body: true
@@ -64,13 +64,13 @@ script-providers:
   "Script-hub":
     url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js
     interval: 86400
-  "QX转换Surge":
+  "QX转换Stash":
     url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js
     interval: 86400
-  "Loon转换Surge":
+  "Loon转换Stash":
     url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.js
     interval: 86400
-  "Surge模块控制器":
+  "Surge转换Stash":
     url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.js
     interval: 86400
   "规则集转换":
