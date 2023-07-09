@@ -190,7 +190,9 @@ const html = `
 
       <div style="padding: 1rem; position: fixed; bottom: 1rem; margin-right: 1rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
         <textarea id="result" :value="result" placeholder="结果"></textarea>
-        <button @click="copy">全选&复制(https://script.hub 可复制)</button>
+        <button @click="copy">全选{{isHttps ? "&复制" : " https://script.hub 可复制"}}</button>
+        &nbsp;
+        <button @click="reset">重置</button>
       </div>
 
       
@@ -200,38 +202,45 @@ const html = `
     </footer>
     <script type="module">
       import { createApp } from 'vue'
-
+  const init = {
+    baseUrl: location.protocol + '//script.hub/file/',
+    types: [{value: 'rule-set', label: '规则集'}, {value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}],
+    type: '',
+    targets: [{value: 'rule-set', label: '规则集', suffix: '.list' }, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}],
+    target: '',
+    src: '',
+    n: '',
+    filename: '',
+    y: '',
+    x: '',
+    del: false,
+    hnadd: '',
+    hndel: '',
+    jsc: '',
+    jsc_all: '',
+    jsc2: '',
+    jsc2_all: '',
+    cron: '',
+    cronexp: '',
+    arg: '',
+    argv: '',
+    tiles: '',
+    tcolor: '',
+    cachexp: '',
+    nore: false
+  }
   createApp({
     data() {
-      return {
-        baseUrl: location.protocol + '//script.hub/file/',
-        types: [{value: 'rule-set', label: '规则集'}, {value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}],
-        type: '',
-        targets: [{value: 'rule-set', label: '规则集', suffix: '.list' }, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}],
-        target: '',
-        src: '',
-        n: '',
-        filename: '',
-        y: '',
-        x: '',
-        del: false,
-        hnadd: '',
-        hndel: '',
-        jsc: '',
-        jsc_all: '',
-        jsc2: '',
-        jsc2_all: '',
-        cron: '',
-        cronexp: '',
-        arg: '',
-        argv: '',
-        tiles: '',
-        tcolor: '',
-        cachexp: '',
-        nore: false
-      }
+      return {...init}
     },
     methods: {
+      reset(){
+        const initData = { ...init }
+        Object.keys(initData).map(key => {
+          this[key] = initData[key]
+        })
+        alert("✅ 已重置");
+      },
       copy(){
         const copyText = document.getElementById("result");
 
@@ -255,8 +264,13 @@ const html = `
       }
     },
     type(v) {
-      if(v === 'rule-set'){
+      if(v === 'rule-set' && this.target !== 'rule-set'){
         this.target='rule-set'
+      }
+    },
+    target(v) {
+      if(v === 'rule-set' && this.type !== 'rule-set'){
+        this.type='rule-set'
       }
     }
   },
@@ -279,6 +293,9 @@ const html = `
 
         return ''
         
+      },
+      isHttps: function () {
+        return location.protocol === 'https:'
       }
     }
   }).mount('#app')
