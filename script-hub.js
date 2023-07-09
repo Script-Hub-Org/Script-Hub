@@ -208,7 +208,7 @@ const html = `
     <script type="module">
       import { createApp } from 'vue'
   const init = {
-    baseUrl: location.protocol + '//script.hub/file/',
+    baseUrl: location.protocol + '//script.hub/file/_start_/',
     types: [{value: 'rule-set', label: '规则集'}, {value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}],
     type: '',
     targets: [{value: 'rule-set', label: '规则集', suffix: '.list' }, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}],
@@ -303,7 +303,7 @@ const html = `
         if (this.src && target && type) {
           const suffix = target.suffix
           const filename = this.filename || this.src.substring(this.src.lastIndexOf('/') + 1).split('.')[0]
-          return this.baseUrl + this.src + '/' + filename + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
+          return this.baseUrl + this.src + '/_end_/' + filename + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
         }
 
         return ''
