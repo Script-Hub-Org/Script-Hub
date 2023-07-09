@@ -26,7 +26,7 @@ const html = `
     <div id="app">
 
       <a href="https://github.com/Script-Hub-Org/Script-Hub"><h1 style="margin-bottom: 0;">Script Hub</h1></a>
-      <p>重写 & 规则集转换</p>
+      <p>重写 & 规则集转换 {{env}}</p>
 
       <div>
         <code>来源: </code>
@@ -243,6 +243,7 @@ const html = `
     nore: false,
     env: "${$.getEnv() || ''}"
   }
+  
   if (init.env === 'Surge') {
     init.target = 'surge-module'
   } else if (init.env === 'Loon') {
@@ -252,6 +253,8 @@ const html = `
   } else if (init.env === 'Shadowrocket') {
     init.target = 'shadowrocket-module'
   }
+
+  console.log("init", init)
 
   createApp({
     data() {
