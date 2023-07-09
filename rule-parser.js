@@ -16,10 +16,11 @@ var req = $request.url.replace(/r_parser.list$|r_parser.list\?.+/,'');
 var urlArg
 
     req = decodeURIComponent($request.url.split(/https?:\/\/script\.hub\/file\/.+\?src=/)[1].split(/&type=/)[0]);
-    //console.log(req);
+	//console.log(req);
     if ($request.url.search(/&target=.+&.+/) != -1){
-        urlArg = "&" + $request.url.split(/&target=[^&]+&/)[1];
+        urlArg = "&" + decodeURIComponent($request.url.split(/&target=[^&]+&/)[1]);
     }else{urlArg = ""};
+//console.log(urlArg);
 	
 var original = [];//用于获取原文行号
 //获取参数
@@ -49,7 +50,7 @@ if (oCache != "" && oCache != null){
 
 !(async () => {
   let body
-  
+  
   if (oCache == null){
     //console.log("一个缓存也没有")
   body = await http(req);
@@ -94,7 +95,7 @@ $persistentStore.write(JSON.stringify(oCache), 'parser_cache');
       };
   };
 };
-  
+  
 //判断是否断网
 if(body == null || body == ""){if(isSurgeiOS || isStashiOS){
   console.log("规则集转换：未获取到body的链接为" + $request.url)
@@ -210,7 +211,7 @@ if(ipNoResolve === true){
 		noResolve = x.replace(/\x20/g,"").match(/,no-resolve/i) ? ",no-resolve" : '';
 		
 		ruleType = x.split(/ *, */)[0].toUpperCase().replace(/^PROCESS-PATH/i,"PROCESS-NAME");
-        
+        
         if (isSurgeiOS){
             ruleType = ruleType.replace(/^DST-PORT/i,"DEST-PORT");
         };
@@ -253,4 +254,4 @@ function http(req) {
   resolve(data)
   })
 )
-                                                     }
+}
