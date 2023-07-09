@@ -1,4 +1,4 @@
-# Script-Hub
+# Script Hub
 
 Advanced Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and ShadowRocket
 

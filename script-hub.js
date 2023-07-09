@@ -10,7 +10,7 @@ const html = `
     <title>Script Hub</title>
   </head>
 
-  <body>
+  <body style="margin-bottom: 160px;">
     <script type="importmap">
       {
     "imports": {
@@ -21,7 +21,8 @@ const html = `
 
     <div id="app">
 
-      <h1>Script Hub</h1>
+      <a href="https://github.com/Script-Hub-Org/Script-Hub"><h1 style="margin-bottom: 0;">Script Hub</h1></a>
+      <p>重写 & 规则集转换</p>
 
       <div>
         <code>来源: </code>
@@ -187,12 +188,12 @@ const html = `
         <label for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
       </div>
 
-      <div>
-        <span>结果: </span>
-        <textarea id="result" :value="result" placeholder=""></textarea>
+      <div style="padding: 1rem; position: fixed; bottom: 1rem; margin-right: 1rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
+        <textarea id="result" :value="result" placeholder="结果"></textarea>
+        <button @click="copy">全选&复制(https://script.hub 可复制)</button>
       </div>
 
-      <button @click="copy">一键全选&复制(仅 https://script.hub 可复制)</button>
+      
     </div>
     <footer>
       <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub</a></p>
