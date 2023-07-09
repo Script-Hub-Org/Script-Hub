@@ -189,9 +189,12 @@ const html = `
       </div>
 
       <div style="padding: 1rem; position: fixed; bottom: 1rem; margin-right: 1rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
+        <a v-if="result" :href="result">打开链接</a>
         <textarea id="result" :value="result" placeholder="结果"></textarea>
+        
         <button v-if="copyInfo">{{copyInfo}}</button>
-        <button v-else @click="copy">全选{{isHttps ? "&复制" : " https://script.hub 可复制"}}</button>
+        <button v-else @click="copy">全选{{isHttps ? "&复制" : ""}}</button>
+        <small v-if="!isHttps"> https://script.hub 可复制</small>
         &nbsp;
         <button v-if="resetInfo">{{resetInfo}}</button>
         <button v-else @click="reset">重置</button>
@@ -282,26 +285,25 @@ const html = `
     computed: {
       result: function () {
 				const fields = {}
-        const _fields = ['src', 'type', 'target', 'n', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'del', 'nore']
-        _fields.forEach(field => {
-         if (this[field]!==''&&this[field]!==false) {
-            fields[field] = this[field]
-          }
-        })
-
         if (this.jsc_all) {
           fields.jsc = '.'
         }
         if (this.jsc2_all) {
           fields.jsc2 = '.'
         }
+        const _fields = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'del', 'nore']
+        _fields.forEach(field => {
+         if (this[field]!==''&&this[field]!==false) {
+            fields[field] = this[field]
+          }
+        })
 
         const type = this.types.find(i => i.value === this.type)
         const target = this.targets.find(i => i.value === this.target)
         if (this.src && target && type) {
           const suffix = target.suffix
           const filename = this.filename || this.src.substring(this.src.lastIndexOf('/') + 1).split('.')[0]
-          return this.baseUrl + filename + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
+          return this.baseUrl + this.src + '/' + filename + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
         }
 
         return ''
