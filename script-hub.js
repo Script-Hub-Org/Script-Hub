@@ -54,7 +54,7 @@ const html = `
       </details>
 
       <details>
-        <summary>文件名</summary>
+        <summary>文件名(避免重名, 默认从来源取)</summary>
         <textarea id="filename" v-model="filename" placeholder=""></textarea>
       </details>
 
