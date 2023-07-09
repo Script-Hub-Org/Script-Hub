@@ -21,30 +21,32 @@ const html = `
 
     <div id="app">
 
+      <h1>Script Hub</h1>
+
       <div>
-        <span>来源: </span>
+        <code>来源: </code>
         <textarea id="src" v-model="src" placeholder=""></textarea>
       </div>
 
       <div>
-        <span>来源类型: </span>
-        <span v-for="item in types">
+        <code>来源类型: </code>
+        <div v-for="item in types">
           <input type="radio" :id="'type-' + item.value" :value="item.value" v-model="type" />
           <label :for="'type-' + item.value">{{item.label}}</label>
-        </span>
+        </div>
       </div>
 
       <div>
-        <span>目标类型: </span>
-        <span v-for="item in targets">
+        <code>目标类型: </code>
+        <div v-for="item in targets">
           <input type="radio" :id="'target-' + item.value" :value="item.value" v-model="target" />
           <label :for="'target-' + item.value">{{item.label}}</label>
-        </span>
+        </div>
       </div>
 
 
 
-      <details>
+      <details v-if="!target || target !== 'rule-set'">
         <summary>名称 简介</summary>
         <span>名字+简介 ，名字和简介以"+"相连，可缺省名字或简介</span>
         <textarea id="n" v-model="n" placeholder=""></textarea>
@@ -55,92 +57,114 @@ const html = `
         <textarea id="filename" v-model="filename" placeholder=""></textarea>
       </details>
 
-      <details>
+      <details v-if="!target || target !== 'rule-set'">
         <summary>重写相关</summary>
-          <details>
-        <summary>保留重写</summary>
-        <span>根据关键词保留重写(即去掉注释符#) 多关键词以"+"分隔</span>
-        <textarea id="y" v-model="y" placeholder=""></textarea>
+        <details>
+          <summary>保留重写</summary>
+          <span>根据关键词保留重写(即去掉注释符#) 多关键词以"+"分隔</span>
+          <textarea id="y" v-model="y" placeholder=""></textarea>
+        </details>
+        <details>
+          <summary>排除重写</summary>
+          <span>根据关键词排除重写(即添加注释符#) 多关键词以"+"分隔</span>
+          <textarea id="x" v-model="x" placeholder=""></textarea>
+        </details>
+        <div>
+          <input type="checkbox" id="del" v-model="del" />
+          <label for="del">从转换结果中剔除被注释的重写</label>
+        </div>
       </details>
-      <details>
-        <summary>排除重写</summary>
-        <span>根据关键词排除重写(即添加注释符#) 多关键词以"+"分隔</span>
-        <textarea id="x" v-model="x" placeholder=""></textarea>
+
+      <details v-if="!target || target === 'rule-set'">
+        <summary>规则相关</summary>
+        <details>
+          <summary>保留规则</summary>
+          <span>根据关键词保留规则(即去掉注释符#) 多关键词以"+"分隔</span>
+          <textarea id="y" v-model="y" placeholder=""></textarea>
+        </details>
+        <details>
+          <summary>排除规则</summary>
+          <span>根据关键词排除规则(即添加注释符#) 多关键词以"+"分隔</span>
+          <textarea id="x" v-model="x" placeholder=""></textarea>
+        </details>
       </details>
-            <div>
-        <input type="checkbox" id="del" v-model="del" />
-        <label for="del">从转换结果中剔除被注释的重写</label>
-      </div>
-      </details>
-
-    
 
 
 
-      <details>
+
+
+      <details v-if="!target || target !== 'rule-set'">
         <summary>修改 MITM 主机名</summary>
         <details>
-        <summary>添加 MITM 主机名</summary>
-        <span>添加 MITM 主机名 多主机名以","分隔</span>
-        <textarea id="hnadd" v-model="hnadd" placeholder=""></textarea>
+          <summary>添加 MITM 主机名</summary>
+          <span>添加 MITM 主机名 多主机名以","分隔</span>
+          <textarea id="hnadd" v-model="hnadd" placeholder=""></textarea>
+        </details>
+
+        <details>
+          <summary>删除 MITM 主机名</summary>
+          <span>从已有MITM主机名中删除主机名 多主机名以","分隔(需要传入完整主机名)</span>
+          <textarea id="hndel" v-model="hndel" placeholder=""></textarea>
+        </details>
       </details>
 
-      <details>
-        <summary>删除 MITM 主机名</summary>
-        <span>从已有MITM主机名中删除主机名 多主机名以","分隔(需要传入完整主机名)</span>
-        <textarea id="hndel" v-model="hndel" placeholder=""></textarea>
-      </details>
-      </details>
-      
 
-      <details>
+      <details v-if="!target || target === 'qx-rewrite'">
         <summary>启用脚本转换(仅在转换 QX 资源时可用)</summary>
         <details>
           <summary>启用脚本转换 1(仅在转换 QX 资源时可用)</summary>
           <span>根据关键词为脚本启用脚本转换(多关键词以"+"分隔，主要用途 将使用了QX独有api的脚本转换为通用脚本，谨慎开启，大部分脚本本身就通用，无差别启用，只会徒增功耗)</span>
           <textarea id="jsc" v-model="jsc" placeholder=""></textarea>
+          <div>
+            <input type="checkbox" id="jsc_all" v-model="jsc_all" />
+            <label for="jsc_all">全部转换</label>
+          </div>
         </details>
 
-        <details>
+        <details v-if="!target || target !== 'rule-set'">
           <summary>启用脚本转换 2(仅在转换 QX 资源时可用)</summary>
           <span>根据关键词为脚本启用脚本转换(与 <code>启用脚本转换 1</code> 的区别: 总是会在$done(body)里包一个response)</span>
           <textarea id="jsc2" v-model="jsc2" placeholder=""></textarea>
+          <div>
+            <input type="checkbox" id="jsc2_all" v-model="jsc2_all" />
+            <label for="jsc2_all">全部转换</label>
+          </div>
         </details>
       </details>
 
 
-      <details>
+      <details v-if="!target || target !== 'rule-set'">
         <summary>修改定时任务</summary>
-          <details>
-        <summary>修改定时任务(cron)</summary>
-        <span>根据关键词锁定cron脚本配合参数cronexp= 修改定时任务的cron表达式 多关键词用"+"分隔，cron=传入了几项，cronexp=也必须对应传入几项。 cron表达式中空格可用"."或"%20"替代</span>
-        <textarea id="cron" v-model="cron" placeholder=""></textarea>
+        <details>
+          <summary>修改定时任务(cron)</summary>
+          <span>根据关键词锁定cron脚本配合参数cronexp= 修改定时任务的cron表达式 多关键词用"+"分隔，cron=传入了几项，cronexp=也必须对应传入几项。 cron表达式中空格可用"."或"%20"替代</span>
+          <textarea id="cron" v-model="cron" placeholder=""></textarea>
+        </details>
+        <details>
+          <summary>修改定时任务(cronexp)</summary>
+          <span>见 cron= 参数说明</span>
+          <textarea id="cronexp" v-model="cronexp" placeholder=""></textarea>
+        </details>
       </details>
-      <details>
-        <summary>修改定时任务(cronexp)</summary>
-        <span>见 cron= 参数说明</span>
-        <textarea id="cronexp" v-model="cronexp" placeholder=""></textarea>
-      </details>
-      </details>
-      
 
-      <details>
+
+      <details v-if="!target || target !== 'rule-set'">
         <summary>修改参数</summary>
         <details>
-        <summary>修改参数(arg)</summary>
-        <span>arg= 根据关键词锁定脚本配合参数argv= 修改argument=的值 多关键词用"+"分隔，arg=传入了几项，argv=也必须对应传入几项。 argument中的"&"必须用"t;amp;"替代，"+"必须用"t;add;"替代。</span>
-        <textarea id="arg" v-model="arg" placeholder=""></textarea>
+          <summary>修改参数(arg)</summary>
+          <span>arg= 根据关键词锁定脚本配合参数argv= 修改argument=的值 多关键词用"+"分隔，arg=传入了几项，argv=也必须对应传入几项。 argument中的"&"必须用"t;amp;"替代，"+"必须用"t;add;"替代。</span>
+          <textarea id="arg" v-model="arg" placeholder=""></textarea>
+        </details>
+        <details>
+          <summary>修改参数(argv)</summary>
+          <span>见 arg= 参数说明</span>
+          <textarea id="argv" v-model="argv" placeholder=""></textarea>
+        </details>
       </details>
-      <details>
-        <summary>修改参数(argv)</summary>
-        <span>见 arg= 参数说明</span>
-        <textarea id="argv" v-model="argv" placeholder=""></textarea>
-      </details>
-      </details>
-      
-      <details>
+
+      <details v-if="!target || target === 'stash-stoverride'">
         <summary>Stash Tiles 面板相关</summary>
-          <details>
+        <details>
           <summary>根据关键词锁定 Surge 的 Panel 脚本(Stash 专用参数)</summary>
           <span>tiles= Stash专用参数，根据关键词锁定Surge的panel脚本，配合tcolor= 参数修改转换成tiles后的背景颜色，HEX码中的"#"必须用"@"替代</span>
           <textarea id="tiles" v-model="tiles" placeholder=""></textarea>
@@ -151,16 +175,16 @@ const html = `
           <textarea id="tcolor" v-model="tcolor" placeholder=""></textarea>
         </details>
       </details>
-    
+
       <details>
         <summary>缓存有效期</summary>
         <span>cachexp= 设置缓存有效期，单位：小时，不传入此参数默认有效期一小时。也可以用boxjs修改"Parser_cache_exp"的值来修改全局有效期。单位：小时，支持小数，设置为0.0001即立即过期。</span>
         <textarea id="cachexp" v-model="cachexp" placeholder=""></textarea>
       </details>
 
-      <div>
+      <div v-if="!target || target === 'rule-set' ">
         <input type="checkbox" id="nore" v-model="nore" />
-        <label for="nore">为规则集的 IP 规则开启不解析域名(即 no-resolve)</label>
+        <label for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
       </div>
 
       <div>
@@ -168,9 +192,11 @@ const html = `
         <textarea id="result" :value="result" placeholder=""></textarea>
       </div>
 
-      <button @click="copy">一键复制(仅 https://script.hub 可用)</button>
+      <button @click="copy">一键全选&复制(仅 https://script.hub 可复制)</button>
     </div>
-
+    <footer>
+      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub</a></p>
+    </footer>
     <script type="module">
       import { createApp } from 'vue'
 
@@ -191,7 +217,9 @@ const html = `
         hnadd: '',
         hndel: '',
         jsc: '',
+        jsc_all: '',
         jsc2: '',
+        jsc2_all: '',
         cron: '',
         cronexp: '',
         arg: '',
@@ -211,9 +239,26 @@ const html = `
 
         navigator.clipboard.writeText(copyText.value);
 
-        alert("已复制" + copyText.value);
+        alert("✅ 已复制");
       }
     },
+    watch: {
+      jsc_all(v) {
+        if(v){
+        this.jsc='.'
+        }
+      },
+     jsc2_all(v) {
+      if(v){
+      this.jsc2='.'
+      }
+    },
+    type(v) {
+      if(v === 'rule-set'){
+        this.target='rule-set'
+      }
+    }
+  },
     computed: {
       result: function () {
 				const fields = []
