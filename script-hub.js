@@ -47,7 +47,7 @@ const html = `
       <details>
         <summary>名称 简介</summary>
         <span>名字+简介 ，名字和简介以"+"相连，可缺省名字或简介</span>
-        <textarea id="name" v-model="name" placeholder=""></textarea>
+        <textarea id="n" v-model="n" placeholder=""></textarea>
       </details>
 
       <details>
