@@ -338,6 +338,13 @@ const html = `
           const pathType = this.target === 'surge-script' ? '/convert' : '/file'
 
           return this.baseUrl + pathType + '/_start_/' + this.src + '/_end_/' + filename + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
+
+          // let url = new URL(this.baseUrl + pathType + '/_start_/' + this.src + '/_end_/' + filename + suffix)
+          
+          // Object.keys(fields).map(i => {
+          //  url.searchParams.append(i, fields[i])
+          // })
+          // return url.href
         }
 
         return ''
