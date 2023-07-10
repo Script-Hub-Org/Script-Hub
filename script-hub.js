@@ -45,7 +45,7 @@ const html = `
   ::backdrop,
   :root {
     color-scheme: dark;
-    --bg: #1a1a1c;
+    --bg: #1a1a1f;
     --accent-bg: #333339;
     --text: #d3cdcd;
     --text-light: #ababab;
