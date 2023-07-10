@@ -8,6 +8,8 @@ const html = `
 
   <head>
     <meta charset="UTF-8" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/icon.png" />
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/icon-dark.png">
     
@@ -26,31 +28,32 @@ const html = `
   --standard-border-radius: 5px;
 
   /* Default (light) theme */
-  --bg: #fff;
-  --accent-bg: #f5f7ff;
-  --text: #212121;
+  --bg: #eef1f5;
+  --accent-bg: #d8e3f17a;
+  --text: #484848;
   --text-light: #585858;
-  --border: #898EA4;
-  --accent: #0d47a1;
-  --code: #d81b60;
-  --preformatted: #444;
+  --border: #dadce7;
+  --accent: #5c88c9;
+  --code: #af5050;
+  --preformatted: #272727;
   --marked: #ffdd33;
   --disabled: #efefef;
 }
 
 /* Dark theme */
 @media (prefers-color-scheme: dark) {
-  :root,
-  ::backdrop {
+  ::backdrop,
+  :root {
     color-scheme: dark;
-    --bg: #212121;
-    --accent-bg: #2b2b2b;
-    --text: #dcdcdc;
+    --bg: #1a1a1c;
+    --accent-bg: #333339;
+    --text: #d3cdcd;
     --text-light: #ababab;
-    --accent: #ffb300;
-    --code: #f06292;
+    --accent: #9093ce;
+    --code: #ba8a6d;
     --preformatted: #ccc;
     --disabled: #111;
+    --border: #54566692;
   }
   /* Add a bit of transparency so light media isn't so glaring in dark mode */
   img,
@@ -62,6 +65,7 @@ const html = `
 /* Reset box-sizing */
 *, *::before, *::after {
   box-sizing: border-box;
+  text-decoration: none;
 }
 
 /* Reset default appearance */
@@ -468,24 +472,42 @@ select:not([multiple]) {
 
 /* checkbox and radio button style */
 input[type="checkbox"],
-input[type="radio"] {
+/* input[type="radio"] {
   vertical-align: middle;
   position: relative;
   width: min-content;
-}
+} */
 
 input[type="checkbox"] + label,
-input[type="radio"] + label {
+/* input[type="radio"] + label {
   display: inline-block;
-}
+} */
 
-input[type="radio"] {
+/* input[type="radio"] {
   border-radius: 100%;
-}
+} */
 
 input[type="checkbox"]:checked,
-input[type="radio"]:checked {
+/* input[type="radio"]:checked {
   background-color: var(--accent);
+} */
+input[type="radio"] {
+      display: none;
+    }
+label.radio-label {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 11px;
+      background-color: var(--bg--accent);
+      color: var(--accent);
+      cursor: pointer;
+      /* border: 10px solid transparent; */
+    }
+
+input[type="radio"]:checked+label.radio-label {
+    background-color: var(--accent);
+    color: var(--bg);
+    /* border-color: var(--accent); */
 }
 
 input[type="checkbox"]:checked::after {
@@ -700,6 +722,27 @@ dialog::backdrop {
   padding: 1.5rem;
   margin: 2rem 0;
 }
+
+.flex-container {
+      display: flex;
+}
+
+.flex-container>div {
+    margin-right: 12%;
+    font-size: 0.95rem;
+}
+
+textarea {
+      height: 6em;
+}
+
+.parent-container {
+  display: flex;
+  /* justify-content: center; */
+  margin-left: 10px;
+}
+
+
 </style>
   </head>
   
@@ -716,24 +759,43 @@ dialog::backdrop {
         <code>来源: </code>
         <textarea id="src" v-model="src" placeholder=""></textarea>
       </div>
-
+      
+    <div class="flex-container">
       <div>
-        <code>来源类型: </code>
+        <code>&nbsp;来源类型: </code>
         <div v-for="item in types">
-          <input type="radio" :id="'type-' + item.value" :value="item.value" v-model="type" />
-          <label :for="'type-' + item.value">{{item.label}}</label>
+            <input type="radio" :id="'type-' + item.value" :value="item.value" v-model="type" />
+            <label :for="'type-' + item.value" class="radio-label">{{item.label}}</label>
         </div>
       </div>
 
       <div>
-        <code>目标类型: </code>
+        <code>&nbsp;目标类型: </code>
         <div v-for="item in targets">
-          <input type="radio" :id="'target-' + item.value" :value="item.value" v-model="target" />
-          <label :for="'target-' + item.value">{{item.label}}</label>
+            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model="target" />
+            <label :for="'target-' + item.value" class="radio-label">{{item.label}}</label>
         </div>
       </div>
+    </div>
+    <br>
 
-
+    <!-- position: fixed; -->
+    <div style="padding: 1rem;  bottom: 0rem; margin-right: 1rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
+        <a v-if="result" :href="result" target="_blank" style="margin: 0 0.5rem 0 0">打开链接</a>
+        <a v-if="result && target === 'shadowrocket-module' " :href=" 'https://api.boxjs.app/shadowrocket/install?module=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Shadowrocket)</a>
+        <a v-if="result && target === 'loon-plugin' " :href=" 'https://www.nsloon.com/openloon/import?plugin=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Loon)</a>
+        <textarea id="result" :value="result" placeholder="结果"></textarea>
+        
+        <button v-if="copyInfo">{{copyInfo}}</button>
+        <div class="parent-container">
+            <button v-else @click="copy">全选{{isHttps ? "&复制" : ""}}</button>
+            <!-- <small v-if="!isHttps"> https://script.hub 可复制</small> -->
+            &nbsp;&nbsp;
+            <button v-if="resetInfo">{{resetInfo}}</button>
+            <button v-else @click="reset">重置</button>
+        </div>
+      </div>
+      <br>
 
       <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
         <summary>名称 简介</summary>
@@ -881,21 +943,7 @@ dialog::backdrop {
         <label for="wrap_response">总是会在 $done(body) 里包一个 response</label>
       </div>
 
-      <div style="padding: 1rem; position: fixed; bottom: 0rem; margin-right: 1rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
-        <a v-if="result" :href="result" target="_blank" style="margin: 0 0.5rem 0 0">打开链接</a>
-        <a v-if="result && target === 'shadowrocket-module' " :href=" 'https://api.boxjs.app/shadowrocket/install?module=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Shadowrocket)</a>
-        <a v-if="result && target === 'loon-plugin' " :href=" 'https://www.nsloon.com/openloon/import?plugin=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Loon)</a>
-        <textarea id="result" :value="result" placeholder="结果"></textarea>
-        
-        <button v-if="copyInfo">{{copyInfo}}</button>
-        <button v-else @click="copy">全选{{isHttps ? "&复制" : ""}}</button>
-        <small v-if="!isHttps"> https://script.hub 可复制</small>
-        &nbsp;
-        <button v-if="resetInfo">{{resetInfo}}</button>
-        <button v-else @click="reset">重置</button>
-      </div>
 
-      
     </div>
     <footer>
       <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub</a></p>
