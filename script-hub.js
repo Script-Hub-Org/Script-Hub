@@ -392,10 +392,12 @@ summary {
   padding: 0.7rem 1rem;
   margin: -0.7rem -1rem;
   word-break: break-all;
+  font-size: 0.9rem;
 }
 
 details[open] > summary + * {
   margin-top: 0;
+  font-size: 0.85rem;
 }
 
 details[open] > summary {
