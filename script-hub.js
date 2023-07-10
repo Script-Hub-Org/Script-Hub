@@ -1014,7 +1014,8 @@ textarea {
           this.resetInfo = ''
         }, 1000)
       },
-      copy(){
+      copy(event){
+        event.preventDefault();
         const copyText = document.getElementById("result");
 
         copyText.select();
