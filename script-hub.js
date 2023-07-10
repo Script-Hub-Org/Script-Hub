@@ -1014,13 +1014,12 @@ textarea {
           this.resetInfo = ''
         }, 1000)
       },
-      copy(event){
-        event.preventDefault();
+      copy(){
         const copyText = document.getElementById("result");
 
         copyText.select();
         copyText.setSelectionRange(0, 99999); // For mobile devices
-        copyText.blur(); // 取消唤起输入法
+        document.activeElement.blur();
         navigator.clipboard.writeText(copyText.value);
         this.copyInfo = '✅'
         setTimeout(() => {
