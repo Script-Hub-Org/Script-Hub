@@ -1019,7 +1019,7 @@ textarea {
 
         copyText.select();
         copyText.setSelectionRange(0, 99999); // For mobile devices
-
+        copyText.blur(); // 取消唤起输入法
         navigator.clipboard.writeText(copyText.value);
         this.copyInfo = '✅'
         setTimeout(() => {
