@@ -9,22 +9,24 @@
 #!select = 插件随机图标合集, Doraemon(100P),Shin-chan(100P),Weslie-Wolffy(100P),Tom-Jerry(100P),Genshin(160P),Shin-Miya(100P),OnePiece(100P),Stitch(100P),Pokemon(112P),PokemonGif(56P)
 #!input = Parser_cache_exp
 
+[General]
+
+force-http-engine-hosts = script.hub, *.script.hub
+
 [Script]
 
-http-request ^https?:\/\/script\.hub\/$ script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js, tag=Script-hub
+http-request ^https?:\/\/script\.hub\/$ script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js, tag=Script Hub: 前端
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js, requires-body=true, tag=QX转换Loon
+http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js, requires-body=true, tag=Script Hub: QX 转换 Loon
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=loon-plugin script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.js, requires-body=true, tag=Loon插件控制器
+http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=loon-plugin script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.js, requires-body=true, tag=Script Hub: Loon 插件控制器
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=surge-module script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.js, requires-body=true, tag=Surge转换Loon
+http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=surge-module script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.js, requires-body=true, tag=Script Hub: Surge 转换 Loon
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.js, requires-body=true, tag=规则集转换
+http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.js, requires-body=true, tag=Script Hub: 规则集转换
 
-http-request _script-converter-(stash|surge|loon|shadowrocket)\.js$ script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/script-converter/script-converter.js, requires-body=true, tag=脚本转换1
-
-http-request _script-converter-(STASH|SURGE|LOON|SHADOWROCKET)\.js$ script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/script-converter/script-converter.js, requires-body=true, tag=脚本转换2, argument="wrap_response=true"
+http-request ^https?:\/\/script\.hub\/convert\/ script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.js, requires-body=true, tag=Script Hub: 脚本转换
 
 [MITM]
 
-hostname = github.com,raw.githubusercontent.com,gitlab.com,gist.githubusercontent.com,script.hub
+hostname = script.hub, *.script.hub
