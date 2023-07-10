@@ -239,29 +239,28 @@ function getPokemonByIcon(icon) {
 
 var name = "";
 var desc = "";
-var req
-var urlArg
-
-    req = $request.url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
+const url = $request.url;
+var req = $request.url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
 	console.log(req);
-        urlArg = "?" + decodeURIComponent($request.url.split(/_end_\/[^?]+\?/)[1]);
-console.log(urlArg);
-
+	
 var rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
-//获取参数
-var nName = urlArg.search(/\?n=|&n=/) != -1 ? (urlArg.split(/\?n=|&n=/)[1].split("&")[0].split("+")) : null;
-var Pin0 = urlArg.search(/\?y=|&y=/) != -1 ? (urlArg.split(/\?y=|&y=/)[1].split("&")[0].split("+")) : null;
-var Pout0 = urlArg.search(/\?x=|&x=/) != -1 ? (urlArg.split(/\?x=|&x=/)[1].split("&")[0].split("+")) : null;
-var hnAdd = urlArg.search(/\?hnadd=|&hnadd=/) != -1 ? (urlArg.split(/\?hnadd=|&hnadd=/)[1].split("&")[0].replace(/ /g,"").split(",")) : null;
-var hnDel = urlArg.search(/\?hndel=|&hndel=/) != -1 ? (urlArg.split(/\?hndel=|&hndel=/)[1].split("&")[0].replace(/ /g,"").split(",")) : null;
-var jsConverter = urlArg.search(/\?jsc=|&jsc=/) != -1 ? (urlArg.split(/\?jsc=|&jsc=/)[1].split("&")[0].split("+")) : null;
-var jsConverter2 = urlArg.search(/\?jsc2=|&jsc2=/) != -1 ? (urlArg.split(/\?jsc2=|&jsc2=/)[1].split("&")[0].split("+")) : null;
-var delNoteSc = urlArg.search(/\?del=|&del=/) != -1 ? true : false;
-var nCron = urlArg.search(/\?cron=|&cron=/) != -1 ? (urlArg.split(/\?cron=|&cron=/)[1].split("&")[0].split("+")) : null;
-var nCronExp = urlArg.search(/\?cronexp=|&cronexp=/) != -1 ? (urlArg.split(/\?cronexp=|&cronexp=/)[1].split("&")[0].replace(/\./g," ").split("+")) : null;
-var icon = "";
-var cachExp = urlArg.search(/\?cachexp=|&cachexp=/) != -1 ? (urlArg.split(/\?cachexp=|&cachexp=/)[1].split("&")[0]) : null;
 
+//获取参数
+const queryObject = parseQueryString(url);
+var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;
+var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
+var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
+var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/ *, */) : null;
+var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/ *, */) : null;
+var delNoteSc = queryObject.del == "true" ? true : false;
+var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;
+var nCronExp = queryObject.cronexp != undefined ? queryObject.cronexp.split("+") : null;
+var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : null;
+var nArg = queryObject.argv != undefined ? queryObject.argv.replace(/\./g," ").split("+") : null;
+var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
+var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
+var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
+var icon = "";
 //缓存有效期相关
 var currentTime = new Date();
 var seconds = Math.floor(currentTime.getTime() / 1000); // 将毫秒转换为秒
@@ -979,4 +978,19 @@ function http(req) {
   resolve(data)
   })
 )
-}
+};
+
+function parseQueryString(url) {
+  const queryString = url.split('?')[1]; // 获取查询字符串部分
+  const regex = /([^=&]+)=([^&]*)/g; // 匹配键值对的正则表达式
+  const params = {};
+  let match;
+
+  while ((match = regex.exec(queryString))) {
+    const key = decodeURIComponent(match[1]); // 解码键
+    const value = decodeURIComponent(match[2]); // 解码值
+    params[key] = value; // 将键值对添加到对象中
+  }
+
+  return params;
+};
