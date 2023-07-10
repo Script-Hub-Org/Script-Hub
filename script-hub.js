@@ -27,7 +27,7 @@ const html = `
     <div id="app">
 
       <a href="https://github.com/Script-Hub-Org/Script-Hub"><h1 style="margin-bottom: 0;">Script Hub</h1></a>
-      <p>重写 & 规则集转换 {{env}}</p>
+      <p>重写 & 规则集转换</p>
 
       <div>
         <code>来源: </code>
@@ -52,7 +52,7 @@ const html = `
 
 
 
-      <details v-if="!target || target !== 'rule-set'">
+      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
         <summary>名称 简介</summary>
         <span>名字+简介 ，名字和简介以"+"相连，可缺省名字或简介</span>
         <textarea id="n" v-model="n" placeholder=""></textarea>
@@ -63,7 +63,7 @@ const html = `
         <textarea id="filename" v-model="filename" placeholder=""></textarea>
       </details>
 
-      <details v-if="!target || target !== 'rule-set'">
+      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
         <summary>重写相关</summary>
         <details>
           <summary>保留重写</summary>
@@ -99,7 +99,7 @@ const html = `
 
 
 
-      <details v-if="!target || target !== 'rule-set'">
+      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
         <summary>修改 MITM 主机名</summary>
         <details>
           <summary>添加 MITM 主机名</summary>
@@ -127,7 +127,7 @@ const html = `
           </div>
         </details>
 
-        <details v-if="!target || target !== 'rule-set'">
+        <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
           <summary>启用脚本转换 2(仅在转换 QX 资源时可用)</summary>
           <span>根据关键词为脚本启用脚本转换(与 <code>启用脚本转换 1</code> 的区别: 总是会在$done(body)里包一个response)</span>
           <textarea id="jsc2" v-model="jsc2" placeholder=""></textarea>
@@ -139,7 +139,7 @@ const html = `
       </details>
 
 
-      <details v-if="!target || target !== 'rule-set'">
+      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
         <summary>修改定时任务</summary>
         <details>
           <summary>修改定时任务(cron)</summary>
@@ -154,7 +154,7 @@ const html = `
       </details>
 
 
-      <details v-if="!target || target !== 'rule-set'">
+      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
         <summary>修改参数</summary>
         <details>
           <summary>修改参数(arg)</summary>
@@ -182,7 +182,7 @@ const html = `
         </details>
       </details>
 
-      <details>
+      <details v-if="!target || target !== 'surge-script' ">
         <summary>缓存有效期</summary>
         <span>cachexp= 设置缓存有效期，单位：小时，不传入此参数默认有效期一小时。也可以用boxjs修改"Parser_cache_exp"的值来修改全局有效期。单位：小时，支持小数，设置为0.0001即立即过期。</span>
         <textarea id="cachexp" v-model="cachexp" placeholder=""></textarea>
@@ -191,6 +191,11 @@ const html = `
       <div v-if="!target || target === 'rule-set' ">
         <input type="checkbox" id="nore" v-model="nore" />
         <label for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
+      </div>
+
+      <div v-if="!target || target === 'surge-script' ">
+        <input type="checkbox" id="wrap_response" v-model="wrap_response" />
+        <label for="wrap_response">总是会在 $done(body) 里包一个 response</label>
       </div>
 
       <div style="padding: 1rem; position: fixed; bottom: 1rem; margin-right: 1rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
@@ -215,10 +220,10 @@ const html = `
     <script type="module">
       import { createApp } from 'vue'
   const init = {
-    baseUrl: location.protocol + '//script.hub/file/_start_/',
-    types: [{value: 'rule-set', label: '规则集'}, {value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}],
+    baseUrl: location.protocol + '//script.hub',
+    types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'rule-set', label: '规则集'}],
     type: '',
-    targets: [{value: 'rule-set', label: '规则集', suffix: '.list' }, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}],
+    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'rule-set', label: '规则集', suffix: '.list' }],
     target: '',
     src: '',
     n: '',
@@ -242,6 +247,7 @@ const html = `
     copyInfo: '',
     resetInfo: '',
     nore: false,
+    wrap_response: false,
     env: "${$.getEnv() || ''}"
   }
   
@@ -296,11 +302,15 @@ const html = `
       type(v) {
         if(v === 'rule-set' && this.target !== 'rule-set'){
           this.target='rule-set'
+        } else if(v === 'qx-script' && this.target !== 'surge-script'){
+          this.target='surge-script'
         }
       },
       target(v) {
         if(v === 'rule-set' && this.type !== 'rule-set'){
           this.type='rule-set'
+        } else if(v === 'surge-script' && this.type !== 'qx-script'){
+          this.type='qx-script'
         }
       }
   },
@@ -313,7 +323,7 @@ const html = `
         if (this.jsc2_all) {
           fields.jsc2 = '.'
         }
-        const _fields = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'del', 'nore']
+        const _fields = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'del', 'nore', 'wrap_response']
         _fields.forEach(field => {
          if (this[field]!==''&&this[field]!==false) {
             fields[field] = this[field]
@@ -323,9 +333,11 @@ const html = `
         const type = this.types.find(i => i.value === this.type)
         const target = this.targets.find(i => i.value === this.target)
         if (this.src && target && type) {
-          const suffix = target.suffix
+          const suffix = target.suffix || ''
           const filename = this.filename || this.src.substring(this.src.lastIndexOf('/') + 1).split('.')[0]
-          return this.baseUrl + this.src + '/_end_/' + filename + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
+          const pathType = this.target === 'surge-script' ? '/convert' : '/file'
+
+          return this.baseUrl + pathType + '/_start_/' + this.src + '/_end_/' + filename + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
         }
 
         return ''
