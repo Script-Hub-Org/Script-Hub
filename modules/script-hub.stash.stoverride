@@ -65,5 +65,5 @@ script-providers:
     url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.js
     interval: 86400
   "Script Hub: 脚本转换":
-    url: https://raw.githubusercontent.com/xream/scripts/main/surge/modules/script-converter/script-converter.js
+    url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.js
     interval: 86400
