@@ -1,9 +1,6 @@
 #!name=Script Hub: 重写 & 规则集转换
 #!desc=https://script.hub
 
-# 🔗 模块链接
-#SUBSCRIBED https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
-
 [General]
 
 force-http-engine-hosts = %APPEND% script.hub, *.script.hub
