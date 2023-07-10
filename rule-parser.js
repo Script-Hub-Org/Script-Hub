@@ -13,19 +13,16 @@ const isSurgeiOS = 'undefined' !== typeof $environment && $environment['surge-ve
 const isShadowrocket = 'undefined' !== typeof $rocket;
 const isLooniOS = 'undefined' != typeof $loon;
 
-var req = $request.url.replace(/r_parser.list$|r_parser.list\?.+/,'');
-var urlArg
-
-    req = $request.url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-	console.log(req);
-        urlArg = "?" + decodeURIComponent($request.url.split(/_end_\/[^?]+\?/)[1]);
-console.log(urlArg);
+const url = $request.url;
+var req = $request.url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
+	//console.log(req);
 
 //获取参数
-var Rin0 = urlArg.search(/\?y=|&y=/) != -1 ? (urlArg.split(/\?y=|&y=/)[1].split("&")[0].split("+")) : null;
-var Rout0 = urlArg.search(/\?x=|&x=/) != -1 ? (urlArg.split(/\?x=|&x=/)[1].split("&")[0].split("+")) : null;
-var ipNoResolve = urlArg.search(/\?nore=|&nore=/) != -1 ? true : false;
-var cachExp = urlArg.search(/\?cachexp=|&cachexp=/) != -1 ? (urlArg.split(/\?cachexp=|&cachexp=/)[1].split("&")[0]) : null;
+const queryObject = parseQueryString(url);
+var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
+var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
+var ipNoResolve = queryObject.nore == "true" ? true : false;
+var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
 
 //缓存有效期相关
 var currentTime = new Date();
@@ -246,4 +243,19 @@ function http(req) {
   resolve(data)
   })
 )
-}
+};
+
+function parseQueryString(url) {
+  const queryString = url.split('?')[1]; // 获取查询字符串部分
+  const regex = /([^=&]+)=([^&]*)/g; // 匹配键值对的正则表达式
+  const params = {};
+  let match;
+
+  while ((match = regex.exec(queryString))) {
+    const key = decodeURIComponent(match[1]); // 解码键
+    const value = decodeURIComponent(match[2]); // 解码值
+    params[key] = value; // 将键值对添加到对象中
+  }
+
+  return params;
+};
