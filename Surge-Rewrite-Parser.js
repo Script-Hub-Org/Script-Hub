@@ -258,23 +258,7 @@ var nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+")
 var nTilesColor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
 var icon = "";
-/*
-//获取参数
-var nName = urlArg.search(/\?n=|&n=/) != -1 ? (urlArg.split(/\?n=|&n=/)[1].split("&")[0].split("+")) : null;
-var Pin0 = urlArg.search(/\?y=|&y=/) != -1 ? (urlArg.split(/\?y=|&y=/)[1].split("&")[0].split("+")) : null;
-var Pout0 = urlArg.search(/\?x=|&x=/) != -1 ? (urlArg.split(/\?x=|&x=/)[1].split("&")[0].split("+")) : null;
-var hnAdd = urlArg.search(/\?hnadd=|&hnadd=/) != -1 ? (urlArg.split(/\?hnadd=|&hnadd=/)[1].split("&")[0].replace(/ /g,"").split(",")) : null;
-var hnDel = urlArg.search(/\?hndel=|&hndel=/) != -1 ? (urlArg.split(/\?hndel=|&hndel=/)[1].split("&")[0].replace(/ /g,"").split(",")) : null;
-var delNoteSc = urlArg.search(/\?del=|&del=/) != -1 ? true : false;
-var nCron = urlArg.search(/\?cron=|&cron=/) != -1 ? (urlArg.split(/\?cron=|&cron=/)[1].split("&")[0].split("+")) : null;
-var nCronExp = urlArg.search(/\?cronexp=|&cronexp=/) != -1 ? (urlArg.split(/\?cronexp=|&cronexp=/)[1].split("&")[0].replace(/\./g," ").split("+")) : null;
-var nArgTarget = urlArg.search(/\?arg=|&arg=/) != -1 ? (urlArg.split(/\?arg=|&arg=/)[1].split("&")[0].split("+")) : null;
-var nArg = urlArg.search(/\?argv=|&argv=/) != -1 ? (urlArg.split(/\?argv=|&argv=/)[1].split("&")[0].split("+")) : null;
-var nTilesTarget = urlArg.search(/\?tiles=|&tiles=/) != -1 ? (urlArg.split(/\?tiles=|&tiles=/)[1].split("&")[0].split("+")) : null;
-var nTilesColor = urlArg.search(/\?tcolor=|&tcolor=/) != -1 ? (urlArg.split(/\?tcolor=|&tcolor=/)[1].split("&")[0].split("+")) : null;
-var icon = "";
-var cachExp = urlArg.search(/\?cachexp=|&cachexp=/) != -1 ? (urlArg.split(/\?cachexp=|&cachexp=/)[1].split("&")[0]) : null;
-*/
+
 //缓存有效期相关
 var currentTime = new Date();
 var seconds = Math.floor(currentTime.getTime() / 1000); // 将毫秒转换为秒
