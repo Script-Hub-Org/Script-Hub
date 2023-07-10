@@ -775,7 +775,7 @@ textarea {
     <br>
 
     <!-- position: fixed; -->
-    <div style="padding: 1rem;  bottom: 0rem; margin-right: 1rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
+    <div style="padding: 1rem;  bottom: 0rem; margin-right: 0rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
         <a v-if="result" :href="result" target="_blank" style="margin: 0 0.5rem 0 0">打开链接</a>
         <a v-if="result && target === 'shadowrocket-module' " :href=" 'https://api.boxjs.app/shadowrocket/install?module=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Shadowrocket)</a>
         <a v-if="result && target === 'loon-plugin' " :href=" 'https://www.nsloon.com/openloon/import?plugin=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Loon)</a>
