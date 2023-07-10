@@ -212,7 +212,7 @@ const html = `
     <footer>
       <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub</a></p>
     </footer>
-    <script type="module">
+    <script>
       const { createApp, ref } = Vue
   const init = {
     baseUrl: location.protocol + '//script.hub',
