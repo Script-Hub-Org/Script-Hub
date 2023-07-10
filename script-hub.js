@@ -16,13 +16,8 @@ const html = `
   </head>
 
   <body style="margin-bottom: 160px;">
-    <script type="importmap">
-      {
-    "imports": {
-      "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
-    }
-  }
-</script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
 
     <div id="app">
 
@@ -218,7 +213,7 @@ const html = `
       <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub</a></p>
     </footer>
     <script type="module">
-      import { createApp } from 'vue'
+      const { createApp, ref } = Vue
   const init = {
     baseUrl: location.protocol + '//script.hub',
     types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'rule-set', label: '规则集'}],
