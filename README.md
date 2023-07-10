@@ -33,6 +33,13 @@ Advanced Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and ShadowRo
 
 支持 将 QX 脚本转换成 Surge 脚本(兼容)
 
+## 预览
+
+
+| ![1](https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/screen-01.png) | ![2](https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/screen-02.png) |
+| :---: | :---: |
+| ① | ② |
+
 <details>
 <summary>安装</summary>
 
