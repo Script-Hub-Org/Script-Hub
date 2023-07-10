@@ -2,6 +2,20 @@ name: "Script Hub: 重写 & 规则集转换"
 desc: "https://script.hub"
 
 http:
+  force-http-engine:
+    - "script.hub:80"
+    - "script.hub:443"
+    - "*.script.hub:80"
+    - "*.script.hub:443"
+
+  mitm:
+    - "github.com"
+    - "raw.githubusercontent.com"
+    - "gitlab.com"
+    - "gist.githubusercontent.com"
+    - "script.hub"
+    - "*.script.hub"
+
   script:
     - match: ^https?:\/\/script\.hub\/$
       name: "Script-hub"
@@ -51,13 +65,6 @@ http:
       max-size: 3145728
       argument: |-
         "wrap_response=true"
-
-  mitm:
-    - "github.com"
-    - "raw.githubusercontent.com"
-    - "gitlab.com"
-    - "gist.githubusercontent.com"
-    - "script.hub"
 
 script-providers:
   "Script-hub":
