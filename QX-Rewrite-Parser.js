@@ -237,16 +237,6 @@ function getPokemonByIcon(icon) {
 
 }//宝可梦game
 
-var jsctype
-if (isStashiOS){
-    jsctype = "stash";
-}else if (isSurgeiOS){
-    jsctype = "surge";
-}else if (isShadowrocket){
-    jsctype = "shadowrocket";
-}else if (isLooniOS){
-    jsctype = "loon";
-}else{jsctype = "";};
 var name = "";
 var desc = "";
 var req
@@ -419,6 +409,7 @@ let reBdType = "";     //request|response-body
 let reBdPtn = "";      //re-header 正则
 let reBdArg1 = "";     //用以匹配的headers
 let reBdArg2 = "";     //替换
+let scriptBox = [];    //存放脚本信息待下一步处理
 
 
 body.forEach((x, y, z) => {
@@ -468,7 +459,7 @@ if (jsConverter != null)	{
 	for (let i=0; i < jsConverter.length; i++) {
   const elem = jsConverter[i];
 	if (x.indexOf(elem) != -1){
-		x = x.replace(/\x20(https?|ftp|file)(:\/\/.+\.js)/g,` $1$2_script-converter-${jsctype}.js`);
+		x = x.replace(/\x20(https?|ftp|file)(:\/\/.+\/)(.+?\.js)/g,` http://script.hub/convert/_start_/$1$2$3/_end_/$3?type=qx-script&target=surge-script`);
 	}else{};
 };//循环结束
 }else{};//开启脚本转换结束
@@ -478,8 +469,7 @@ if (jsConverter2 != null)	{
 	for (let i=0; i < jsConverter2.length; i++) {
   const elem = jsConverter2[i];
 	if (x.indexOf(elem) != -1){
-        jsctype = jsctype.toUpperCase();
-		x = x.replace(/\x20(https?|ftp|file)(:\/\/.+\.js)/g,` $1$2_script-converter-${jsctype}.js`);
+		x = x.replace(/\x20(https?|ftp|file)(:\/\/.+\/)(.+?\.js)/g,` http://script.hub/convert/_start_/$1$2$3/_end_/$3?type=qx-script&target=surge-script&wrap_response=true`);
 	}else{};
 };//循环结束
 }else{};//开启脚本转换2结束
@@ -573,11 +563,11 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
                 
                 if (isStashiOS){
 					
-				rebody = x.match(/\x20script[^\s]*(-body|-analyze)/) ? 'require-body: true' : '';
+				rebody = x.match(/\x20script[^\s]*(-body|-analyze)/) ? 'true' : 'false';
 				
-				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? 'max-size: 3145728' : '';
+				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? '3145728' : '0';
 				
-				proto = js.match(/proto\.js/i) ? 'binary-mode: true' : '';
+				proto = js.match(/proto\.js/i) ? 'true' : 'false';
 				};
 				
 				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
@@ -591,13 +581,9 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					script.push(
 						`${noteK}${scname}_${y} = type=http-${sctype}, pattern=${ptn}${rebody}${size}${proto}, script-path=${js}, timeout=60, script-update-interval=0`);
 				}else if (isStashiOS){
-				z[y - 1]?.match(/^#/) && script.push("    " + z[y - 1]);
-					
-				script.push(
-						`${noteK4}- match: ${ptn}${noteKn6}name: ${scname}_${y}${noteKn6}type: ${sctype}${noteKn6}timeout: 30${noteKn6}${rebody}${noteKn6}${size}${noteKn6}${proto}`
-				);
-				providers.push(
-						`${noteK2}${scname}_${y}:${noteKn4}url: ${js}${noteKn4}interval: 86400`);
+			
+			let noteKstatus = noteKn4.match(/#/) ? 'true' : 'false';
+			scriptBox.push({"noteK":noteKstatus,"jsurl":js,"matchptn":ptn,"name":scname + "_" + y,"type":sctype,"requirebody":rebody,"maxsize":size,"binarymode":proto})
 				};
 				
 				break;
@@ -663,8 +649,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				}else if (isStashiOS){
 				z[y - 1]?.match(/^#/) && script.push("    " + z[y - 1]);
-				script.push(`${noteK4}- match: ${reHdPtn}${noteKn6}name: replaceHeader_${y}${noteKn6}type: ${reHdType}${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}${reHdArg1}->${reHdArg2}`);
-				providers.push(`${noteK2}replaceHeader_${y}:${noteKn4}url: https://raw.githubusercontent.com/xream/scripts/main/surge/modules/replace-header/index.js${noteKn4}interval: 86400`	);				
+				script.push(`${noteK4}- match: ${reHdPtn}${noteKn6}name: "replace-Header"${noteKn6}type: ${reHdType}${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}${reHdArg1}->${reHdArg2}`);
+				providers.push(`${noteK2}"replace-Header":${noteKn4}url: https://raw.githubusercontent.com/xream/scripts/main/surge/modules/replace-header/index.js${noteKn4}interval: 86400`	);				
 				};
 				break;
 				
@@ -701,10 +687,10 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				z[y - 1]?.match(/^#/) && script.push("    " + z[y - 1]);
 				
 				script.push(
-					`${noteK4}- match: ${ptn}${noteKn6}name: ${scname}_${y}${noteKn6}type: request${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}type=text/json&url=${arg}`)
+					`${noteK4}- match: ${ptn}${noteKn6}name: "echo-response"${noteKn6}type: request${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}type=text/json&url=${arg}`)
 				
 				providers.push(
-							`${noteK2}${scname}_${y}:${noteKn4}url: https://raw.githubusercontent.com/xream/scripts/main/surge/modules/echo-response/index.js${noteKn4}interval: 86400`);
+							`${noteK2}"echo-response":${noteKn4}url: https://raw.githubusercontent.com/xream/scripts/main/surge/modules/echo-response/index.js${noteKn4}interval: 86400`);
 				}; 
 
 			}else{others.push(x)};
@@ -765,9 +751,9 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					z[y - 1]?.match(/^#/) && script.push("    " + z[y - 1]);
 					
 					script.push(
-							`${noteK4}- match: ${reBdPtn}${noteKn6}name: replaceBody_${y}${noteKn6}type: ${reBdType}${noteKn6}timeout: 30${noteKn6}require-body: true${noteKn6}max-size: 3145728${noteKn6}argument: |-${noteKn8}${reBdArg1}->${reBdArg2}`);
+							`${noteK4}- match: ${reBdPtn}${noteKn6}name: "replace-Body"${noteKn6}type: ${reBdType}${noteKn6}timeout: 30${noteKn6}require-body: true${noteKn6}max-size: 3145728${noteKn6}argument: |-${noteKn8}${reBdArg1}->${reBdArg2}`);
 					providers.push(
-							`${noteK2}replaceBody_${y}:${noteKn4}url: https://gitlab.com/lodepuly/vpn_tool/-/raw/main/Resource/Script/CommonScript/replace-body.js${noteKn4}interval: 86400`);	
+							`${noteK2}"replace-Body":${noteKn4}url: https://gitlab.com/lodepuly/vpn_tool/-/raw/main/Resource/Script/CommonScript/replace-body.js${noteKn4}interval: 86400`);	
 					};
                     }else if (type.match(/\x20(https?|ftp|file)/)){
 //定时任务                    
@@ -798,11 +784,9 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				script.push(
 						`${noteK}cron "${cronExp}" script-path=${cronJs}, timeout=60, tag=${croName}`);
 				}else if (isStashiOS){
-				z[y - 1]?.match(/^#/) && cron.push("    " + z[y - 1]);
-				cron.push(
-						`${noteK4}- name: ${croName}${noteKn6}cron: "${cronExp}"${noteKn6}timeout: 60`);
-				providers.push(
-						`${noteK2}${croName}:${noteKn4}url: ${cronJs}${noteKn4}interval: 86400`);	};
+					let noteKstatus = noteKn4.match(/#/) ? 'true' : 'false';
+					
+scriptBox.push({"noteK":noteKstatus,"jsurl":cronJs,"name":croName + "_" + y,"cron":cronExp});	};
                     };//定时任务转换结束
 				}
 		} //switch结束
@@ -902,6 +886,40 @@ ${MITM}`
     };
 	
 	URLRewrite = (URLRewrite[0] || '') && `  rewrite:\n${URLRewrite.join("\n")}`;
+	
+	
+	
+//处理脚本名字
+let urlMap = {};
+
+for (let i = 0; i < scriptBox.length; i++) {
+  let url = scriptBox[i].jsurl;
+
+  if (urlMap[url]) {
+    scriptBox[i].name = urlMap[url];
+  } else {
+    urlMap[url] = scriptBox[i].name;
+  }
+};
+
+for (let i = 0; i < scriptBox.length; i++) {
+	let noteKn4,noteKn6,noteK2
+	if (scriptBox[i].noteK == "true"){
+		noteKn4 = "\n#    ";noteKn6 = "\n#      ";noteK2 = "#  ";
+	}else{noteKn4 = "\n    ";noteKn6 = "\n      ";noteK2 = "  ";}
+	if (scriptBox[i].matchptn !== undefined){
+	script.push(`${noteKn4}- match: ` + scriptBox[i].matchptn + `${noteKn6}name: "` + scriptBox[i].name + `"${noteKn6}type: ` + scriptBox[i].type + `${noteKn6}timeout: 30` + `${noteKn6}require-body: ` + scriptBox[i].requirebody + `${noteKn6}max-size: ` + scriptBox[i].maxsize + `${noteKn6}binary-mode: ` + scriptBox[i].binarymode);
+	
+	providers.push(`${noteK2}"` + scriptBox[i].name + '":' + `${noteKn4}url: ` + scriptBox[i].jsurl + `${noteKn4}interval: 86400`);
+	}else{
+		cron.push(`${noteKn4}- name: "` + scriptBox[i].name + `"${noteKn6}cron: "` + scriptBox[i].cronExp + `"${noteKn6}timeout: 60`);
+		
+		providers.push(`${noteK2}"` + scriptBox[i].name + '":' + `${noteKn4}url: ` + scriptBox[i].jsurl + `${noteKn4}interval: 86400`);
+	}
+
+};
+
+providers = [...new Set(providers)];
     
 	script = (script[0] || '') && `  script:\n${script.join("\n\n")}`;
     
