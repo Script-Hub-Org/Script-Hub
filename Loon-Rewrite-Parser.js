@@ -403,6 +403,7 @@ let fileName = "";     //文件名
 let mock2Reject = "";  //Mock转reject类型
 let Urx2Reject = "";   //URL-REGEX转reject
 let rewType = "";      //302/307/header重写类型
+let scriptBox = [];    //存放脚本信息待下一步处理
 
 
 body.forEach((x, y, z) => {
@@ -593,11 +594,11 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 
 				}else if (isStashiOS){
 
-				proto = x.replace(/\x20/g,'').match('binary-body-mode=(true|1)') ? 'binary-mode: true' : '';
+				proto = x.replace(/\x20/g,'').match('binary-body-mode=(true|1)') ? 'true' : 'false';
 
-				rebody = x.replace(/\x20/g,'').match('requires-body=(true|1)') ? 'require-body: true' : '';
+				rebody = x.replace(/\x20/g,'').match('requires-body=(true|1)') ? 'true' : 'false';
 				
-				size = x.replace(/\x20/g,'').match('requires-body=(true|1)') ? 'max-size: 3145728' : '';
+				size = x.replace(/\x20/g,'').match('requires-body=(true|1)') ? '3145728' : '0';
                 
             if (nArgTarget != null){
 	for (let i=0; i < nArgTarget.length; i++) {
@@ -605,17 +606,13 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 	if (x.indexOf(elem) != -1){
         arg = `${noteKn6}argument: |-${noteKn8}` + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
-
-				script.push(
-					`${noteKn4}- match: ${ptn}${noteKn6}name: ${scname}_${y}${noteKn6}type: ${sctype}${noteKn6}timeout: 30${noteKn6}${rebody}${noteKn6}${size}${arg}${noteKn6}${proto}`
-			);
-			providers.push(
-					`${noteK2}${scname}_${y}:${noteKn4}url: ${js}${noteKn4}interval: 86400`
-			);
+			
+			let noteKstatus = noteKn4.match(/#/) ? 'true' : 'false';
+			scriptBox.push({"noteK":noteKstatus,"jsurl":js,"matchptn":ptn,"name":scname + "_" + y,"type":sctype,"requirebody":rebody,"maxsize":size,"binarymode":proto,"argument":arg})
 				};
 
 				}else{};//整个http-re结束
-				
+			
 				break;
 				
 //HeaderRewrite				
@@ -668,14 +665,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				script.push(`${noteK}cron "${cronExp}" script-path=${cronJs}, timeout=60, tag=${croName}`);
                 
                 }else if (isStashiOS){
-				
-				cron.push(
-						`${noteKn4}- name: ${croName}${noteKn6}cron: "${cronExp}"${noteKn6}timeout: 60`
-				);
-				providers.push(
-						`${noteK2}${croName}:${noteKn4}url: ${cronJs}${noteKn4}interval: 86400`
-				);
-                    
+scriptBox.push({"jsurl":cronJs,"name":croName + "_" + y,"cron":cronExp});
                 }else if (isSurgeiOS || isShadowrocket){
                     script.push(
                         `${noteK}${croName} = type=cron, cronexp="${cronExp}", script-path=${cronJs}, timeout=60, wake-system=1`
@@ -926,6 +916,38 @@ ${MITM}`
     General = (General[0] || '') && `${General.join("\n")}`;
     
     rules = (rules[0] || '') && `rules:\n${rules.join("\n")}`;
+	
+//处理脚本名字
+let urlMap = {};
+
+for (let i = 0; i < scriptBox.length; i++) {
+  let url = scriptBox[i].jsurl;
+
+  if (urlMap[url]) {
+    scriptBox[i].name = urlMap[url];
+  } else {
+    urlMap[url] = scriptBox[i].name;
+  }
+};
+
+for (let i = 0; i < scriptBox.length; i++) {
+	let noteKn4,noteKn6,noteK2
+	if (scriptBox[i].noteK == "true"){
+		noteKn4 = "\n#    ";noteKn6 = "\n#      ";noteK2 = "#  ";
+	}else{noteKn4 = "\n    ";noteKn6 = "\n      ";noteK2 = "  ";}
+	if (scriptBox[i].matchptn !== undefined){
+	script.push(`${noteKn4}- match: ` + scriptBox[i].matchptn + `${noteKn6}name: "` + scriptBox[i].name + `"${noteKn6}type: ` + scriptBox[i].type + `${noteKn6}timeout: 30` + `${noteKn6}require-body: ` + scriptBox[i].requirebody + `${noteKn6}max-size: ` + scriptBox[i].maxsize + `${noteKn6}binary-mode: ` + scriptBox[i].binarymode + `${noteKn6}` + scriptBox[i].argument);
+	
+	providers.push(`${noteK2}"` + scriptBox[i].name + '":' + `${noteKn4}url: ` + scriptBox[i].jsurl + `${noteKn4}interval: 86400`);
+	}else{
+		cron.push(`${noteKn4}- name: "` + scriptBox[i].name + `"${noteKn6}cron: "` + scriptBox[i].cronExp + `"${noteKn6}timeout: 60`);
+		
+		providers.push(`${noteK2}"` + scriptBox[i].name + '":' + `${noteKn4}url: ` + scriptBox[i].jsurl + `${noteKn4}interval: 86400`);
+	}
+
+};
+
+providers = [...new Set(providers)];
 
 script = (script[0] || '') && `  script:\n${script.join("\n\n")}`;
 
