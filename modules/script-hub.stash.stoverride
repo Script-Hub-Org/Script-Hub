@@ -3,10 +3,8 @@ desc: "https://script.hub"
 
 http:
   force-http-engine:
-    - "script.hub:80"
-    - "script.hub:443"
-    - "*.script.hub:80"
-    - "*.script.hub:443"
+    - "script.hub"
+    - "*.script.hub"
 
   mitm:
     - "script.hub"
