@@ -1000,7 +1000,7 @@ textarea {
           }
         })
         // alert("✅ 已重置");
-        this.resetInfo = '✅'
+        this.resetInfo = '重置'
         setTimeout(() => {
           this.resetInfo = ''
         }, 1000)
@@ -1010,9 +1010,9 @@ textarea {
 
         copyText.select();
         copyText.setSelectionRange(0, 99999); // For mobile devices
-        document.activeElement.blur();
+        // document.activeElement.blur();
         navigator.clipboard.writeText(copyText.value);
-        this.copyInfo = '✅'
+        this.copyInfo = '复制'
         setTimeout(() => {
           this.copyInfo = ''
         }, 1000)
