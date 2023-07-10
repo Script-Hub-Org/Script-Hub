@@ -9,79 +9,61 @@ http:
     - "*.script.hub:443"
 
   mitm:
-    - "github.com"
-    - "raw.githubusercontent.com"
-    - "gitlab.com"
-    - "gist.githubusercontent.com"
     - "script.hub"
     - "*.script.hub"
 
   script:
     - match: ^https?:\/\/script\.hub\/$
-      name: "Script-hub"
+      name: "Script Hub: 前端"
       type: request
       timeout: 30
 
     - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite
-      name: "QX转换Stash"
+      name: "Script Hub: QX转换Stash"
       type: request
       timeout: 30
-      require-body: true
-      max-size: 3145728
+      require-body: false
 
     - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=loon-plugin
-      name: "Loon转换Stash"
+      name: "Script Hub: Loon转换Stash"
       type: request
       timeout: 30
-      require-body: true
-      max-size: 3145728
+      require-body: false
 
     - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=surge-module
-      name: "Surge转换Stash"
+      name: "Script Hub: Surge转换Stash"
       type: request
       timeout: 30
-      require-body: true
-      max-size: 3145728
+      require-body: false
 
     - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set
-      name: "规则集转换"
+      name: "Script Hub: 规则集转换"
       type: request
       timeout: 30
-      require-body: true
-      max-size: 3145728
+      require-body: false
 
-    - match: _script-converter-(stash|surge|loon|shadowrocket)\.js$
-      name: "脚本转换"
+    - match: ^https?:\/\/script\.hub\/convert\/
+      name: "Script Hub: 脚本转换"
       type: request
       timeout: 30
-      require-body: true
-      max-size: 3145728
-
-    - match: _script-converter-(STASH|SURGE|LOON|SHADOWROCKET)\.js$
-      name: "脚本转换"
-      type: request
-      timeout: 30
-      require-body: true
-      max-size: 3145728
-      argument: |-
-        "wrap_response=true"
+      require-body: false
 
 script-providers:
-  "Script-hub":
+  "Script Hub: 前端":
     url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js
     interval: 86400
-  "QX转换Stash":
+  "Script Hub: QX转换Stash":
     url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js
     interval: 86400
-  "Loon转换Stash":
+  "Script Hub: Loon转换Stash":
     url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.js
     interval: 86400
-  "Surge转换Stash":
+  "Script Hub: Surge转换Stash":
     url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.js
     interval: 86400
-  "规则集转换":
+  "Script Hub: 规则集转换":
     url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.js
     interval: 86400
-  "脚本转换":
+  "Script Hub: 脚本转换":
     url: https://raw.githubusercontent.com/xream/scripts/main/surge/modules/script-converter/script-converter.js
     interval: 86400
