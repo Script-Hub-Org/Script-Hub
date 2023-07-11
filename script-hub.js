@@ -25,10 +25,11 @@ const html = `
     "Nimbus Sans L", Roboto, "Noto Sans", "Segoe UI", Arial, Helvetica,
     "Helvetica Neue", sans-serif;
   --mono-font: Consolas, Menlo, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
-  --standard-border-radius: 5px;
+  --standard-border-radius: 13px;
 
   /* Default (light) theme */
   --bg: #eef1f5;
+  --kbg: #6e8ed712;
   --accent-bg: #d8e3f17a;
   --text: #484848;
   --text-light: #585858;
@@ -38,6 +39,8 @@ const html = `
   --preformatted: #272727;
   --marked: #ffdd33;
   --disabled: #efefef;
+  --inputs:#d2d7e2b0;
+  --selectc:#e4e4ee85;
 }
 
 /* Dark theme */
@@ -46,14 +49,17 @@ const html = `
   :root {
     color-scheme: dark;
     --bg: #1a1a1f;
-    --accent-bg: #333339;
+    --kbg: #27272ca3;
+    --accent-bg: #313139a3;
     --text: #d3cdcd;
     --text-light: #ababab;
     --accent: #9093ce;
     --code: #ba8a6d;
     --preformatted: #ccc;
     --disabled: #111;
-    --border: #54566692;
+    --border: none;
+    --inputs:#41414657;
+    --selectc:#1f1f21;
   }
   /* Add a bit of transparency so light media isn't so glaring in dark mode */
   img,
@@ -91,7 +97,7 @@ body {
   font-size: 1.05rem;
   line-height: 1.5;
   display: grid;
-  grid-template-columns: 1fr min(45rem, 90%) 1fr;
+  grid-template-columns: 1fr min(45rem, 92%) 1fr;
   margin: 0;
 }
 body > * {
@@ -442,12 +448,14 @@ textarea,
 select,
 input {
   font-size: inherit;
-  font-family: inherit;
+  /* font-family: inherit; */
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   color: var(--text);
-  background-color: var(--bg);
-  border: 1px solid var(--border);
+  /* background-color: var(--bg); */
+  background-color: var(--inputs);
+  border: none;
+  /* border: 1px solid var(--border); */
   border-radius: var(--standard-border-radius);
   box-shadow: none;
   max-width: 100%;
@@ -727,7 +735,12 @@ dialog::backdrop {
 }
 
 .flex-container {
-      display: flex;
+  background: var(--selectc);
+  display: flex;
+  border-radius: 15px;
+  padding: 0.5rem 0rem 0.5rem 0.25rem;
+  margin-top: 12px;
+
 }
 
 .flex-container>div {
@@ -737,8 +750,11 @@ dialog::backdrop {
 
 textarea {
       height: 6em;
+      resize: vertical;
 }
-
+textarea::-webkit-resizer {
+  background: transparent;
+}
 .button-over {
   position: relative;
   top: -2px;
@@ -752,24 +768,25 @@ textarea {
   <body style="margin-bottom: 160px;">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
-
     <div id="app">
-
       <a href="https://github.com/Script-Hub-Org/Script-Hub"><h1 style="margin-bottom: 0;">Script Hub</h1></a>
       <p>重写 & 规则集转换 <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki" target="_blank">查看文档</a></small></p>
 
       <div>
-        <code>来源链接: </code>
-        <textarea id="src" v-model.lazy="src" placeholder="请填写URL链接"></textarea>
+         <code style=" position: relative; top: -4px; ">来源链接: </code> 
+        <textarea id="src" v-model.lazy="src" placeholder="请填写来源URL链接"></textarea>
       </div>
-    <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B" target="_blank">如何选择类型</a></small>
-    <div class="flex-container">
+      <!--font-size: 16px;  style=" position: relative; top: -3px; "-->
+      <small style=" position: relative; top: 7px; ">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B" target="_blank">如何选择类型</a></small>
+      <div class="flex-container">
       <div>
+      
         <code>&nbsp;来源类型: </code>
         <div v-for="item in types">
             <input type="radio" :id="'type-' + item.value" :value="item.value" v-model.lazy="type" />
             <label :for="'type-' + item.value" class="radio-label">{{item.label}}</label>
         </div>
+
       </div>
 
       <div>
@@ -784,10 +801,10 @@ textarea {
     
 
     <template v-if="!target || type === 'qx-rewrite'">
-        <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">什么时候应该启用脚本转换</a></small>
+        <small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">什么时候应该启用脚本转换</a></small>
         <details>
           <summary>启用脚本转换(仅在转换 QX 资源时可用)</summary>
-          <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">脚本转换 1 和 2 怎么选</a></small>
+          <small> &#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">脚本转换 1 和 2 怎么选</a></small>
           <details>
             <summary>启用脚本转换 1(仅在转换 QX 资源时可用)</summary>
             <span>根据关键词为脚本启用脚本转换(多关键词以"+"分隔，主要用途 将使用了QX独有api的脚本转换为通用脚本，谨慎开启，大部分脚本本身就通用，无差别启用，只会徒增功耗)</span>
@@ -811,7 +828,7 @@ textarea {
       </template>
 
     <!-- position: fixed; -->
-    <div style="padding: 1rem;  bottom: 0rem; margin-right: 0rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
+    <div style="padding: 1rem;bottom: 0rem;margin-right: 0rem;background-color: var(--kbg);/* border: 1px solid var(--border); */border-radius: var(--standard-border-radius);">
         <a v-if="result" :href="result" target="_blank" style="margin: 0 0.5rem 0 0">打开链接</a>
         <a v-if="result && target === 'shadowrocket-module' " :href=" 'https://api.boxjs.app/shadowrocket/install?module=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Shadowrocket)</a>
         <a v-if="result && target === 'loon-plugin' " :href=" 'https://www.nsloon.com/openloon/import?plugin=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Loon)</a>
