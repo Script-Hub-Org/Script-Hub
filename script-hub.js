@@ -779,7 +779,7 @@ textarea {
         <a v-if="result" :href="result" target="_blank" style="margin: 0 0.5rem 0 0">打开链接</a>
         <a v-if="result && target === 'shadowrocket-module' " :href=" 'https://api.boxjs.app/shadowrocket/install?module=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Shadowrocket)</a>
         <a v-if="result && target === 'loon-plugin' " :href=" 'https://www.nsloon.com/openloon/import?plugin=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Loon)</a>
-        <textarea id="result" :value="result" placeholder="结果"></textarea>
+        <textarea id="result" :value="result" placeholder="结果" readonly></textarea>
         
         <button v-if="copyInfo">{{copyInfo}}</button>
         <button v-else @click="copy">复制</button>
@@ -940,7 +940,7 @@ textarea {
 
     </div>
     <footer>
-      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub V 1.02</a></p>
+      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub V 1.03</a></p>
     </footer>
     <script>
       const { createApp, ref } = Vue
