@@ -8,16 +8,29 @@
 插件图标用的 @Keikinn 的 StickerOnScreen项目 以及 @Toperlock 的图标库项目，感谢，感谢
 宝可梦插件图标游戏 由ChatGPT @chengkongyiban @Toperlock 共同完成 再次感谢@xream佬
 ***************************/
-const isEgern = 'object' == typeof egern;
-const isLanceX = 'undefined' !== typeof $native;
-if (isLanceX){
-	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"};
-};
-if (isEgern){$rocket = [];};
-const isStashiOS = 'undefined' !== typeof $environment && $environment['stash-version'];
-const isSurgeiOS = 'undefined' !== typeof $environment && $environment['surge-version'];
-const isShadowrocket = 'undefined' !== typeof $rocket;
-const isLooniOS = 'undefined' != typeof $loon;
+
+const url = $request.url;
+var req = $request.url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
+	console.log(req);
+	
+//获取参数
+const queryObject = parseQueryString(url);
+const isSurgeiOS = queryObject.target == "surge-module";
+const isStashiOS = queryObject.target == "stash-stoverride";
+const isLooniOS = queryObject.target == "loon-plugin";
+const isShadowrocket = queryObject.target == "shadowrocket-module";
+var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;
+var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
+var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
+var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/ *, */) : null;
+var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/ *, */) : null;
+var delNoteSc = queryObject.del != undefined ? true : false;
+var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;
+var nCronExp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;
+var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
+var noCache = queryObject.nocache != undefined ? true : false;
+var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
+var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 const iconStatus = $persistentStore.read("启用插件随机图标") ?? "启用";
 const iconReplace = $persistentStore.read("替换原始插件图标");
 const iconLibrary1 = $persistentStore.read("插件随机图标合集") ?? "Doraemon(100P)";
@@ -239,26 +252,9 @@ function getPokemonByIcon(icon) {
 
 var name = "";
 var desc = "";
-const url = $request.url;
-var req = $request.url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-	console.log(req);
-	
+var icon = "";
 var rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
 
-//获取参数
-const queryObject = parseQueryString(url);
-var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;
-var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
-var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
-var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/ *, */) : null;
-var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/ *, */) : null;
-var delNoteSc = queryObject.del == "true" ? true : false;
-var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;
-var nCronExp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;
-var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
-var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
-var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
-var icon = "";
 //缓存有效期相关
 var currentTime = new Date();
 var seconds = Math.floor(currentTime.getTime() / 1000); // 将毫秒转换为秒
@@ -309,8 +305,10 @@ console.log("插件图标：" + pluginIcon);
 
 !(async () => {
   let body
-  
-  if (oCache == null){
+
+  if (noCache == true){
+	body = await http(req);
+}else if (oCache == null){
     //console.log("一个缓存也没有")
   body = await http(req);
   nCache[0].url = req;
