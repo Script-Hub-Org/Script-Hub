@@ -782,7 +782,8 @@ textarea {
         <textarea id="result" :value="result" placeholder="结果"></textarea>
         
         <button v-if="copyInfo">{{copyInfo}}</button>
-            <button v-else @click="copy">全选{{isHttps ? "&复制" : ""}}</button>
+        <button v-else @click="copy">复制</button>
+            <!-- <button v-else @click="copy">全选{{isHttps ? "&复制" : ""}}</button> -->
             <!-- <small v-if="!isHttps"> https://script.hub 可复制</small> -->
             &nbsp;&nbsp;
             <button v-if="resetInfo">{{resetInfo}}</button>
@@ -1007,19 +1008,17 @@ textarea {
       },
       copy(){
         const copyText = document.getElementById("result");
-
         copyText.select();
         copyText.setSelectionRange(0, 99999); // For mobile devices
-        // document.activeElement.blur();
-        navigator.clipboard.writeText(copyText.value);
-        this.copyInfo = '复制'
+        // navigator.clipboard.writeText(copyText.value);
+        document.execCommand("copy");
+        this.copyInfo = '成功'
         setTimeout(() => {
           this.copyInfo = ''
         }, 1000)
         // if (this.isHttps) {
         //   alert("✅ 已复制");
         // }
-      
       }
     },
     watch: {
