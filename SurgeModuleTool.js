@@ -196,8 +196,12 @@ for await (const [index, file] of files.entries()) {
         alert = new Alert()
         alert.title = `✅ ${nameInfo}`
         alert.message = `${descInfo}\n${file}`
+        alert.addAction("打开 Surge")
         alert.addCancelAction("关闭")
-        await alert.presentAlert()
+        idx = await alert.presentAlert()
+        if (idx == 0) {
+          Safari.open('surge://')
+        }
       }
     } catch (e) {
       console.log(`\n❌ ${originalName || ''}\n${file}`);
