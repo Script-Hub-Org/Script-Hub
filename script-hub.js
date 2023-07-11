@@ -88,7 +88,7 @@ html {
 body {
   color: var(--text);
   background-color: var(--bg);
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   line-height: 1.5;
   display: grid;
   grid-template-columns: 1fr min(45rem, 90%) 1fr;
@@ -401,7 +401,7 @@ details[open] > summary + * {
 
 details[open] > summary {
   margin-bottom: 0.5rem;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
 }
 
 details[open] > :last-child {
@@ -738,6 +738,13 @@ textarea {
       height: 6em;
 }
 
+.button-over {
+  position: relative;
+  top: -2px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
 </style>
   </head>
   
@@ -929,12 +936,12 @@ textarea {
 
       <div v-if="!target || target === 'rule-set' ">
         <input type="checkbox" id="nore" v-model="nore" />
-        <label for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
+        <label class="button-over" for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
       </div>
 
       <div v-if="!target || target === 'surge-script' ">
         <input type="checkbox" id="wrap_response" v-model="wrap_response" />
-        <label for="wrap_response">总是会在 $done(body) 里包一个 response</label>
+        <label class="button-over" for="wrap_response">总是会在 $done(body) 里包一个 response</label>
       </div>
 
 
