@@ -779,6 +779,7 @@ textarea {
         </div>
       </div>
     </div>
+    <br>
     
 
     <template v-if="!target || type === 'qx-rewrite'">
