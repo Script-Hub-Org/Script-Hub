@@ -371,7 +371,6 @@ if (body.match(/\/\*+\n[\s\S]*\n\*+\/\n/)){
 body = body.replace(/[\s\S]*(\/\*+\n[\s\S]*\n\*+\/\n)[\s\S]*/,"$1").match(/[^\r\n]+/g);
 }else{
     body = body.match(/[^\r\n]+/g);};
-    
 let pluginDesc = [];
 let httpFrame = "";
 let URLRewrite = [];
@@ -408,8 +407,7 @@ let reBdArg1 = "";     //用以匹配的headers
 let reBdArg2 = "";     //替换
 let scriptBox = [];    //存放脚本信息待下一步处理
 
-
-body.forEach((x, y, z) => {
+for await (var [y, x] of body.entries()) {
 	x = x.replace(/^ *(#|;|\/\/)/,'#').replace(/\x20.+url-and-header\x20/,' url ').replace(/\x20+url\x20+/," url ").replace(/^hostname\x20*=/,"hostname=").replace(/(^[^#].+)\x20+\/\/.+/,"$1");
 //去掉注释
 if (Pin0 != null)	{
@@ -540,7 +538,6 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
             
 			case " url script-":
 //脚本
-
 				sctype = x.match(' script-response') ? 'response' : 'request';
 				
 				urlInNum = x.replace(/\x20{2,}/g," ").split(" ").indexOf("url");
@@ -551,30 +548,36 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					ptn = ptn.replace(/(.+,.+)/,'"$1"');};
 
 				js = x.replace(/\x20{2,}/g," ").split(" ")[urlInNum + 2];
-                
+				
+				
+				
 				rebody = x.match(/\x20script[^\s]*(-body|-analyze)/) ? ', requires-body=true' : '';
 				
 				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? ', max-size=3145728' : '';
 				
-				proto = js.match(/proto\.js/i) ? ', binary-body-mode=true' : '';
-                
+				proto = await isBinaryMode(js);
+				
+				if ((isSurgeiOS || isLooniOS || isShadowrocket) && proto == "true"){
+					proto = ", binary-body-mode=true";
+				};
+				
                 if (isStashiOS){
 					
 				rebody = x.match(/\x20script[^\s]*(-body|-analyze)/) ? 'true' : 'false';
 				
 				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? '3145728' : '0';
-				
-				proto = js.match(/proto\.js/i) ? 'true' : 'false';
 				};
 				
 				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
 				
 				if (isLooniOS){			
-				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
+				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 					script.push(
 						`${noteK}http-${sctype} ${ptn} script-path=${js}${rebody}${proto}, timeout=60 ,tag=${scname}_${y}`);
-				}else if (isSurgeiOS || isShadowrocket){			
-				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
+				}else if (isSurgeiOS || isShadowrocket){	
+									
+				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
+
 					script.push(
 						`${noteK}${scname}_${y} = type=http-${sctype}, pattern=${ptn}${rebody}${size}${proto}, script-path=${js}, timeout=60, script-update-interval=0`);
 				}else if (isStashiOS){
@@ -590,10 +593,10 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 			case " url reject-":
 				
 				if (isShadowrocket || isLooniOS){
-				z[y - 1]?.match(/^#/) && URLRewrite.push(z[y - 1]);
+				body[y - 1]?.match(/^#/) && URLRewrite.push(body[y - 1]);
 				URLRewrite.push(x.replace(/\x20{2,}/g," ").replace(/(^#)?(.*?)\x20url\x20(reject-200|reject-img|reject-dict|reject-array)/, `${noteK}$2 - $3`));
 				}else if(isSurgeiOS){
-					z[y - 1]?.match(/^#/) && MapLocal.push(z[y - 1]);
+					body[y - 1]?.match(/^#/) && MapLocal.push(body[y - 1]);
                     
 				if (x.match(/dict$/)){
 					rejectType = "https://raw.githubusercontent.com/mieqq/mieqq/master/reject-dict.json"
@@ -606,7 +609,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				};
 				MapLocal.push(x.replace(/\x20{2,}/g," ").replace(/(^#)?(.+?)\x20url\x20reject-.+/, `${noteK}$2 data="${rejectType}"`));	
 				}else if (isStashiOS){
-				z[y - 1]?.match(/^#/) && URLRewrite.push("    " + z[y - 1]);
+				body[y - 1]?.match(/^#/) && URLRewrite.push("    " + body[y - 1]);
 				URLRewrite.push(x.replace(/\x20{2,}/g," ").replace(/(^#)?(.*?)\x20url\x20(reject-200|reject-img|reject-dict|reject-array)/, `${noteK4}- >-${noteKn6}$2 - $3`));
 				};
 				break;
@@ -614,11 +617,11 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				case " url reject":
                 
 				if (isSurgeiOS || isShadowrocket || isLooniOS){
-				z[y - 1]?.match(/^#/) && URLRewrite.push(z[y - 1]);
+				body[y - 1]?.match(/^#/) && URLRewrite.push(body[y - 1]);
 				
 				URLRewrite.push(x.replace(/\x20{2,}/g," ").replace(/(^#)?(.+?)\x20url\x20reject$/, `${noteK}$2 - reject`));
 				}else if (isStashiOS){
-				z[y - 1]?.match(/^#/) && URLRewrite.push("    " + z[y - 1]);
+				body[y - 1]?.match(/^#/) && URLRewrite.push("    " + body[y - 1]);
 				
 				URLRewrite.push(x.replace(/\x20{2,}/g," ").replace(/(^#)?(.+?)\x20url\x20reject$/, `${noteK4}- >-${noteKn6}$2 - reject`));
 				}; 
@@ -638,14 +641,14 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				reHdArg2 = x.split(" " + reHdType + "-header ")[2];
 				
 				if (isLooniOS){
-				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
+				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				script.push(`${noteK}http-${reHdType} ${reHdPtn} script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/replace-header/index.js, timeout=60, tag=replaceHeader_${y}, argument="${reHdArg1}->${reHdArg2}"`);				
 				}else if (isSurgeiOS || isShadowrocket){
-				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
+				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				script.push(`${noteK}replaceHeader_${y} = type=http-${reHdType}, pattern=${reHdPtn}, script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/replace-header/index.js, timeout=60, argument="${reHdArg1}->${reHdArg2}"`);
 				
 				}else if (isStashiOS){
-				z[y - 1]?.match(/^#/) && script.push("    " + z[y - 1]);
+				body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 				script.push(`${noteK4}- match: ${reHdPtn}${noteKn6}name: "replace-Header"${noteKn6}type: ${reHdType}${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}${reHdArg1}->${reHdArg2}`);
 				providers.push(`${noteK2}"replace-Header":${noteKn4}url: https://raw.githubusercontent.com/xream/scripts/main/surge/modules/replace-header/index.js${noteKn4}interval: 86400`	);				
 				};
@@ -663,12 +666,12 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
                 
 				scname = arg.substring(arg.lastIndexOf('/') + 1, arg.lastIndexOf('.') );
 				if (isLooniOS){
-				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
+				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				
 				script.push(
 					`${noteK}http-request ${ptn} script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/echo-response/index.js, timeout=60, tag=${scname}_${y}, argument=type=text/json&url=${arg}`);
 				}else if (isSurgeiOS){
-				z[y - 1]?.match(/^#/) && MapLocal.push(z[y - 1]);
+				body[y - 1]?.match(/^#/) && MapLocal.push(body[y - 1]);
 
 				mockPtn = x.replace(/\x20{2,}/g," ").split(" url echo-response")[0].replace(/^#/,"");
 				
@@ -676,12 +679,12 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				MapLocal.push(`${noteK}${mockPtn} data="${dataCon}"`);
 				}else if (isShadowrocket){
-				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
+				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				
 				script.push(
 					`${noteK}${scname}_${y} = type=http-request, pattern=${ptn}, script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/echo-response/index.js, timeout=60, argument=type=text/json&url=${arg}`)
 				}else if (isStashiOS){
-				z[y - 1]?.match(/^#/) && script.push("    " + z[y - 1]);
+				body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 				
 				script.push(
 					`${noteK4}- match: ${ptn}${noteKn6}name: "echo-response"${noteKn6}type: request${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}type=text/json&url=${arg}`)
@@ -714,10 +717,10 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 			case " url 30":
 				
 				if (isLooniOS || isSurgeiOS || isShadowrocket){
-					z[y - 1]?.match(/^#/) && URLRewrite.push(z[y - 1]);
+					body[y - 1]?.match(/^#/) && URLRewrite.push(body[y - 1]);
 					URLRewrite.push(x.replace(/\x20{2,}/g," ").replace(/(^#)?(.*?)\x20url\x20(302|307)\x20(.+)/, `${noteK}$2 $4 $3`));
 				}else if (isStashiOS){
-				z[y - 1]?.match(/^#/) && URLRewrite.push("    " + z[y - 1]);
+				body[y - 1]?.match(/^#/) && URLRewrite.push("    " + body[y - 1]);
 					URLRewrite.push(x.replace(/\x20{2,}/g," ").replace(/(^#)?(.*?)\x20url\x20(302|307)\x20(.+)/, `${noteK4}- >-${noteKn6}$2 $4 $3`));
 				};
 				break;
@@ -736,16 +739,16 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				reBdArg2 = x.split(" " + reBdType + "-body ")[2];
 					if (isLooniOS){
-					z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
+					body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 						
 					script.push(
 							`${noteK}http-${reBdType} ${reBdPtn} script-path=https://gitlab.com/lodepuly/vpn_tool/-/raw/main/Resource/Script/CommonScript/replace-body.js, requires-body=true, timeout=60 ,tag=replaceBody_${y}, argument="${reBdArg1}->${reBdArg2}"`);
 					}else if (isSurgeiOS || isShadowrocket){
-					z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
+					body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 					script.push(
 							`${noteK}replaceBody_${y} = type=http-${reBdType}, pattern=${reBdPtn}, requires-body=true, max-size=3145728, script-path=https://gitlab.com/lodepuly/vpn_tool/-/raw/main/Resource/Script/CommonScript/replace-body.js, timeout=60, argument="${reBdArg1}->${reBdArg2}"`);
 					}else if (isStashiOS){
-					z[y - 1]?.match(/^#/) && script.push("    " + z[y - 1]);
+					body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 					
 					script.push(
 							`${noteK4}- match: ${reBdPtn}${noteKn6}name: "replace-Body"${noteKn6}type: ${reBdType}${noteKn6}timeout: 30${noteKn6}require-body: true${noteKn6}max-size: 3145728${noteKn6}argument: |-${noteKn8}${reBdArg1}->${reBdArg2}`);
@@ -773,11 +776,11 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				croName = cronJs.substring(cronJs.lastIndexOf('/') + 1, cronJs.lastIndexOf('.') );
 				
 				if (isSurgeiOS || isShadowrocket){
-				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
+				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				script.push(
 						`${noteK}${croName} = type=cron, cronexp="${cronExp}", script-path=${cronJs}, timeout=60, wake-system=1`);	
 				}else if (isLooniOS){
-				z[y - 1]?.match(/^#/) && script.push(z[y - 1]);
+				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				script.push(
 						`${noteK}cron "${cronExp}" script-path=${cronJs}, timeout=60, tag=${croName}`);
 				}else if (isStashiOS){
@@ -788,7 +791,7 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":cronJs,"name":croName + "_" + y,"cro
 				}
 		} //switch结束
 	
-}); //循环结束
+}; //循环结束
 
 if (isLooniOS){
     pluginDesc = (pluginDesc[0] || '') && `${pluginDesc.join("\n")}`;
@@ -992,3 +995,13 @@ function parseQueryString(url) {
 
   return params;
 };
+
+async function isBinaryMode(url) {
+  if (url.search(/-proto\.js/i) != -1) {
+	return "true"
+  } else {
+    const res = await http(url);
+	if (res.includes(".bodyBytes")){
+		return "true";
+	}else{return "false";}
+};}
