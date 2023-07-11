@@ -173,7 +173,7 @@ for await (const [index, file] of files.entries()) {
       }
       // console.log(res);
       res = addLineAfterLastOccurrence(res, `\n\n# 🔗 模块链接\n${subscribed.replace(/\n/g, "")}\n`)
-      content = `${res}`.replace(/^#\!desc\s&?=\s*/mi, `#!desc=🔗 [${new Date().toLocaleString()}] `)
+      content = `${res}`.replace(/^#\!desc\s*?=\s*/mi, `#!desc=🔗 [${new Date().toLocaleString()}] `)
       // console.log(content);
       if (filePath) {
         fm.writeString(filePath, content)  
