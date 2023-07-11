@@ -954,7 +954,7 @@ textarea {
 
     </div>
     <footer>
-      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.04</a></p>
+      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.06</a></p>
     </footer>
     <script>
       const { createApp, ref } = Vue
@@ -1072,27 +1072,13 @@ textarea {
         if (this.src && target && type) {
           const suffix = target.suffix || ''
           const pathType = this.target === 'surge-script' ? '/convert' : '/file'
-          function convertToValidFileName(str) {
-            // 替换非法字符为下划线
-            const invalidCharsRegex = /[\/:*?"<>|]/g;
-            const validFileName = str.replace(invalidCharsRegex, '_');
-
-            // 删除多余的点号
-            const multipleDotsRegex = /\.{2,}/g;
-            const fileNameWithoutMultipleDots = validFileName.replace(multipleDotsRegex, '.');
-
-            // 删除文件名开头和结尾的点号和空格
-            const leadingTrailingDotsSpacesRegex = /^[\s.]+|[\s.]+$/g;
-            const finalFileName = fileNameWithoutMultipleDots.replace(leadingTrailingDotsSpacesRegex, '');
-
-            return finalFileName;
-          }
+        
           const plainUrl = this.src.split('?')[0]
+
           let filename = this.filename || plainUrl.substring(plainUrl.lastIndexOf('/') + 1).split('.')[0]
           if (!filename) {
-            filename = 'untitled-' + new Date().toLocaleString()
+            filename = 'untitled-' + Date.now()
           }
-          filename = convertToValidFileName(filename)
 
           return this.baseUrl + pathType + '/_start_/' + this.src + '/_end_/' + encodeURIComponent(filename) + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
 
