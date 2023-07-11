@@ -33,54 +33,9 @@ Advanced Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and Shadowro
 
 支持 将 QX 脚本转换成 Surge 脚本(兼容)
 
-<details>
-<summary>截图预览</summary>
+## 文档
 
-| ![1](https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/screen-01.png) | ![2](https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/screen-02.png) |
-| :---: | :---: |
-| ① | ② |
-</details>
-
-<details>
-<summary>安装</summary>
-
-# Surge Egern LanceX 模块
-
-[https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule](https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule)
-
-# Shadowrocket 模块
-
-[https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule](https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule)
-
-# Stash 覆写
-
-[https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.stash.stoverride](https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.stash.stoverride)
-
-# Loon 插件
-
-[https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.loon.plugin](https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.loon.plugin)
-
-</details>
-
-<details>
-<summary>使用</summary>
-
-# 打开网页
-
-> 如果你已经完成了信任证书 开启 MitM 等常规操作
-
-应该可以正常访问 [https://script.hub](https://script.hub)
-
-> 如果你实在搞不定什么是信任证书 开启 MitM
-
-访问 [http://script.hub](http://script.hub) 也可以, 不保证功能完整性
-
-# 关于需要开启 binary-mode 的脚本说明:
-
-因为 qx 重写中对此类脚本没有特殊标记，仅能靠脚本名判断，如 Maasea 佬的 YouTube 去广告脚本没有以 proto.js 结尾，故转换后不会正确识别并开启  
- surge 模块及 loon 插件里的此类脚本可以正确识别并开启
-
-</details>
+[查看文档](https://github.com/Script-Hub-Org/Script-Hub/wiki)
 
 ## 鸣谢
 
