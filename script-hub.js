@@ -755,13 +755,13 @@ textarea {
     <div id="app">
 
       <a href="https://github.com/Script-Hub-Org/Script-Hub"><h1 style="margin-bottom: 0;">Script Hub</h1></a>
-      <p>重写 & 规则集转换</p>
+      <p>重写 & 规则集转换 <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki" target="_blank">查看文档</a></small></p>
 
       <div>
         <code>来源: </code>
         <textarea id="src" v-model="src" placeholder=""></textarea>
       </div>
-      
+    <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B" target="_blank">如何选择类型</a></small>
     <div class="flex-container">
       <div>
         <code>&nbsp;来源类型: </code>
@@ -779,7 +779,34 @@ textarea {
         </div>
       </div>
     </div>
-    <br>
+    
+
+    <template v-if="!target || type === 'qx-rewrite'">
+        <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">什么时候应该启用脚本转换</a></small>
+        <details>
+          <summary>启用脚本转换(仅在转换 QX 资源时可用)</summary>
+          <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">脚本转换 1 和 2 怎么选</a></small>
+          <details>
+            <summary>启用脚本转换 1(仅在转换 QX 资源时可用)</summary>
+            <span>根据关键词为脚本启用脚本转换(多关键词以"+"分隔，主要用途 将使用了QX独有api的脚本转换为通用脚本，谨慎开启，大部分脚本本身就通用，无差别启用，只会徒增功耗)</span>
+            <textarea id="jsc" v-model="jsc" placeholder=""></textarea>
+            <div>
+              <input type="checkbox" id="jsc_all" v-model="jsc_all" />
+              <label for="jsc_all">全部转换</label>
+            </div>
+          </details>
+
+          <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
+            <summary>启用脚本转换 2(仅在转换 QX 资源时可用)</summary>
+            <span>根据关键词为脚本启用脚本转换(与 <code>启用脚本转换 1</code> 的区别: 总是会在$done(body)里包一个response)</span>
+            <textarea id="jsc2" v-model="jsc2" placeholder=""></textarea>
+            <div>
+              <input type="checkbox" id="jsc2_all" v-model="jsc2_all" />
+              <label for="jsc2_all">全部转换</label>
+            </div>
+          </details>
+        </details>
+      </template>
 
     <!-- position: fixed; -->
     <div style="padding: 1rem;  bottom: 0rem; margin-right: 0rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: var(--standard-border-radius);">
@@ -859,31 +886,7 @@ textarea {
           <textarea id="hndel" v-model="hndel" placeholder=""></textarea>
         </details>
       </details>
-
-
-      <details v-if="!target || type === 'qx-rewrite'">
-        <summary>启用脚本转换(仅在转换 QX 资源时可用)</summary>
-        <details>
-          <summary>启用脚本转换 1(仅在转换 QX 资源时可用)</summary>
-          <span>根据关键词为脚本启用脚本转换(多关键词以"+"分隔，主要用途 将使用了QX独有api的脚本转换为通用脚本，谨慎开启，大部分脚本本身就通用，无差别启用，只会徒增功耗)</span>
-          <textarea id="jsc" v-model="jsc" placeholder=""></textarea>
-          <div>
-            <input type="checkbox" id="jsc_all" v-model="jsc_all" />
-            <label for="jsc_all">全部转换</label>
-          </div>
-        </details>
-
-        <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
-          <summary>启用脚本转换 2(仅在转换 QX 资源时可用)</summary>
-          <span>根据关键词为脚本启用脚本转换(与 <code>启用脚本转换 1</code> 的区别: 总是会在$done(body)里包一个response)</span>
-          <textarea id="jsc2" v-model="jsc2" placeholder=""></textarea>
-          <div>
-            <input type="checkbox" id="jsc2_all" v-model="jsc2_all" />
-            <label for="jsc2_all">全部转换</label>
-          </div>
-        </details>
-      </details>
-
+      
 
       <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
         <summary>修改定时任务</summary>
