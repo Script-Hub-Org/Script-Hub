@@ -548,27 +548,22 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					ptn = ptn.replace(/(.+,.+)/,'"$1"');};
 
 				js = x.replace(/\x20{2,}/g," ").split(" ")[urlInNum + 2];
-				
-				
-				
+
 				rebody = x.match(/\x20script[^\s]*(-body|-analyze)/) ? ', requires-body=true' : '';
 				
 				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? ', max-size=3145728' : '';
 				
-				proto = js.match(/proto\.js/i) ? ', binary-body-mode=true' : '';
-				
-				/*
+				proto = await isBinaryMode(js);
+			
 				if ((isSurgeiOS || isLooniOS || isShadowrocket) && proto == "true"){
 					proto = ", binary-body-mode=true";
 				};
-*/
-				
+
                 if (isStashiOS){
 					
 				rebody = x.match(/\x20script[^\s]*(-body|-analyze)/) ? 'true' : 'false';
 				
 				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? '3145728' : '0';
-				proto = js.match(/proto\.js/i) ? 'true' : 'false';
 				};
 				
 				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
@@ -1000,11 +995,15 @@ function parseQueryString(url) {
 };
 
 async function isBinaryMode(url) {
-  if (url.search(/-proto\.js/i) != -1) {
+  if (url.search(/proto/i) != -1) {
 	return "true"
-  } else {
+  } else if (url.search(/(tieba|youtube|bili|spotify)/i) != -1){
     const res = await http(url);
-	if (res.includes(".bodyBytes")){
+	if (res == undefined){
+		console.log("Script Hub QX 转换器 查询脚本链接失败");
+		return "false";
+	}else if (res.includes(".bodyBytes")){
 		return "true";
 	}else{return "false";}
-};}
+}else{return "false"};
+}
