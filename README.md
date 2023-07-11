@@ -17,9 +17,9 @@ Advanced Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and Shadowro
 
 👏🏻 欢迎加入社群进行交流讨论
 
-👥 群组 [张佩服应该判几年](https://t.me/zhangpeifu) & [折腾啥(群组)](https://t.me/zhetengsha_group)
+👥 群组 [那天我用石头砸了一下张佩服的头](https://t.me/zhangpeifu) & [折腾啥(群组)](https://t.me/zhetengsha_group)
 
-📢 频道 [那天我用石头砸了一下张佩服的头](https://t.me/h5683577) & [折腾啥(频道)](https://t.me/zhetengsha)
+📢 频道 [张佩服应该判几年](https://t.me/h5683577) & [折腾啥(频道)](https://t.me/zhetengsha)
 
 ## 简介
 
