@@ -474,25 +474,25 @@ select:not([multiple]) {
 
 /* checkbox and radio button style */
 input[type="checkbox"],
-/* input[type="radio"] {
+  input[type="radio"] {
   vertical-align: middle;
   position: relative;
   width: min-content;
-} */
+} 
 
 input[type="checkbox"] + label,
-/* input[type="radio"] + label {
+ input[type="radio"] + label {
   display: inline-block;
-} */
+} 
 
-/* input[type="radio"] {
+ input[type="radio"] {
   border-radius: 100%;
-} */
+} 
 
 input[type="checkbox"]:checked,
-/* input[type="radio"]:checked {
+ input[type="radio"]:checked {
   background-color: var(--accent);
-} */
+} 
 input[type="radio"] {
       display: none;
     }
