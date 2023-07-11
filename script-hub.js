@@ -384,6 +384,7 @@ section:last-child {
 
 details {
   padding: 0.7rem 1rem;
+  border: none;
 }
 
 summary {
