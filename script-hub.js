@@ -940,7 +940,7 @@ textarea {
 
     </div>
     <footer>
-      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub</a></p>
+      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub V 1.02</a></p>
     </footer>
     <script>
       const { createApp, ref } = Vue
