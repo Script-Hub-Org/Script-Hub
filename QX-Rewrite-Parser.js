@@ -555,17 +555,20 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? ', max-size=3145728' : '';
 				
-				proto = await isBinaryMode(js);
+				proto = js.match(/proto\.js/i) ? ', binary-body-mode=true' : '';
 				
+				/*
 				if ((isSurgeiOS || isLooniOS || isShadowrocket) && proto == "true"){
 					proto = ", binary-body-mode=true";
 				};
+*/
 				
                 if (isStashiOS){
 					
 				rebody = x.match(/\x20script[^\s]*(-body|-analyze)/) ? 'true' : 'false';
 				
 				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? '3145728' : '0';
+				proto = js.match(/proto\.js/i) ? 'true' : 'false';
 				};
 				
 				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
