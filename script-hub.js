@@ -937,9 +937,9 @@ textarea {
       </details>
 
       <details v-if="!target || target !== 'surge-script' ">
-        <summary>缓存有效期</summary>
-        <span>cachexp= 设置缓存有效期，单位：小时，不传入此参数默认有效期一小时。也可以用boxjs修改"Parser_cache_exp"的值来修改全局有效期。单位：小时，支持小数，设置为0.0001即立即过期。</span>
-        <textarea id="cachexp" v-model.lazy="cachexp" placeholder=""></textarea>
+        <summary>缓存(默认开启)</summary>
+        <span>cachexp= 设置缓存有效期，单位：小时，不传入此参数默认有效期一小时。也可以用 BoxJs 修改 <code>Parser_cache_exp</code> 的值来修改全局有效期。单位：小时，支持小数，设置为0.0001即立即过期。</span>
+        <input id="cachexp" v-model.number.lazy="cachexp" placeholder=""></input>
         <div>
           <input type="checkbox" id="nocache" v-model.lazy="nocache" />
           <label for="nocache">不缓存该条链接</label>
