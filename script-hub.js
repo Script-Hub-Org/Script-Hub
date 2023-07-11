@@ -397,11 +397,11 @@ summary {
 
 details[open] > summary + * {
   margin-top: 0;
-  font-size: 0.85rem;
 }
 
 details[open] > summary {
   margin-bottom: 0.5rem;
+  font-size: 0.85rem;
 }
 
 details[open] > :last-child {
