@@ -401,7 +401,7 @@ details[open] > summary + * {
 
 details[open] > summary {
   margin-bottom: 0.5rem;
-  font-size: 0.85rem;
+  font-size: 1.25rem;
 }
 
 details[open] > :last-child {
