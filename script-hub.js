@@ -71,6 +71,7 @@ const html = `
 *, *::before, *::after {
   box-sizing: border-box;
   text-decoration: none;
+  margin-top: 1px;
 }
 
 /* Reset default appearance */
@@ -756,7 +757,7 @@ textarea::-webkit-resizer {
 }
 .button-over {
   position: relative;
-  top: -2px;
+  top: -3px;
   font-size: 14px;
   font-weight: bold;
 }
