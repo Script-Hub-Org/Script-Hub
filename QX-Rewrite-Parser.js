@@ -254,9 +254,7 @@ var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/ *, */) : 
 var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/ *, */) : null;
 var delNoteSc = queryObject.del == "true" ? true : false;
 var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;
-var nCronExp = queryObject.cronexp != undefined ? queryObject.cronexp.split("+") : null;
-var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : null;
-var nArg = queryObject.argv != undefined ? queryObject.argv.replace(/\./g," ").split("+") : null;
+var nCronExp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
