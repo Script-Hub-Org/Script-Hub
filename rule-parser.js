@@ -23,6 +23,7 @@ var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var ipNoResolve = queryObject.nore == "true" ? true : false;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
+var noCache = queryObject.nocache != undefined ? true : false;
 
 //缓存有效期相关
 var currentTime = new Date();
@@ -45,8 +46,10 @@ if (oCache != "" && oCache != null){
 
 !(async () => {
   let body
-  
-  if (oCache == null){
+
+  if (noCache == true){
+	body = await http(req);
+}else if (oCache == null){
     //console.log("一个缓存也没有")
   body = await http(req);
   nCache[0].url = req;
@@ -112,7 +115,7 @@ let noResolve          //ip规则是否开启不解析域名
 let ruleType           //规则类型
 let ruleValue          //规则
 
-body.forEach((x, y, z) => {
+for await (var [y, x] of body.entries()) {
 	x = x.replace(/^payload:/,'').replace(/^ *(#|;|\/\/)/,'#').replace(/  - /,'').replace(/(^[^#].+)\x20+\/\/.+/,'$1').replace(/(\{[0-9]+)\,([0-9]*\})/g,'$1t&zd;$2').replace(/^[^,]+$/,"").replace(/(^[^U].*(\[|=|{|\\|\/.*\.js).*)/i,"");
 	
 //去掉注释
@@ -212,7 +215,7 @@ if(ipNoResolve === true){
 	};
 	};
 	
-}); //循环结束
+}; //循环结束
 
 let ruleNum = ruleSet.length;
 let notSupport = others.length;
