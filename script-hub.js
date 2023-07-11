@@ -940,6 +940,10 @@ textarea {
         <summary>缓存有效期</summary>
         <span>cachexp= 设置缓存有效期，单位：小时，不传入此参数默认有效期一小时。也可以用boxjs修改"Parser_cache_exp"的值来修改全局有效期。单位：小时，支持小数，设置为0.0001即立即过期。</span>
         <textarea id="cachexp" v-model.lazy="cachexp" placeholder=""></textarea>
+        <div>
+          <input type="checkbox" id="nocache" v-model.lazy="nocache" />
+          <label for="nocache">不缓存该条链接</label>
+        </div>
       </details>
 
       <div v-if="!target || target === 'rule-set' ">
@@ -984,6 +988,7 @@ textarea {
     tiles: '',
     tcolor: '',
     cachexp: '',
+    nocache: '',
     copyInfo: '',
     resetInfo: '',
     nore: false,
@@ -1061,7 +1066,7 @@ textarea {
         if (this.jsc2_all) {
           fields.jsc2 = '.'
         }
-        const _fields = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'del', 'nore', 'wrap_response']
+        const _fields = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response']
         _fields.forEach(field => {
          if (this[field]!==''&&this[field]!==false) {
             fields[field] = this[field]
