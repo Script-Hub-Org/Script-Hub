@@ -813,6 +813,10 @@ textarea {
         <a v-if="result" :href="result" target="_blank" style="margin: 0 0.5rem 0 0">打开链接</a>
         <a v-if="result && target === 'shadowrocket-module' " :href=" 'https://api.boxjs.app/shadowrocket/install?module=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Shadowrocket)</a>
         <a v-if="result && target === 'loon-plugin' " :href=" 'https://www.nsloon.com/openloon/import?plugin=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Loon)</a>
+        <template v-if="result && target === 'surge-module' ">
+          <a :href=" 'scriptable:///run/SurgeModuleTool?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Surge)</a>
+          <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E7%9B%B8%E5%85%B3%E7%94%9F%E6%80%81:-Surge-%E6%A8%A1%E5%9D%97%E5%B7%A5%E5%85%B7" target="_blank">如何导入</a></small>
+        </template>
         <textarea id="result" :value="result" placeholder="结果" readonly></textarea>
         
         <button v-if="copyInfo">{{copyInfo}}</button>
@@ -1067,12 +1071,32 @@ textarea {
         const target = this.targets.find(i => i.value === this.target)
         if (this.src && target && type) {
           const suffix = target.suffix || ''
-          const filename = this.filename || this.src.substring(this.src.lastIndexOf('/') + 1).split('.')[0]
           const pathType = this.target === 'surge-script' ? '/convert' : '/file'
+          function convertToValidFileName(str) {
+            // 替换非法字符为下划线
+            const invalidCharsRegex = /[\/:*?"<>|]/g;
+            const validFileName = str.replace(invalidCharsRegex, '_');
 
-          return this.baseUrl + pathType + '/_start_/' + this.src + '/_end_/' + filename + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
+            // 删除多余的点号
+            const multipleDotsRegex = /\.{2,}/g;
+            const fileNameWithoutMultipleDots = validFileName.replace(multipleDotsRegex, '.');
 
-          // let url = new URL(this.baseUrl + pathType + '/_start_/' + this.src + '/_end_/' + filename + suffix)
+            // 删除文件名开头和结尾的点号和空格
+            const leadingTrailingDotsSpacesRegex = /^[\s.]+|[\s.]+$/g;
+            const finalFileName = fileNameWithoutMultipleDots.replace(leadingTrailingDotsSpacesRegex, '');
+
+            return finalFileName;
+          }
+          const plainUrl = this.src.split('?')[0]
+          let filename = this.filename || plainUrl.substring(plainUrl.lastIndexOf('/') + 1).split('.')[0]
+          if (!filename) {
+            filename = 'untitled-' + new Date().toLocaleString()
+          }
+          filename = convertToValidFileName(filename)
+
+          return this.baseUrl + pathType + '/_start_/' + this.src + '/_end_/' + encodeURIComponent(filename) + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
+
+          // let url = new URL(this.baseUrl + pathType + '/_start_/' + this.src + '/_end_/' + encodeURIComponent(filename) + suffix)
           
           // Object.keys(fields).map(i => {
           //  url.searchParams.append(i, fields[i])
