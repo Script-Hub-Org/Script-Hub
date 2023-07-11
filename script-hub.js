@@ -979,7 +979,7 @@ textarea::-webkit-resizer {
 
     </div>
     <footer>
-      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.07</a></p>
+      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.09</a></p>
     </footer>
     <script>
       const { createApp, ref } = Vue
