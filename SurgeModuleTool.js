@@ -131,11 +131,11 @@ for await (const [index, file] of files.entries()) {
         throw new Error('无订阅链接')
       }
 
-      const originalNameMatched = `${content}`.match(/^#\!name=\s*(.*?)\s*(\n|$)/im)
+      const originalNameMatched = `${content}`.match(/^#\!name\s*?=\s*(.*?)\s*(\n|$)/im)
       if (originalNameMatched) {
         originalName = originalNameMatched[1]
       }
-      const originalDescMatched = `${content}`.match(/^#\!desc=\s*(.*?)\s*(\n|$)/im)
+      const originalDescMatched = `${content}`.match(/^#\!desc\s*?=\s*(.*?)\s*(\n|$)/im)
       if (originalDescMatched) {
         originalDesc = originalDescMatched[1]
         if (originalDesc) {
@@ -154,7 +154,8 @@ for await (const [index, file] of files.entries()) {
       if (!res) {
         throw new Error(`未获取到模块内容`)
       }
-      const nameMatched = `${res}`.match(/^#\!name=\s*(.*?)\s*(\n|$)/im)
+
+      const nameMatched = `${res}`.match(/^#\!name\s*?=\s*?\s*(.*?)\s*(\n|$)/im)
       if (!nameMatched) {
         throw new Error(`不是合法的模块内容`)
       }
@@ -162,7 +163,7 @@ for await (const [index, file] of files.entries()) {
       if (!name) {
         throw new Error('模块无名称字段')
       }
-      const descMatched = `${res}`.match(/^#\!desc=\s*(.*?)\s*(\n|$)/im)
+      const descMatched = `${res}`.match(/^#\!desc\s*?=\s*?\s*(.*?)\s*(\n|$)/im)
       let desc
       if (descMatched) {
         desc = descMatched[1]
@@ -172,7 +173,7 @@ for await (const [index, file] of files.entries()) {
       }
       // console.log(res);
       res = addLineAfterLastOccurrence(res, `\n\n# 🔗 模块链接\n${subscribed.replace(/\n/g, "")}\n`)
-      content = `${res}`.replace('#!desc=', `#!desc=🔗 [${new Date().toLocaleString()}] `)
+      content = `${res}`.replace(/^#\!desc\s&?=\s*/mi, `#!desc=🔗 [${new Date().toLocaleString()}] `)
       // console.log(content);
       if (filePath) {
         fm.writeString(filePath, content)  
