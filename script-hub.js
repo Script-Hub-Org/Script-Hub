@@ -764,15 +764,14 @@ textarea::-webkit-resizer {
 </style>
   </head>
   
-  <body style="margin-bottom: 160px;">
-	<script>
+  <body style="margin-bottom: 160px;"><script>
 `;
+
 // <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
 const htmls = `
 </script>
-    <div id="app">
-      <a href="https://github.com/Script-Hub-Org/Script-Hub"><h1 style="margin-bottom: 0;">Script Hub</h1></a>
+  <div id="app"><a href="https://github.com/Script-Hub-Org/Script-Hub"><h1 style="margin-bottom: 0;">Script Hub</h1></a>
       <p>重写 & 规则集转换 <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki" target="_blank">查看文档</a></small></p>
 
       <div>

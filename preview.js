@@ -10,7 +10,8 @@ app.use(async ctx => {
   const filePath = new URL('./script-hub.js', import.meta.url)
   const content = await readFile(filePath, { encoding: 'utf8' })
   ctx.type = 'html'
-  ctx.body = content.match(/<!DOCTYPE html>([\s\S]*?)<\/html>/i)[1]
+  // ctx.body = content.match(/<!DOCTYPE html>([\s\S]*?)<\/html>/i)[1]
+  ctx.body = content.match(/<!DOCTYPE html>([\s\S]*?<body style="margin-bottom: 160px;"><script>)/i)[1] + '</script><script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>'  + content.match(/(<div id="app">[\s\S]*?)<\/html>/i)[1]
 })
 
 app.listen(PORT, HOST, async ctx => {
