@@ -11,7 +11,7 @@ http:
     - "*.script.hub"
 
   script:
-    - match: ^https?:\/\/script\.hub\/$
+    - match: ^https?:\/\/script\.hub\/($|edit\/)
       name: "Script Hub: 前端"
       type: request
       timeout: 30

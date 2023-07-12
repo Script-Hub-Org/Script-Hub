@@ -19,7 +19,7 @@ hostname = script.hub, *.script.hub
 
 [Script]
 
-http-request ^https?:\/\/script\.hub\/$ script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js, tag=Script Hub: 前端
+http-request ^https?:\/\/script\.hub\/($|edit\/) script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js, tag=Script Hub: 前端
 
 http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js, tag=Script Hub: QX 转换 Loon
 
