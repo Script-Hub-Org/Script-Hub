@@ -71,7 +71,7 @@ const html = `
 *, *::before, *::after {
   box-sizing: border-box;
   text-decoration: none;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 /* Reset default appearance */
