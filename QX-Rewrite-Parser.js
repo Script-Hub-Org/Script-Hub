@@ -13,9 +13,10 @@ const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
 	console.log("原始链接：" + req);
 var urlArg = url.split(/\/_end_\//)[1];
+
 //获取参数
 const queryObject = parseQueryString(urlArg);
-console.log("参数:" + queryObject);
+console.log("参数:" + JSON.stringify(queryObject));
 const isSurgeiOS = queryObject.target == "surge-module";
 const isStashiOS = queryObject.target == "stash-stoverride";
 const isLooniOS = queryObject.target == "loon-plugin";
@@ -255,6 +256,11 @@ var name = "";
 var desc = "";
 var icon = "";
 var rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
+var resFile = urlArg.split("?")[0];
+var resFileName = 
+resFile.substring(0,resFile.lastIndexOf('.'));
+var notifyName
+if (nName != null && nName[0] != ""){notifyName = nName[0];}else{notifyName = resFileName;};
 
 //查询js binarymode相关
  let binaryInfo = $persistentStore.read("Parser_binary_info");
@@ -363,10 +369,10 @@ $persistentStore.write(JSON.stringify(oCache), 'parser_cache');
 //判断是否断网
 if(body == null || body == ""){if(isSurgeiOS || isStashiOS){
     console.log("QX转换：未获取到body的链接为" + $request.url)
-	$notification.post("QX转换：未获取到body","请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈",{url:"https://t.me/zhangpeifu"})
+	$notification.post(`QX转换："${notifyName}"未获取到body`,"请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈",{url:"https://t.me/zhangpeifu"})
  $done({ response: { status: 404 ,body:{} } });}else if(isLooniOS || isShadowrocket){
     console.log("QX转换：未获取到body的链接为" + $request.url)
-    $notification.post("QX转换：未获取到body","请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈","https://t.me/zhangpeifu")
+    $notification.post(`QX转换："${notifyName}"未获取到body`,"请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈","https://t.me/zhangpeifu")
  $done({ response: { status: 404 ,body:{} } });
 }//识别客户端通知
 }else{//以下开始重写及脚本转换
