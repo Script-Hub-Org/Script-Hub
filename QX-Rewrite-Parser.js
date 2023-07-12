@@ -255,6 +255,12 @@ var desc = "";
 var icon = "";
 var rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
 
+//查询js binarymode相关
+ let binaryInfo = $persistentStore.read("Parser_binary_info");
+if (binaryInfo != null && binaryInfo !=""){
+	binaryInfo = JSON.parse(binaryInfo);
+}else{binaryInfo = [];};
+
 //缓存有效期相关
 var currentTime = new Date();
 var seconds = Math.floor(currentTime.getTime() / 1000); // 将毫秒转换为秒
@@ -994,15 +1000,31 @@ function parseQueryString(url) {
 
 
 async function isBinaryMode(url) {
-  if (url.search(/proto/i) != -1) {
+
+if (url.search(/proto/i) != -1) {
 	return "true"
   } else if (url.search(/(tieba|youtube|bili|spotify)/i) != -1){
-    const res = await http(url);
+		if (binaryInfo != "" && binaryInfo.some(item=>item.url===url)){
+			for (let i = 0; i < binaryInfo.length; i++) {
+  if (binaryInfo[i].url === url) {
+    binarymode = binaryInfo[i].binarymode;
+		return binarymode;
+    break;
+  }
+}
+		} else {
+			const res = await http(url);
 	if (res == undefined){
 		console.log("Script Hub QX 转换器 查询脚本链接失败");
 		return "false";
 	}else if (res.includes(".bodyBytes")){
+		binaryInfo.push({"url":url,"binarymode":"true"});
+		$persistentStore.write(JSON.stringify(binaryInfo), "Parser_binary_info")
 		return "true";
-	}else{return "false";}
-}else{return "false"};
+	}else{binaryInfo.push({"url":url,"binarymode":"false"});
+		$persistentStore.write(JSON.stringify(binaryInfo), "Parser_binary_info")
+		return "false";}     }//没有信息或者没有url的信息
+		
+	}else {return "false"}
+	
 }
