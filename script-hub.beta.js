@@ -767,7 +767,7 @@ textarea::-webkit-resizer {
 </style>
   </head>
   
-  <body style="margin-bottom: 160px;"><script>
+  <body style="margin-bottom: 80px;"><script>
 `;
 
 // <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>

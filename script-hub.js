@@ -101,7 +101,7 @@ body {
   grid-template-columns: 1fr min(45rem, 92%) 1fr;
   margin: 0px;
   margin-top: 60px;
-  
+
 }
 body > * {
   grid-column: 2;
@@ -768,7 +768,7 @@ textarea::-webkit-resizer {
 </style>
   </head>
   
-  <body style="margin-bottom: 160px;"><script>
+  <body style="margin-bottom: 80px;"><script>
 `;
 
 // <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
