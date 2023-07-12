@@ -1,7 +1,7 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: blue; icon-glyph: cloud-download-alt;
-let ToolVersion = "1.92";
+let ToolVersion = "1.93";
 async function delay(milliseconds) {
   var before = Date.now();
   while (Date.now() < before + milliseconds) {};
@@ -48,7 +48,7 @@ if (fromUrlScheme) {
   idx = 1
 } else {
   let alert = new Alert()
-    alert.title = "Surge 模块工具"
+  alert.title = "Surge 模块工具"
   //alert.addDestructiveAction("更新文件夹内全部文件")
   alert.addDestructiveAction("更新本脚本")
   alert.addAction("从链接创建")
@@ -253,7 +253,21 @@ async function update() {
       alert.message = "无法获取在线版本"
       alert.addCancelAction("关闭")
       await alert.presentAlert()
-  } else if (version > ToolVersion) {
+      return
+  } else {
+    let needUpdate = version > ToolVersion
+    if (!needUpdate) {
+      let alert = new Alert()
+      alert.title = "Surge 模块工具"
+      alert.message =  `当前版本: ${ToolVersion}\n在线版本: ${version}\n无需更新`
+      alert.addDestructiveAction("强制更新")
+      alert.addCancelAction("关闭")
+      idx = await alert.presentAlert()
+      if (idx === 0) {
+        needUpdate = true
+      }  
+    }
+    if (needUpdate) {
       fm.writeString(`${dict}/${scriptName}.js`, resp)
       console.log("更新成功: " + version)
       let notification = new Notification()
@@ -263,12 +277,8 @@ async function update() {
       notification.openURL = `scriptable:///open/${scriptName}`
       notification.addAction("打开脚本", `scriptable:///open/${scriptName}`, false)
       await notification.schedule()
-      
-  } else {
-      let alert = new Alert()
-      alert.title = "Surge 模块工具"
-      alert.message =  `当前版本: ${ToolVersion}\n在线版本: ${version}\n无需更新`
-      alert.addCancelAction("关闭")
-      await alert.presentAlert()
+    }
+    
   }
+
 }
