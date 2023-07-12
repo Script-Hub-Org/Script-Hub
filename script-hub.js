@@ -12,9 +12,8 @@ const html = `
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/icon.png" />
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/icon-dark.png">
     
-    <!--  <link rel="stylesheet" href="https://unpkg.com/simpledotcss/simple.min.css">-->
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no" />
+    <!-- (viewport-fit=cover,填充整个屏幕导致全屏布局不一样) <link rel="stylesheet" href="https://unpkg.com/simpledotcss/simple.min.css">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no", viewport-fit=auto />
     <meta name="HandheldFriendly" content="true">
     <title>Script Hub</title>
     <style>
@@ -72,7 +71,7 @@ const html = `
 *, *::before, *::after {
   box-sizing: border-box;
   text-decoration: none;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 /* Reset default appearance */
@@ -100,7 +99,7 @@ body {
   display: grid;
   grid-template-columns: 1fr min(45rem, 92%) 1fr;
   margin: 0px;
-  margin-top: 60px;
+  
 
 }
 body > * {
@@ -143,6 +142,7 @@ body > footer {
 /* Format headers */
 h1 {
   font-size: 3rem;
+  margin-top: 40px;
 }
 
 h2 {
@@ -778,7 +778,7 @@ const htmls = `
   <div id="app"><a href="https://github.com/Script-Hub-Org/Script-Hub"><h1 style="margin-bottom: 0;">Script Hub</h1></a>
       <p>重写 & 规则集转换 <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki" target="_blank">查看文档</a></small></p>
 
-      <div>
+      <div style=" margin-top: 30px;">
          <code style=" position: relative; top: -4px; ">来源链接: </code> 
         <textarea id="src" v-model.lazy="src" placeholder="请填写来源 URL 链接"></textarea>
       </div>
