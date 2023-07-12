@@ -857,6 +857,16 @@ const htmls = `
         <textarea id="n" v-model.lazy="n" placeholder=""></textarea>
       </details>
 
+      <details v-if="!target || (target === 'surge-script' )">
+        <summary>QX 专属脚本说明：你一般不需要用它, 因为这是脚本转脚本.
+        <br>
+        如果你是QX脚本开发者, 那么他将为你兼容Surge等app提供支持.</summary>
+        <span>
+        <!--无-->
+        </span>
+        
+      </details>
+      
       <details>
         <summary>文件名(避免重名, 默认从来源取)</summary>
         <textarea id="filename" v-model.lazy="filename" placeholder=""></textarea>
