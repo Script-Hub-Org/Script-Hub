@@ -933,7 +933,7 @@ const htmls = `
         <summary>修改参数</summary>
         <details>
           <summary>修改参数(arg)</summary>
-          <span>arg= 根据关键词锁定脚本配合参数argv= 修改argument=的值 多关键词用"+"分隔，arg=传入了几项，argv=也必须对应传入几项。 argument中的"&"必须用"t;amp;"替代，"+"必须用"t;add;"替代(新版本已经不需要这样操作, 可以尝试直接用 "&" 和 "+")。</span>
+          <span>arg= 根据关键词锁定脚本配合参数argv= 修改argument=的值 多关键词用"+"分隔，arg=传入了几项，argv=也必须对应传入几项。 argument中 "+"必须用"t;add;"替代。</span>
           <textarea id="arg" v-model.lazy="arg" placeholder=""></textarea>
         </details>
         <details>
