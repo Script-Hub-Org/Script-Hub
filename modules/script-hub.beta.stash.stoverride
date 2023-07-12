@@ -51,17 +51,17 @@ script-providers:
     url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.beta.js
     interval: 86400
   "Script Hub: QX转换Stash":
-    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js
+    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.beta.js
     interval: 86400
   "Script Hub: Loon转换Stash":
-    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.js
+    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.beta.js
     interval: 86400
   "Script Hub: Surge转换Stash":
-    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.js
+    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.beta.js
     interval: 86400
   "Script Hub: 规则集转换":
-    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.js
+    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.beta.js
     interval: 86400
   "Script Hub: 脚本转换":
-    url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.js
+    url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.beta.js
     interval: 86400
