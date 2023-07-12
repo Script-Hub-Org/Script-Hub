@@ -800,7 +800,25 @@ const htmls = `
         </div>
       </div>
     </div>
-    <br>
+    <br/>
+
+    <details v-if="!target || type === 'qx-script' || target === 'surge-script'">
+      <summary>
+      QX 专属脚本说明：
+      <br/>
+      你一般<code>不需要用它</code>, 因为这是 <code>脚本转脚本</code>
+      <br/>
+      通常情况下, 你需要的是 <code>QX 重写 转换到 模块/覆写/插件</code>
+      <br/>
+      专属脚本转换的使用场景:
+      <br/>
+      你想在你的模块/覆写/插件中, 单独引用一条转换的 QX 专属脚本
+      </summary>
+      <span>
+      <!--无-->
+      </span>
+      
+    </details>
     
 
     <template v-if="!target || type === 'qx-rewrite'">
@@ -849,27 +867,12 @@ const htmls = `
             <button v-if="resetInfo">{{resetInfo}}</button>
             <button v-else @click="reset">重置</button>
       </div>
-      <br>
+      <br/>
 
       <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
         <summary>名称 简介</summary>
         <span>名字+简介 ，名字和简介以"+"相连，可缺省名字或简介</span>
         <textarea id="n" v-model.lazy="n" placeholder=""></textarea>
-      </details>
-
-      <details v-if="!target || (target === 'surge-script' )">
-        <summary>
-        QX 专属脚本说明：
-        <br>
-        你一般不需要用它, 因为这是脚本转脚本
-        <br>
-        如果你是QX脚本开发者, 那么他将为你兼容
-        <br>
-        Surge 等 app 提供支持</summary>
-        <span>
-        <!--无-->
-        </span>
-        
       </details>
       
       <details>

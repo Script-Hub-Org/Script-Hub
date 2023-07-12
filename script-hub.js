@@ -800,8 +800,25 @@ const htmls = `
         </div>
       </div>
     </div>
-    <br>
-    
+    <br/>
+
+    <details v-if="!target || type === 'qx-script' || target === 'surge-script'">
+      <summary>
+      QX 专属脚本说明：
+      <br/>
+      你一般<code>不需要用它</code>, 因为这是 <code>脚本转脚本</code>
+      <br/>
+      通常情况下, 你需要的是 <code>QX 重写 转换到 模块/覆写/插件</code>
+      <br/>
+      专属脚本转换的使用场景:
+      <br/>
+      你想在你的模块/覆写/插件中, 单独引用一条转换的 QX 专属脚本
+      </summary>
+      <span>
+      <!--无-->
+      </span>
+      
+    </details>
 
     <template v-if="!target || type === 'qx-rewrite'">
         <small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">什么时候应该启用脚本转换</a></small>
@@ -830,6 +847,8 @@ const htmls = `
         </details>
       </template>
 
+
+
     <!-- position: fixed; -->
     <div style="padding: 1rem;bottom: 0rem;margin-right: 0rem;background-color: var(--kbg);/* border: 1px solid var(--border); */border-radius: var(--standard-border-radius);">
         <a v-if="result" :href="result" target="_blank" style="margin: 0 0.5rem 0 0">打开链接</a>
@@ -849,27 +868,12 @@ const htmls = `
             <button v-if="resetInfo">{{resetInfo}}</button>
             <button v-else @click="reset">重置</button>
       </div>
-      <br>
+      <br/>
 
       <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
         <summary>名称 简介</summary>
         <span>名字+简介 ，名字和简介以"+"相连，可缺省名字或简介</span>
         <textarea id="n" v-model.lazy="n" placeholder=""></textarea>
-      </details>
-
-      <details v-if="!target || (target === 'surge-script' )">
-        <summary>
-        QX 专属脚本说明：
-        <br>
-        你一般不需要用它, 因为这是脚本转脚本
-        <br>
-        如果你是QX脚本开发者, 那么他将为你兼容
-        <br>
-        Surge 等 app 提供支持</summary>
-        <span>
-        <!--无-->
-        </span>
-        
       </details>
       
       <details>
