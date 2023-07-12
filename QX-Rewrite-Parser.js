@@ -10,11 +10,12 @@
 ***************************/
 
 const url = $request.url;
-var req = $request.url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-	console.log(req);
-	
+var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
+	console.log("原始链接：" + req);
+var urlArg = url.split(/\/_end_\//)[1];
 //获取参数
-const queryObject = parseQueryString(url);
+const queryObject = parseQueryString(urlArg);
+console.log("参数:" + queryObject);
 const isSurgeiOS = queryObject.target == "surge-module";
 const isStashiOS = queryObject.target == "stash-stoverride";
 const isLooniOS = queryObject.target == "loon-plugin";
@@ -1026,5 +1027,4 @@ if (url.search(/proto/i) != -1) {
 		return "false";}     }//没有信息或者没有url的信息
 		
 	}else {return "false"}
-	
-}
+};
