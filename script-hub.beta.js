@@ -12,9 +12,8 @@ const html = `
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/icon.png" />
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/icon-dark.png">
     
-    <!--  <link rel="stylesheet" href="https://unpkg.com/simpledotcss/simple.min.css">-->
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no" />
+    <!-- (viewport-fit=cover,填充整个屏幕导致全屏布局不一样) <link rel="stylesheet" href="https://unpkg.com/simpledotcss/simple.min.css">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no", viewport-fit=auto />
     <meta name="HandheldFriendly" content="true">
     <title>Script Hub</title>
     <style>
@@ -72,7 +71,7 @@ const html = `
 *, *::before, *::after {
   box-sizing: border-box;
   text-decoration: none;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 /* Reset default appearance */
@@ -100,7 +99,8 @@ body {
   display: grid;
   grid-template-columns: 1fr min(45rem, 92%) 1fr;
   margin: 0px;
-  margin-top: 60px;
+  
+
 }
 body > * {
   grid-column: 2;
@@ -142,6 +142,7 @@ body > footer {
 /* Format headers */
 h1 {
   font-size: 3rem;
+  margin-top: 40px;
 }
 
 h2 {
@@ -777,9 +778,9 @@ const htmls = `
   <div id="app"><a href="https://github.com/Script-Hub-Org/Script-Hub"><h1 style="margin-bottom: 0;">Script Hub</h1></a>
       <p>重写 & 规则集转换 <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki" target="_blank">查看文档</a></small></p>
 
-      <div>
+      <div style=" margin-top: 30px;">
          <code style=" position: relative; top: -4px; ">来源链接: </code> 
-         <textarea id="src" v-model.lazy="src" placeholder="请填写来源 URL 链接"></textarea>
+        <textarea id="src" v-model.lazy="src" placeholder="请填写来源 URL 链接"></textarea>
       </div>
       <!--font-size: 16px;  style=" position: relative; top: -3px; "-->
       <small style=" position: relative; top: 7px; ">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B" target="_blank">如何选择类型</a></small>
@@ -821,7 +822,6 @@ const htmls = `
       </span>
       
     </details>
-    
 
     <template v-if="!target || type === 'qx-rewrite'">
         <small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">什么时候应该启用脚本转换</a></small>
@@ -850,6 +850,8 @@ const htmls = `
         </details>
       </template>
 
+
+
     <!-- position: fixed; -->
     <div style="padding: 1rem;bottom: 0rem;margin-right: 0rem;background-color: var(--kbg);/* border: 1px solid var(--border); */border-radius: var(--standard-border-radius);">
         <a v-if="result" :href="result" target="_blank" style="margin: 0 0.5rem 0 0">打开链接</a>
@@ -860,20 +862,19 @@ const htmls = `
           <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E7%9B%B8%E5%85%B3%E7%94%9F%E6%80%81:-Surge-%E6%A8%A1%E5%9D%97%E5%B7%A5%E5%85%B7" target="_blank">如何导入</a></small>
         </template>
         <textarea id="result" :value="result" placeholder="结果(请输入来源链接并选择类型)" readonly></textarea>
-
         
         <button v-if="copyInfo">{{copyInfo}}</button>
         <button v-else @click="copy" :disabled="!result">复制</button>
             <!-- <button v-else @click="copy">全选{{isHttps ? "&复制" : ""}}</button> -->
             <!-- <small v-if="!isHttps"> https://script.hub 可复制</small> -->
             &nbsp;&nbsp;
-        <button v-if="resetInfo">{{resetInfo}}</button>
-        <button v-else @click="reset">重置</button>
+            <button v-if="resetInfo">{{resetInfo}}</button>
+            <button v-else @click="reset">重置</button>
         <template v-if="copyInfo">
           <br/>
           <small>&#9432; 将此链接中的 <code>file</code> 改为 <code>edit</code> 即可在浏览器中再次对当前内容进行编辑</small>
         </template>
-
+        
       </div>
       <br/>
 
