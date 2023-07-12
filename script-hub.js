@@ -858,9 +858,12 @@ const htmls = `
       </details>
 
       <details v-if="!target || (target === 'surge-script' )">
-        <summary>QX 专属脚本说明：你一般不需要用它, 因为这是脚本转脚本.
+        <summary>
+        QX 专属脚本说明：
         <br>
-        如果你是QX脚本开发者, 那么他将为你兼容Surge等app提供支持.</summary>
+        你一般不需要用它, 因为这是脚本转脚本
+        <br>
+        如果你是QX脚本开发者, 那么他将为你兼容Surge等app提供支持</summary>
         <span>
         <!--无-->
         </span>
