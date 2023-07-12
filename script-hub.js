@@ -1008,6 +1008,7 @@ const htmls = `
       <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.12</a></p>
     </footer>
     <script>
+      const openAllDetails = () => document.querySelectorAll('details').forEach(i => i.setAttribute('open', ""))
     
       const { createApp, ref } = Vue
   const init = {
@@ -1040,7 +1041,8 @@ const htmls = `
     resetInfo: '',
     nore: false,
     wrap_response: false,
-    env: "${$.getEnv() || ''}"
+    env: "${$.getEnv() || ''}",
+    editMode: false,
   }
   
   if (init.env === 'Surge') {
@@ -1052,6 +1054,57 @@ const htmls = `
   } else if (init.env === 'Shadowrocket') {
     init.target = 'shadowrocket-module'
   }
+
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response']
+  
+  init.editMode = location.pathname.indexOf('/edit') === 0
+
+  const href = location.href;
+  
+  
+  const startStr = href.split('/edit/_start_/')[1]
+  if(startStr) {
+    const endArray = startStr.split('/_end_/')
+    if (endArray) {
+      const src = endArray[0]
+      if(src) {
+        init.src = src
+      }
+      const filenameStr = endArray[1]
+      if(filenameStr) {
+        const fullnameArray = filenameStr.split('?')
+        if (fullnameArray) {
+          const fullname = fullnameArray[0]
+          if(fullname) {
+            init.filename = fullname.substring(0, fullname.lastIndexOf('.'))
+          }
+          const searchStr = filenameStr.substring(filenameStr.lastIndexOf('?')+1)
+          if (searchStr) {
+          const urlParams = new URLSearchParams("?" + searchStr);
+
+          params.forEach(i => {
+            const param = urlParams.get(i)
+
+            if (param != null && param !== '' && param !== false) {
+              if (i === 'jsc' && param === '.') {
+                init.jsc_all = true
+              } else if (i === 'jsc2' && param === '.') {
+                init.jsc2_all = true
+              } else {
+                init[i] = param
+              }
+              
+            }
+          })
+          }
+          
+        }
+      }
+    }
+  }
+
+  
+  
 
   console.log("init", init)
 
@@ -1113,8 +1166,8 @@ const htmls = `
         if (this.jsc2_all) {
           fields.jsc2 = '.'
         }
-        const _fields = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response']
-        _fields.forEach(field => {
+        
+        params.forEach(field => {
          if (this[field]!==''&&this[field]!==false) {
             fields[field] = this[field]
           }
@@ -1149,7 +1202,12 @@ const htmls = `
       isHttps: function () {
         return location.protocol === 'https:'
       }
-    }
+    },
+    mounted() {
+      if (this.editMode) {
+        openAllDetails()
+      }
+  }
   }).mount('#app')
 </script>
   </body>

@@ -14,7 +14,8 @@ const html = `
     
     <!--  <link rel="stylesheet" href="https://unpkg.com/simpledotcss/simple.min.css">-->
     
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no" />
+    <meta name="HandheldFriendly" content="true">
     <title>Script Hub</title>
     <style>
     /* Global variables. */
@@ -777,7 +778,7 @@ const htmls = `
 
       <div>
          <code style=" position: relative; top: -4px; ">来源链接: </code> 
-        <textarea id="src" v-model.lazy="src" placeholder="请填写来源URL链接"></textarea>
+         <textarea id="src" v-model.lazy="src" placeholder="请填写来源 URL 链接"></textarea>
       </div>
       <!--font-size: 16px;  style=" position: relative; top: -3px; "-->
       <small style=" position: relative; top: 7px; ">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B" target="_blank">如何选择类型</a></small>
@@ -857,15 +858,21 @@ const htmls = `
           <a :href=" 'scriptable:///run/SurgeModuleTool?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Surge)</a>
           <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E7%9B%B8%E5%85%B3%E7%94%9F%E6%80%81:-Surge-%E6%A8%A1%E5%9D%97%E5%B7%A5%E5%85%B7" target="_blank">如何导入</a></small>
         </template>
-        <textarea id="result" :value="result" placeholder="结果" readonly></textarea>
+        <textarea id="result" :value="result" placeholder="结果(请输入来源链接并选择类型)" readonly></textarea>
+
         
         <button v-if="copyInfo">{{copyInfo}}</button>
-        <button v-else @click="copy">复制</button>
+        <button v-else @click="copy" :disabled="!result">复制</button>
             <!-- <button v-else @click="copy">全选{{isHttps ? "&复制" : ""}}</button> -->
             <!-- <small v-if="!isHttps"> https://script.hub 可复制</small> -->
             &nbsp;&nbsp;
-            <button v-if="resetInfo">{{resetInfo}}</button>
-            <button v-else @click="reset">重置</button>
+        <button v-if="resetInfo">{{resetInfo}}</button>
+        <button v-else @click="reset">重置</button>
+        <template v-if="copyInfo">
+          <br/>
+          <small>&#9432; 将此链接中的 <code>file</code> 改为 <code>edit</code> 即可在浏览器中再次对当前内容进行编辑</small>
+        </template>
+
       </div>
       <br/>
 
@@ -1108,13 +1115,13 @@ const htmls = `
     methods: {
       reset(){
         const initData = { ...init }
+        this.resetInfo = '已重置'
         Object.keys(initData).map(key => {
-          if (key !== 'type' && key !== 'target') {
+          if (key !== 'type' && key !== 'target' && key !== 'resetInfo') {
             this[key] = initData[key]
           }
         })
-        // alert("✅ 已重置");
-        this.resetInfo = '重置'
+        
         setTimeout(() => {
           this.resetInfo = ''
         }, 1000)
@@ -1128,7 +1135,7 @@ const htmls = `
         this.copyInfo = '成功'
         setTimeout(() => {
           this.copyInfo = ''
-        }, 1000)
+        }, 2000)
         // if (this.isHttps) {
         //   alert("✅ 已复制");
         // }
