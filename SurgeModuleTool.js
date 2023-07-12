@@ -1,7 +1,10 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
+// icon-color: deep-gray; icon-glyph: magic;
+// Variables used by Scriptable.
+// These must be at the very top of the file. Do not edit.
 // icon-color: blue; icon-glyph: cloud-download-alt;
-let ToolVersion = "1.12";
+let ToolVersion = "1.21";
 async function delay(milliseconds) {
   var before = Date.now();
   while (Date.now() < before + milliseconds) {};
@@ -48,11 +51,12 @@ if (fromUrlScheme) {
   idx = 2
 } else {
   let alert = new Alert()
-
-  // alert.addDestructiveAction("更新文件夹内全部文件")
-  alert.addAction("全部更新")
+    alert.title = "Surge 模块工具"
+  //alert.addDestructiveAction("更新文件夹内全部文件")
+  alert.addAction("更新全部模块")
   alert.addAction("更新单个模块")
   alert.addAction("从链接创建")
+  alert.addDestructiveAction("更新本脚本")
   alert.addCancelAction("取消")
   idx = await alert.presentAlert()
 }
@@ -102,6 +106,9 @@ if (idx == 0) {
     files = [`${name}.sgmodule`]
     contents = [`#SUBSCRIBED ${url}`]
   }
+} else if (idx == 3) {
+  console.log("更新")
+   await update()
 }
 
 
@@ -215,5 +222,37 @@ for await (const [index, file] of files.entries()) {
         await alert.presentAlert()
       }
     }
+  }
+}
+
+// @key Think @wuhu.
+async function update() {
+  const fm = FileManager.iCloud()
+  const dict = fm.documentsDirectory()
+  // const scriptName = Script.name()
+  const scriptName = "SurgeModuleTool"
+  const url = "https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/SurgeModuleTool.js"
+  let req = new Request(url)
+  req.method = "GET"
+  const resp = await req.loadString()
+  
+  const regex = /let ToolVersion = "([\d.]+)"/
+  const match = resp.match(regex);
+  const version = (match ? match[1] : "")
+  
+  if (version > ToolVersion) {
+      fm.writeString(`${dict}/${scriptName}.js`, resp)
+      let notification = new Notification()
+      notification.title = "脚本更新成功Version:"+version
+      notification.subtitle = "点击该通知即可跳转"
+      notification.sound = "default"
+      notification.openURL = `scriptable:///open/${scriptName}`
+      notification.addAction("打开脚本", `scriptable:///open/${scriptName}`, false)
+      await notification.schedule()
+  } else {
+      let alert = new Alert()
+      alert.title = "Surge 模块工具 已是\n最新版本 Version:"+version
+      alert.addCancelAction("完成")
+      await alert.presentAlert()
   }
 }
