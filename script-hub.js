@@ -863,7 +863,9 @@ const htmls = `
         <br>
         你一般不需要用它, 因为这是脚本转脚本
         <br>
-        如果你是QX脚本开发者, 那么他将为你兼容Surge等app提供支持</summary>
+        如果你是QX脚本开发者, 那么他将为你兼容
+        <br>
+        Surge 等 app 提供支持</summary>
         <span>
         <!--无-->
         </span>
