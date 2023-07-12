@@ -1,6 +1,7 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: blue; icon-glyph: cloud-download-alt;
+let ToolVersion = "1.12";
 async function delay(milliseconds) {
   var before = Date.now();
   while (Date.now() < before + milliseconds) {};
