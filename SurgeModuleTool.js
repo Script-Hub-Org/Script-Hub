@@ -48,15 +48,15 @@ if (args.queryParameters.url) {
   fromUrlScheme = true
 }
 if (fromUrlScheme) {
-  idx = 2
+  idx = 1
 } else {
   let alert = new Alert()
     alert.title = "Surge 模块工具"
   //alert.addDestructiveAction("更新文件夹内全部文件")
-  alert.addAction("更新全部模块")
-  alert.addAction("更新单个模块")
-  alert.addAction("从链接创建")
   alert.addDestructiveAction("更新本脚本")
+  alert.addAction("从链接创建")
+  alert.addAction("更新单个模块")
+  alert.addAction("更新全部模块")
   alert.addCancelAction("取消")
   idx = await alert.presentAlert()
 }
@@ -67,14 +67,14 @@ let folderPath
 let files = []
 let contents = []
 const fm = FileManager.iCloud()
-if (idx == 0) {
+if (idx == 3) {
   folderPath = await DocumentPicker.openFolder()
   files = fm.listContents(folderPath)
-} else if (idx == 1) {
+} else if (idx == 2) {
   const filePath = await DocumentPicker.openFile()
   folderPath = filePath.substring(0, filePath.lastIndexOf('/'))
   files = [filePath.substring(filePath.lastIndexOf('/')+1)]
-} else if (idx == 2) {
+} else if (idx == 1) {
   let url
   let name
   if (fromUrlScheme) {
@@ -106,8 +106,8 @@ if (idx == 0) {
     files = [`${name}.sgmodule`]
     contents = [`#SUBSCRIBED ${url}`]
   }
-} else if (idx == 3) {
-  console.log("更新")
+} else if (idx == 0) {
+  console.log("检查更新")
    await update()
 }
 
