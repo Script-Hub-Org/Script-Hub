@@ -555,7 +555,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 			
 				if ((isSurgeiOS || isLooniOS || isShadowrocket) && proto == "true"){
 					proto = ", binary-body-mode=true";
-				};
+				}else if ((isSurgeiOS || isLooniOS || isShadowrocket) && proto == "false"){proto = "";};
 
                 if (isStashiOS){
 					
@@ -991,6 +991,7 @@ function parseQueryString(url) {
 
   return params;
 };
+
 
 async function isBinaryMode(url) {
   if (url.search(/proto/i) != -1) {
