@@ -99,7 +99,8 @@ body {
   line-height: 1.5;
   display: grid;
   grid-template-columns: 1fr min(45rem, 92%) 1fr;
-  margin: 0;
+  margin: 0px;
+  margin-top: 60px;
 }
 body > * {
   grid-column: 2;
