@@ -29,7 +29,7 @@ var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var ipNoResolve = queryObject.nore == "true" ? true : false;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
-var noCache = queryObject.nocache != undefined ? true : false;
+var noCache = istrue(queryObject.nocache);
 
 //缓存有效期相关
 var currentTime = new Date();
@@ -252,6 +252,12 @@ function http(req) {
   resolve(data)
   })
 )
+};
+
+function istrue(str) {
+	if (str == true || str == 1 || str == "true"|| str == "1"){
+		return true;
+	}else{return false;}
 };
 
 function parseQueryString(url) {
