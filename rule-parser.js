@@ -14,11 +14,12 @@ const isShadowrocket = 'undefined' !== typeof $rocket;
 const isLooniOS = 'undefined' != typeof $loon;
 
 const url = $request.url;
-var req = $request.url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-	//console.log(req);
-
+var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
+	console.log("原始链接：" + req);
+var urlArg = url.split(/\/_end_\//)[1];
 //获取参数
-const queryObject = parseQueryString(url);
+const queryObject = parseQueryString(urlArg);
+console.log("参数:" + queryObject);
 var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var ipNoResolve = queryObject.nore == "true" ? true : false;
