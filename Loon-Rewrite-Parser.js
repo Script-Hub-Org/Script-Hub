@@ -23,10 +23,10 @@ var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/ *, */) : null;
 var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/ *, */) : null;
-var delNoteSc = queryObject.del != undefined ? true : false;
+var delNoteSc = istrue(queryObject.del);
 var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;
 var nCronExp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;
-var noCache = queryObject.nocache != undefined ? true : false;
+var noCache = istrue(queryObject.nocache);
 var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : null;
 var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
@@ -1080,6 +1080,13 @@ function http(req) {
   })
 )
 };
+
+function istrue(str) {
+	if (str == true || str == 1 || str == "true"|| str == "1"){
+		return true;
+	}else{return false;}
+};
+
 function parseQueryString(url) {
   const queryString = url.split('?')[1]; // 获取查询字符串部分
   const regex = /([^=&]+)=([^&]*)/g; // 匹配键值对的正则表达式
