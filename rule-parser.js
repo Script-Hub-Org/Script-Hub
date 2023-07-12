@@ -17,9 +17,14 @@ const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
 	console.log("原始链接：" + req);
 var urlArg = url.split(/\/_end_\//)[1];
+
+var resFile = urlArg.split("?")[0];
+var resFileName = 
+resFile.substring(0,resFile.lastIndexOf('.'));
+
 //获取参数
 const queryObject = parseQueryString(urlArg);
-console.log("参数:" + queryObject);
+console.log("参数:" + JSON.stringify(queryObject));
 var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var ipNoResolve = queryObject.nore == "true" ? true : false;
@@ -98,10 +103,10 @@ $persistentStore.write(JSON.stringify(oCache), 'parser_cache');
 //判断是否断网
 if(body == null || body == ""){if(isSurgeiOS || isStashiOS){
   console.log("规则集转换：未获取到body的链接为" + $request.url)
-	$notification.post("规则集转换：未获取到body","请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈",{url:"https://t.me/zhangpeifu"})
+	$notification.post(`规则集转换："${resFileName}"未获取到body`,"请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈",{url:"https://t.me/zhangpeifu"})
  $done({ response: { status: 404 ,body:{} } });}else if (isLooniOS || isShadowrocket){
   console.log("规则集转换：未获取到body的链接为" + $request.url)
-  $notification.post("规则集转换：未获取到body","请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈","https://t.me/zhangpeifu")
+  $notification.post(`规则集转换："${resFileName}"未获取到body`,"请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈","https://t.me/zhangpeifu")
  $done({ response: { status: 404 ,body:{} } });
 }//识别客户端通知
 }else{//以下开始规则集解析
