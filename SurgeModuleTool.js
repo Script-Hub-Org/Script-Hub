@@ -1,7 +1,7 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: blue; icon-glyph: cloud-download-alt;
-let ToolVersion = "1.93";
+let ToolVersion = "1.94";
 async function delay(milliseconds) {
   var before = Date.now();
   while (Date.now() < before + milliseconds) {};
@@ -109,6 +109,11 @@ if (idx == 3) {
 }
 
 
+let report = {
+  success: 0,
+  fail: [],
+  noUrl: 0
+}
 
 
 for await (const [index, file] of files.entries()) {
@@ -116,6 +121,7 @@ for await (const [index, file] of files.entries()) {
     // console.log(file);
     let originalName
     let originalDesc
+    let noUrl
     try {
       let content
       let filePath
@@ -128,11 +134,13 @@ for await (const [index, file] of files.entries()) {
       }
       const matched = `${content}`.match(/^#SUBSCRIBED\s+(.*?)\s*(\n|$)/im)
       if (!matched) {
+        noUrl = true
         throw new Error('无订阅链接')
       }
       const subscribed = matched[0]
       const url = matched[1]
       if (!url) {
+        noUrl = true
         throw new Error('无订阅链接')
       }
 
@@ -196,6 +204,7 @@ for await (const [index, file] of files.entries()) {
         descInfo = `${originalDesc} -> ${desc}`
       }
       console.log(`\n✅ ${nameInfo}\n${descInfo}\n${file}`);
+      report.success += 1 
       await delay(1 * 1000)
       if (fromUrlScheme) {
         alert = new Alert()
@@ -209,8 +218,21 @@ for await (const [index, file] of files.entries()) {
         }
       }
     } catch (e) {
-      console.log(`\n❌ ${originalName || ''}\n${file}`);
-      console.error(e);
+      if (noUrl) {
+        report.noUrl += 1 
+      } else {
+        report.fail.push(originalName||file)   
+      }
+      
+      
+      
+      if (noUrl) {
+        console.log(`\n🈚️ ${originalName || ''}\n${file}`);
+        console.log(e)
+      } else {
+        console.log(`\n❌ ${originalName || ''}\n${file}`);
+        console.error(`${originalName || file}: ${e}`)
+      }
       if (fromUrlScheme) {
         alert = new Alert()
         alert.title = `❌ ${originalName || ''}\n${file}`
@@ -220,6 +242,17 @@ for await (const [index, file] of files.entries()) {
       }
     }
   }
+}
+if (!fromUrlScheme) {
+    alert = new Alert()
+    alert.title = `📦 模块总数${report.success + report.fail.length + report.noUrl}`
+    alert.message = `🈚️ 无链接: ${report.noUrl}\n✅ 更新成功: ${report.success}\n❌ 更新失败: ${report.fail.length}${report.fail.length > 0 ? `\n${report.fail.join(', ')}` : ''}`
+    alert.addAction("打开 Surge")
+    alert.addCancelAction("关闭")
+    idx = await alert.presentAlert()
+    if (idx == 0) {
+      Safari.open('surge://')
+    }
 }
 
 // @key Think @wuhu.
