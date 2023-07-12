@@ -786,7 +786,7 @@ const htmls = `
       
         <code>&nbsp;来源类型: </code>
         <div v-for="item in types">
-            <input type="radio" :id="'type-' + item.value" :value="item.value" v-model.lazy="type" />
+            <input type="radio" :id="'type-' + item.value" :value="item.value" v-model.lazy="type" :disabled="item.disabled"/>
             <label :for="'type-' + item.value" class="radio-label">{{item.label}}</label>
         </div>
 
@@ -795,7 +795,7 @@ const htmls = `
       <div>
         <code>&nbsp;目标类型: </code>
         <div v-for="item in targets">
-            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model.lazy="target" />
+            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model.lazy="target" :disabled=" (type === 'qx-script' && item.value !== 'surge-script') || (type === 'rule-set' && item.value !== 'rule-set') " />
             <label :for="'target-' + item.value" class="radio-label">{{item.label}}</label>
         </div>
       </div>
@@ -1006,7 +1006,7 @@ const htmls = `
       const { createApp, ref } = Vue
   const init = {
     baseUrl: location.protocol + '//script.hub',
-    types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'rule-set', label: '规则集'}, { value: "iso", label: "画个饼" }],
+    types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'rule-set', label: '规则集'}, { value: "iso", label: "画个饼", disabled: true }],
     type: '',
     targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'rule-set', label: '规则集', suffix: '.list' }],
     target: '',
