@@ -4,7 +4,7 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: blue; icon-glyph: cloud-download-alt;
-let ToolVersion = "1.88";
+let ToolVersion = "1.89";
 async function delay(milliseconds) {
   var before = Date.now();
   while (Date.now() < before + milliseconds) {};
@@ -234,9 +234,13 @@ async function update() {
   let version
   let resp
   try {
-    const url = "https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/SurgeModuleTool.js"
+    const url = "https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/SurgeModuleTool.js?v="+Date.now()
     let req = new Request(url)
     req.method = "GET"
+    req.headers = {
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    }
     resp = await req.loadString()
     
     const regex = /let ToolVersion = "([\d.]+)"/
