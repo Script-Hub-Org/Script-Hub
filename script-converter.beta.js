@@ -17,19 +17,22 @@ let url
 !(async () => {
   if (!$.isRequest()) throw new Error('不是 request')
 
-  var req
-  var urlArg
-
-  req = $request.url.split(/convert\/_start_\//)[1].split(/\/_end_\//)[0];
+  let req = $request.url.split(/convert\/_start_\//)[1].split(/\/_end_\//)[0];
 	// console.log(req);
-  urlArg = "?" + decodeURIComponent($request.url.split(/_end_\/[^?]+\?/)[1]);
+  let urlArg = $request.url.split(/\/_end_\//)[1];
   // console.log(urlArg);
 
-  //获取参数
-  var wrap_response = urlArg.search(/\?wrap_response=|&wrap_response=/) != -1 ? (urlArg.split(/\?wrap_response=|&wrap_response=/)[1].split("&")[0]) : null;
-  // console.log(wrap_response);
 
-  let body = `
+  const queryObject = parseQueryString(urlArg);
+  console.log("参数:" + JSON.stringify(queryObject));
+
+  const evJsori = queryObject.evalScriptori;
+  const evJsmodi = queryObject.evalScriptmodi;
+  const wrap_response = queryObject.wrap_response;
+  const type = queryObject.type;
+  const target = queryObject.target;
+
+  let prefix = `
 // 转换时间: ${new Date().toLocaleString('zh')}
 var setInterval = () => {}
 var clearInterval = () => {}
@@ -135,9 +138,14 @@ var _scriptSonverterDone = (val = {}) => {
   // $.log('ℹ️ res', $.toStr(res))
   const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
   $.log('ℹ️ res status', status)
-  let content = String($.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody'))
-  // $.log('ℹ️ res body', content)
-  body = `${body}\n${content.replace(/\$done\(/g, '_scriptSonverterDone(')}`
+  let body = String($.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody'))
+  // $.log('ℹ️ res body', body)
+  eval(evJsori)
+  if (target==='surge-script' || type === 'qx-script') {
+    body = `${prefix}\n${body.replace(/\$done\(/g, '_scriptSonverterDone(')}`  
+  }
+  
+  eval(evJsmodi)
   result = {
     response: {
       status: 200,
@@ -175,7 +183,20 @@ var _scriptSonverterDone = (val = {}) => {
   .finally(async () => {
     $.done(result)
   })
+function parseQueryString(url) {
+  const queryString = url.split('?')[1]; // 获取查询字符串部分
+  const regex = /([^=&]+)=([^&]*)/g; // 匹配键值对的正则表达式
+  const params = {};
+  let match;
 
+  while ((match = regex.exec(queryString))) {
+    const key = decodeURIComponent(match[1]); // 解码键
+    const value = decodeURIComponent(match[2]); // 解码值
+    params[key] = value; // 将键值对添加到对象中
+  }
+
+  return params;
+};
 // 通知
 async function notify(title, subt, desc, opts) {
   $.msg(title, subt, desc, opts)

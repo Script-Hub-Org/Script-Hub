@@ -848,7 +848,7 @@ const htmls = `
       <div>
         <code>&nbsp;目标类型: </code>
         <div v-for="item in targets">
-            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model.lazy="target" :disabled=" (type === 'qx-script' && item.value !== 'surge-script') || (type === 'rule-set' && item.value !== 'rule-set') " />
+            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model.lazy="target" :disabled=" (type === 'qx-script' && item.value !== 'surge-script') || (type === 'rule-set' && item.value !== 'rule-set') || (type === 'plain-text' && item.value !== 'plain-text') " />
             <label :for="'target-' + item.value" class="radio-label">{{item.label}}</label>
         </div>
       </div>
@@ -888,7 +888,7 @@ const htmls = `
             </div>
           </details>
 
-          <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
+          <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
             <summary>启用脚本转换 2(仅在转换 QX 资源时可用)</summary>
             <span>根据关键词为脚本启用脚本转换(与 <code>启用脚本转换 1</code> 的区别: 总是会在$done(body)里包一个response)</span>
             <textarea id="jsc2" v-model.lazy="jsc2" placeholder=""></textarea>
@@ -928,7 +928,7 @@ const htmls = `
       </div>
       <br/>
 
-      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
+      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
         <summary>名称 简介</summary>
         <span>名字+简介 ，名字和简介以"+"相连，可缺省名字或简介</span>
         <textarea id="n" v-model.lazy="n" placeholder=""></textarea>
@@ -939,7 +939,7 @@ const htmls = `
         <textarea id="filename" v-model.lazy="filename" placeholder=""></textarea>
       </details>
 
-      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
+      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
         <summary>重写相关</summary>
         <details>
           <summary>保留重写</summary>
@@ -975,7 +975,7 @@ const htmls = `
 
 
 
-      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
+      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
         <summary>修改 MITM 主机名</summary>
         <details>
           <summary>添加 MITM 主机名</summary>
@@ -991,7 +991,7 @@ const htmls = `
       </details>
       
 
-      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
+      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
         <summary>修改定时任务</summary>
         <details>
           <summary>修改定时任务(cron)</summary>
@@ -1006,7 +1006,7 @@ const htmls = `
       </details>
 
 
-      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' )">
+      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
         <summary>修改参数</summary>
         <details>
           <summary>修改参数(arg)</summary>
@@ -1034,7 +1034,7 @@ const htmls = `
         </details>
       </details>
 
-      <details v-if="!target || target !== 'surge-script' ">
+      <details v-if="!target || (target !== 'surge-script' && target !== 'plain-text' ) ">
         <summary>缓存(默认开启)</summary>
         <span>cachexp= 设置缓存有效期，单位：小时，不传入此参数默认有效期一小时。也可以用 BoxJs 修改 <code>Parser_cache_exp</code> 的值来修改全局有效期。单位：小时，支持小数，设置为0.0001即立即过期。</span>
         <input id="cachexp" v-model.number.lazy="cachexp" placeholder=""></input>
@@ -1081,9 +1081,9 @@ const htmls = `
       const { createApp, ref } = Vue
   const init = {
     baseUrl: location.protocol + '//script.hub',
-    types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'rule-set', label: '规则集'}, { value: "iso", label: "画个饼", disabled: true }],
+    types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'rule-set', label: '规则集'}, {value: 'plain-text', label: '纯文本'}, { value: "iso", label: "画个饼", disabled: true }],
     type: '',
-    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'rule-set', label: '规则集', suffix: '.list' }],
+    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'rule-set', label: '规则集', suffix: '.list' }, {value: 'plain-text', label: '纯文本'}],
     target: '',
     src: '',
     n: '',
@@ -1150,22 +1150,25 @@ const htmls = `
           }
           const searchStr = filenameStr.substring(filenameStr.lastIndexOf('?')+1)
           if (searchStr) {
-          const urlParams = new URLSearchParams("?" + searchStr);
+            const urlParams = new URLSearchParams("?" + searchStr);
 
-          params.forEach(i => {
-            const param = urlParams.get(i)
+            params.forEach(i => {
+              const param = urlParams.get(i)
 
-            if (param != null && param !== '' && param !== false) {
-              if (i === 'jsc' && param === '.') {
-                init.jsc_all = true
-              } else if (i === 'jsc2' && param === '.') {
-                init.jsc2_all = true
-              } else {
-                init[i] = param
+              if (param != null && param !== '' && param !== false) {
+                if (i === 'jsc' && param === '.') {
+                  init.jsc_all = true
+                } else if (i === 'jsc2' && param === '.') {
+                  init.jsc2_all = true
+                } else {
+                  init[i] = param
+                }
+                
               }
-              
-            }
-          })
+            })
+          }
+          if(fullname && init.target === 'plain-text') {
+            init.filename = fullname
           }
           
         }
@@ -1217,6 +1220,8 @@ const htmls = `
           this.target='rule-set'
         } else if(v === 'qx-script' && this.target !== 'surge-script'){
           this.target='surge-script'
+        }else if(v === 'plain-text' && this.target !== 'plain-text'){
+          this.target='plain-text'
         }
       },
       target(v) {
@@ -1224,6 +1229,8 @@ const htmls = `
           this.type='rule-set'
         } else if(v === 'surge-script' && this.type !== 'qx-script'){
           this.type='qx-script'
+        }else if(v === 'plain-text' && this.type !== 'plain-text'){
+          this.type='plain-text'
         }
       }
   },
@@ -1247,11 +1254,12 @@ const htmls = `
         const target = this.targets.find(i => i.value === this.target)
         if (this.src && target && type) {
           const suffix = target.suffix || ''
-          const pathType = this.target === 'surge-script' ? '/convert' : '/file'
+          const pathType = (this.target === 'surge-script' || this.target === 'plain-text') ? '/convert' : '/file'
         
           const plainUrl = this.src.split('?')[0]
+          const plainUrlFilename = plainUrl.substring(plainUrl.lastIndexOf('/') + 1)
 
-          let filename = this.filename || plainUrl.substring(plainUrl.lastIndexOf('/') + 1).split('.')[0]
+          let filename = this.filename || (this.target === 'plain-text' ? plainUrlFilename : plainUrlFilename.split('.')[0])
           if (!filename) {
             filename = 'untitled-' + Date.now()
           }
