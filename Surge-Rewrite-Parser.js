@@ -23,7 +23,7 @@ var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/ *, */) : null;
 var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/ *, */) : null;
-var delNoteSc = queryObject.del != undefined ? true : false;
+var delNoteSc = istrue(queryObject.del);
 var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;
 var nCronExp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;
 var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : null;
@@ -31,7 +31,7 @@ var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;
 var nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+") : null;
 var nTilesColor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
-var noCache = queryObject.nocache != undefined ? true : false;
+var noCache = istrue(queryObject.nocache);
 
 const iconStatus = $persistentStore.read("启用插件随机图标") ?? "启用";
 const iconReplace = $persistentStore.read("替换原始插件图标");
@@ -1351,6 +1351,12 @@ function http(req) {
   resolve(data)
   })
 )
+};
+
+function istrue(str) {
+	if (str == true || str == 1 || str == "true"|| str == "1"){
+		return true;
+	}else{return false;}
 };
 
 function parseQueryString(url) {
