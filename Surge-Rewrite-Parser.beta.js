@@ -20,7 +20,7 @@ const isLooniOS = queryObject.target == "loon-plugin";
 const isShadowrocket = queryObject.target == "shadowrocket-module";
 
 var evJsori = queryObject.evalScriptori;
-var evJsmodi = queryObject.evalScriptori;
+var evJsmodi = queryObject.evalScriptmodi;
 var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;
 var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
