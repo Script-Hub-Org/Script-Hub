@@ -1,7 +1,7 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: blue; icon-glyph: cloud-download-alt;
-let ToolVersion = "1.94";
+let ToolVersion = "1.95";
 async function delay(milliseconds) {
   var before = Date.now();
   while (Date.now() < before + milliseconds) {};
@@ -210,10 +210,16 @@ for await (const [index, file] of files.entries()) {
         alert = new Alert()
         alert.title = `✅ ${nameInfo}`
         alert.message = `${descInfo}\n${file}`
+        alert.addDestructiveAction("重载 Surge")
         alert.addAction("打开 Surge")
         alert.addCancelAction("关闭")
         idx = await alert.presentAlert()
         if (idx == 0) {
+          const req = new Request('http://script.hub/reload');
+          req.timeoutInterval = 10;
+          req.method = 'GET';
+          let res = await req.loadString();
+        } else if (idx == 1) {
           Safari.open('surge://')
         }
       }
@@ -247,10 +253,16 @@ if (!fromUrlScheme) {
     alert = new Alert()
     alert.title = `📦 模块总数${report.success + report.fail.length + report.noUrl}`
     alert.message = `🈚️ 无链接: ${report.noUrl}\n✅ 更新成功: ${report.success}\n❌ 更新失败: ${report.fail.length}${report.fail.length > 0 ? `\n${report.fail.join(', ')}` : ''}`
+    alert.addDestructiveAction("重载 Surge")
     alert.addAction("打开 Surge")
     alert.addCancelAction("关闭")
     idx = await alert.presentAlert()
     if (idx == 0) {
+      const req = new Request('http://script.hub/reload');
+      req.timeoutInterval = 10;
+      req.method = 'GET';
+      let res = await req.loadString();
+    } else if (idx == 1) {
       Safari.open('surge://')
     }
 }
