@@ -32,7 +32,7 @@ var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
 var noCache = istrue(queryObject.nocache);
 
 var evJsori = queryObject.evalScriptori;
-var evJsmodi = queryObject.evalScriptori;
+var evJsmodi = queryObject.evalScriptmodi;
 
 //缓存有效期相关
 var currentTime = new Date();
