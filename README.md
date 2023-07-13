@@ -39,7 +39,7 @@ Advanced Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and Shadowro
 
 ## 文档
 
-[查看文档](https://github.com/Script-Hub-Org/Script-Hub/wiki)
+[安装体验请查看文档](https://github.com/Script-Hub-Org/Script-Hub/wiki)
 
 ## 鸣谢
 
