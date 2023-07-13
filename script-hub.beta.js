@@ -936,7 +936,7 @@ const htmls = `
       
       <details>
         <summary>文件名(避免重名, 默认从来源取)</summary>
-        <textarea id="filename" v-model.lazy="filename" placeholder=""></textarea>
+        <textarea id="filename" v-model.lazy="filename" :placeholder=" target === 'plain-text' ? '当前为纯文本类型, 此处为包含后缀的完整文件名' : '不包含后缀' "></textarea>
       </details>
 
       <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
@@ -1060,13 +1060,13 @@ const htmls = `
         <details>
           <summary>处理原始内容</summary>
           <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
-          <textarea id="evalScriptori" v-model.lazy="evalScriptori" placeholder=""></textarea>
+          <textarea id="evalScriptori" v-model.lazy="evalScriptori" placeholder="body = body.replace(/ffffoooooo/gi, 'bbbaaarrr')"></textarea>
         </details>
 
         <details>
           <summary>处理转换后的内容</summary>
           <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
-          <textarea id="evalScriptmodi" v-model.lazy="evalScriptmodi" placeholder=""></textarea>
+          <textarea id="evalScriptmodi" v-model.lazy="evalScriptmodi" placeholder="body = body.replace(/ffffoooooo/gi, 'bbbaaarrr')"></textarea>
         </details>
       </details>
 
