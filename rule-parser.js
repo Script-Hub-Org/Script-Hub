@@ -31,6 +31,9 @@ var ipNoResolve = queryObject.nore == "true" ? true : false;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
 var noCache = istrue(queryObject.nocache);
 
+var evJsori = queryObject.evalScriptori;
+var evJsmodi = queryObject.evalScriptmodi;
+
 //缓存有效期相关
 var currentTime = new Date();
 var seconds = Math.floor(currentTime.getTime() / 1000); // 将毫秒转换为秒
@@ -100,6 +103,7 @@ $persistentStore.write(JSON.stringify(oCache), 'parser_cache');
   };
 };
   
+eval(evJsori);
 //判断是否断网
 if(body == null || body == ""){if(isSurgeiOS || isStashiOS){
   console.log("规则集转换：未获取到body的链接为" + $request.url)
@@ -237,6 +241,7 @@ if (isStashiOS){
 
 body = `${ruleSet}`.replace(/t&zd;/g,',').replace(/ ;#/g," ");
 
+eval(evJsmodi);
  $done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
 }//判断是否断网的反括号
 

@@ -21,6 +21,9 @@ const isSurgeiOS = queryObject.target == "surge-module";
 const isStashiOS = queryObject.target == "stash-stoverride";
 const isLooniOS = queryObject.target == "loon-plugin";
 const isShadowrocket = queryObject.target == "shadowrocket-module";
+
+var evJsori = queryObject.evalScriptori;
+var evJsmodi = queryObject.evalScriptmodi;
 var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;
 var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
@@ -365,7 +368,7 @@ $persistentStore.write(JSON.stringify(oCache), 'parser_cache');
       };
   };
 };
-
+eval(evJsori);
 //判断是否断网
 if(body == null || body == ""){if(isSurgeiOS || isStashiOS){
     console.log("QX转换：未获取到body的链接为" + $request.url)
@@ -884,6 +887,7 @@ ${MapLocal}
 ${MITM}`
 		.replace(/(#.+\n)\n+(?!\[)/g,'$1')
 		.replace(/\n{2,}/g,'\n\n')
+
 }else if (isStashiOS){
     
     pluginDesc = (pluginDesc[0] || '') && `${pluginDesc.join("\n")}`;
@@ -971,6 +975,8 @@ if (isSurgeiOS || isStashiOS) {
            others !="" && $notification.post("不支持的类型已跳过",others,"点击查看原文，长按可展开查看剩余不支持内容",{url:req});
         } else if (isLooniOS || isShadowrocket) {
        others !="" && $notification.post("不支持的类型已跳过","第" + others,"点击查看原文，长按可展开查看剩余不支持内容",req);};
+
+eval(evJsmodi);
 
  $done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
 }//判断是否断网的反括号
