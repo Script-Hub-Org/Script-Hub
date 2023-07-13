@@ -1055,6 +1055,22 @@ const htmls = `
       </div>
 
 
+      <details>
+        <summary>高级操作(使用代码处理内容)</summary>
+        <details>
+          <summary>处理原始内容</summary>
+          <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
+          <textarea id="evalScriptori" v-model.lazy="evalScriptori" placeholder=""></textarea>
+        </details>
+
+        <details>
+          <summary>处理转换后的内容</summary>
+          <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
+          <textarea id="evalScriptmodi" v-model.lazy="evalScriptmodi" placeholder=""></textarea>
+        </details>
+      </details>
+
+
     </div>
     <footer>
       <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.12</a></p>
@@ -1091,6 +1107,8 @@ const htmls = `
     nocache: '',
     copyInfo: '',
     resetInfo: '',
+    evalScriptori: '',
+    evalScriptmodi: '',
     nore: false,
     wrap_response: false,
     env: "${$.getEnv() || ''}",
@@ -1107,7 +1125,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'evalScriptori', 'evalScriptmodi']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
