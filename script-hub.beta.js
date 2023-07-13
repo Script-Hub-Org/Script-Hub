@@ -71,7 +71,7 @@ const html = `
 *, *::before, *::after {
   box-sizing: border-box;
   text-decoration: none;
-  margin-top: 1px;
+
 }
 
 /* Reset default appearance */
@@ -525,13 +525,13 @@ input[type="radio"]:checked+label.radio-label {
 }
 
 input[type="checkbox"]:checked::after {
-  /* Creates a rectangle with colored right and bottom borders which is rotated to look like a check mark */
+  /* Creates a rectangle with colored right and bottom borders which is rotated to look like a check mark 对号*/
   content: " ";
   width: 0.18em;
   height: 0.32em;
   border-radius: 0;
   position: absolute;
-  top: 0.05em;
+  top: 0.08em;
   left: 0.17em;
   background-color: transparent;
   border-right: solid var(--bg) 0.08em;
@@ -760,7 +760,7 @@ textarea::-webkit-resizer {
 }
 .button-over {
   position: relative;
-  top: -3px;
+  top: -2px;
   font-size: 14px;
   font-weight: bold;
 }
