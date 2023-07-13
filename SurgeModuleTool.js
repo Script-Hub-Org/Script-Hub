@@ -1,7 +1,7 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: blue; icon-glyph: cloud-download-alt;
-let ToolVersion = "1.95";
+let ToolVersion = "1.96";
 async function delay(milliseconds) {
   var before = Date.now();
   while (Date.now() < before + milliseconds) {};
@@ -40,6 +40,7 @@ function addLineAfterLastOccurrence(text, addition) {
 
 let idx
 let fromUrlScheme
+let checkUpdate
 // if (args.queryParameters.url && args.queryParameters.name) {
 if (args.queryParameters.url) {
   fromUrlScheme = true
@@ -105,7 +106,8 @@ if (idx == 3) {
   }
 } else if (idx == 0) {
   console.log("检查更新")
-   await update()
+  checkUpdate = true
+  await update()
 }
 
 
@@ -249,7 +251,7 @@ for await (const [index, file] of files.entries()) {
     }
   }
 }
-if (!fromUrlScheme) {
+if (!checkUpdate && !fromUrlScheme) {
     alert = new Alert()
     alert.title = `📦 模块总数${report.success + report.fail.length + report.noUrl}`
     alert.message = `🈚️ 无链接: ${report.noUrl}\n✅ 更新成功: ${report.success}\n❌ 更新失败: ${report.fail.length}${report.fail.length > 0 ? `\n${report.fail.join(', ')}` : ''}`
