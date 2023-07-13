@@ -760,7 +760,7 @@ textarea::-webkit-resizer {
 }
 .button-over {
   position: relative;
-  top: -3px;
+  top: -2px;
   font-size: 14px;
   font-weight: bold;
 }
