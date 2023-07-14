@@ -1,7 +1,7 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: blue; icon-glyph: cloud-download-alt;
-let ToolVersion = "1.96";
+let ToolVersion = "1.97";
 async function delay(milliseconds) {
   var before = Date.now();
   while (Date.now() < before + milliseconds) {};
@@ -134,6 +134,17 @@ for await (const [index, file] of files.entries()) {
         content = fm.readString(filePath)
         
       }
+      const originalNameMatched = `${content}`.match(/^#\!name\s*?=\s*(.*?)\s*(\n|$)/im)
+      if (originalNameMatched) {
+        originalName = originalNameMatched[1]
+      }
+      const originalDescMatched = `${content}`.match(/^#\!desc\s*?=\s*(.*?)\s*(\n|$)/im)
+      if (originalDescMatched) {
+        originalDesc = originalDescMatched[1]
+        if (originalDesc) {
+          originalDesc = originalDesc.replace(/^🔗.*?]\s*/i, '')
+        }
+      }
       const matched = `${content}`.match(/^#SUBSCRIBED\s+(.*?)\s*(\n|$)/im)
       if (!matched) {
         noUrl = true
@@ -146,17 +157,7 @@ for await (const [index, file] of files.entries()) {
         throw new Error('无订阅链接')
       }
 
-      const originalNameMatched = `${content}`.match(/^#\!name\s*?=\s*(.*?)\s*(\n|$)/im)
-      if (originalNameMatched) {
-        originalName = originalNameMatched[1]
-      }
-      const originalDescMatched = `${content}`.match(/^#\!desc\s*?=\s*(.*?)\s*(\n|$)/im)
-      if (originalDescMatched) {
-        originalDesc = originalDescMatched[1]
-        if (originalDesc) {
-          originalDesc = originalDesc.replace(/^🔗.*?]\s*/i, '')
-        }
-      }
+
 
       const req = new Request(url);
       req.timeoutInterval = 10;
