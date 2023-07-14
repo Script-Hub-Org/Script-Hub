@@ -468,9 +468,13 @@ if (delNoteSc === true && x.match(/^#/) && x.indexOf("#!") == -1){
 		x = "";
 };//剔除已注释重写结束
 
-let jscStatus = isJsCon(jsConverter);
-let jsc2Status = isJsCon(jsConverter2);
+let jscStatus,jsc2Status
+if (jsConverter != null){
+	jscStatus = isJsCon(jsConverter);}
+if (jsConverter2 != null){
+	jsc2Status = isJsCon(jsConverter2);}
 if (jsc2Status == true){jscStatus = false};
+
 let jsPre = "";
 let jsSuf = "";
 let oriType = queryObject.type.split("-")[0];
