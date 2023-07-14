@@ -380,7 +380,6 @@ if(body == null || body == ""){if(isSurgeiOS || isStashiOS){
 }//识别客户端通知
 }else{//以下开始重写及脚本转换
 
-
 if (body.match(/\/\*+\n[\s\S]*\n\*+\/\n/)){
 body = body.replace(/[\s\S]*(\/\*+\n[\s\S]*\n\*+\/\n)[\s\S]*/,"$1").match(/[^\r\n]+/g);
 }else{
@@ -396,8 +395,9 @@ let providers = [];
 let others = [];       //不支持的内容
 
 
-let scname = "";       //脚本名
+let scname = "";       //脚本重写名
 let js = "";           //脚本链接
+let jsname = "";       //脚本文件名
 let sctype = "";       //脚本类型
 let ptn = "";          //正则
 let rebody = "";       //是否需要body
@@ -463,31 +463,35 @@ if (x.indexOf(elem) != -1){
 x = "hostname=" + x
 }else{};//删除主机名结束
 
-//开启脚本转换
-if (jsConverter != null)	{
-	for (let i=0; i < jsConverter.length; i++) {
-  const elem = jsConverter[i];
-	if (x.indexOf(elem) != -1){
-		x = x.replace(/\x20(https?|ftp|file)(:\/\/.+\/)(.+?\.js)/g,` http://script.hub/convert/_start_/$1$2$3/_end_/$3?type=qx-script&target=surge-script`);
-	}else{};
-};//循环结束
-}else{};//开启脚本转换结束
-
-//开启脚本转换2
-if (jsConverter2 != null)	{
-	for (let i=0; i < jsConverter2.length; i++) {
-  const elem = jsConverter2[i];
-	if (x.indexOf(elem) != -1){
-		x = x.replace(/\x20(https?|ftp|file)(:\/\/.+\/)(.+?\.js)/g,` http://script.hub/convert/_start_/$1$2$3/_end_/$3?type=qx-script&target=surge-script&wrap_response=true`);
-	}else{};
-};//循环结束
-}else{};//开启脚本转换2结束
-
-
 //剔除已注释重写
 if (delNoteSc === true && x.match(/^#/) && x.indexOf("#!") == -1){
 		x = "";
 };//剔除已注释重写结束
+
+let jscStatus = isJsCon(jsConverter);
+let jsc2Status = isJsCon(jsConverter2);
+if (jsc2Status == true){jscStatus = false};
+let jsPre = "";
+let jsSuf = "";
+let oriType = queryObject.type.split("-")[0];
+let jsTarget = queryObject.target.split("-")[0];
+if (jscStatus == true || jsc2Status == true){
+jsPre = "http://script.hub/convert/_start_/";
+};
+if (jscStatus == true){
+jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script`;
+}else if (jsc2Status == true){
+jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script&wrap_response=true`;
+};
+
+function isJsCon (arr) {
+	if (arr != null){
+		for (let i=0; i < arr.length; i++) {
+  const elem = arr[i];
+	if (x.indexOf(elem) != -1){return true};
+	};//循环结束
+  };//if (arr != null)
+}//isJsCon1结束
 
 	let type = x.match(
 		/^#!|\x20url\x20script-|\x20url\x20reject$|\x20url\x20reject-|\x20echo-response\x20|\-header\x20|^hostname| url 30|\x20(request|response)-body|[^\s]+ [^u\s]+ [^\s]+ [^\s]+ [^\s]+ ([^\s]+ )?(https?|ftp|file)/
@@ -558,11 +562,15 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				ptn = x.replace(/\x20{2,}/g," ").split(" ")[urlInNum - 1].replace(/^#/,"");
 
+				js = x.replace(/\x20{2,}/g," ").split(" ")[urlInNum + 2];
+				
+				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
+				
+				jsname = scname;
+
 				if (isSurgeiOS){
 					ptn = ptn.replace(/(.+,.+)/,'"$1"');};
-
-				js = x.replace(/\x20{2,}/g," ").split(" ")[urlInNum + 2];
-
+				
 				rebody = x.match(/\x20script[^\s]*(-body|-analyze)/) ? ', requires-body=true' : '';
 				
 				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? ', max-size=3145728' : '';
@@ -579,8 +587,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? '3145728' : '0';
 				};
-				
-				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
+//开启脚本转换				
+				js = jsPre + js + jsSuf.replace(/_yuliu_/,jsname);
 				
 				if (isLooniOS){			
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
@@ -787,6 +795,10 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					cronExp = cronExp.replace(/[^\s]+ ([^\s]+ [^\s]+ [^\s]+ [^\s]+ [^\s]+)/,'$1');}
 				
 				croName = cronJs.substring(cronJs.lastIndexOf('/') + 1, cronJs.lastIndexOf('.') );
+				
+				jsname = croName;
+				
+				cronJs = jsPre + cronJs + jsSuf.replace(/_yuliu_/,jsname);
 				
 				if (isSurgeiOS || isShadowrocket){
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
