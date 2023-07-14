@@ -27,7 +27,7 @@ const queryObject = parseQueryString(urlArg);
 console.log("参数:" + JSON.stringify(queryObject));
 var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
-var ipNoResolve = queryObject.nore == "true" ? true : false;
+var ipNoResolve = istrue(queryObject.nore);
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
 var noCache = istrue(queryObject.nocache);
 
