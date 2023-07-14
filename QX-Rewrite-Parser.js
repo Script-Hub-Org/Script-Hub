@@ -769,12 +769,12 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					};
                     }else if (type.match(/\x20(https?|ftp|file)/)){
 //定时任务                    
-				
-				if (isSurgeiOS || isShadowrocket || isLooniOS){
 				cronExp = x.replace(/\x20{2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/^#/,'');
-				}else if (isStashiOS){
-				cronExp = x.replace(/\x20{2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/[^\s]+ ([^\s]+ [^\s]+ [^\s]+ [^\s]+ [^\s]+)/,'$1').replace(/^#/,'');
-				};
+				
+				cronJs = x.replace(/^#/,"")
+				.replace(/\x20{2,}/g," ")
+				.replace(cronExp,"")
+				.split(/ *, */)[0];
 				
             if (nCron != null){
 	for (let i=0; i < nCron.length; i++) {
@@ -783,7 +783,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
         cronExp = nCronExp[i];   
             };};};
                 
-				cronJs = x.split("://")[0].replace(/.+\x20([^\s]+)$/,"$1") + "://" + x.split("://")[1].split(",")[0];
+				if (isStashiOS){
+					cronExp = cronExp.replace(/[^\s]+ ([^\s]+ [^\s]+ [^\s]+ [^\s]+ [^\s]+)/,'$1');}
 				
 				croName = cronJs.substring(cronJs.lastIndexOf('/') + 1, cronJs.lastIndexOf('.') );
 				
