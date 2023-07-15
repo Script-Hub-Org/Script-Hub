@@ -17,10 +17,23 @@ var urlArg = url.split(/\/_end_\//)[1];
 //获取参数
 const queryObject = parseQueryString(urlArg);
 console.log("参数:" + JSON.stringify(queryObject));
+
+//目标app
 const isSurgeiOS = queryObject.target == "surge-module";
 const isStashiOS = queryObject.target == "stash-stoverride";
 const isLooniOS = queryObject.target == "loon-plugin";
 const isShadowrocket = queryObject.target == "shadowrocket-module";
+
+//本机app
+const isEgernL = 'object' == typeof egern;
+const isLanceXL = 'undefined' != typeof $native;
+if (isEgernL || isLanceXL){
+	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"}
+};
+const isStashiOSL = 'undefined' !== typeof $environment && $environment['stash-version'];
+const isSurgeiOSL = 'undefined' !== typeof $environment && $environment['surge-version'];
+const isShadowrocketL = 'undefined' !== typeof $rocket;
+const isLooniOSL = 'undefined' != typeof $loon;
 
 var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
@@ -370,14 +383,9 @@ $persistentStore.write(JSON.stringify(oCache), 'parser_cache');
 };
 eval(evJsori);
 //判断是否断网
-if(body == null || body == ""){if(isSurgeiOS || isStashiOS){
-    console.log("QX转换：未获取到body的链接为" + $request.url)
-	$notification.post(`QX转换："${notifyName}"未获取到body`,"请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈",{url:"https://t.me/zhangpeifu"})
- $done({ response: { status: 404 ,body:{} } });}else if(isLooniOS || isShadowrocket){
-    console.log("QX转换：未获取到body的链接为" + $request.url)
-    $notification.post(`QX转换："${notifyName}"未获取到body`,"请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈","https://t.me/zhangpeifu")
+if(body == null || body == ""){
+	notify(`QX转换："${notifyName}"未获取到body`,"请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈","https://t.me/zhangpeifu")
  $done({ response: { status: 404 ,body:{} } });
-}//识别客户端通知
 }else{//以下开始重写及脚本转换
 
 if (body.match(/\/\*+\n[\s\S]*\n\*+\/\n/)){
@@ -988,10 +996,7 @@ ${providers}`
 		.replace(/\n{2,}/g,'\n\n')
 };
 
-if (isSurgeiOS || isStashiOS) {
-           others !="" && $notification.post("不支持的类型已跳过",others,"点击查看原文，长按可展开查看剩余不支持内容",{url:req});
-        } else if (isLooniOS || isShadowrocket) {
-       others !="" && $notification.post("不支持的类型已跳过","第" + others,"点击查看原文，长按可展开查看剩余不支持内容",req);};
+others !="" && notify("不支持的类型已跳过",others,"点击查看原文，长按可展开查看剩余不支持内容",req)
 
 eval(evJsmodi);
 
@@ -1001,9 +1006,30 @@ eval(evJsmodi);
 
 })()
 .catch((e) => {
-		$notification.post(`${e}`,'','');
-		$done()
+		notify(`Script Hub: QX转换`,`${e}`,'','https://t.me/zhetengsha_group');
+		result = {
+      response: {
+        status: 500,
+        body: `${e}\n\n\n\n\n\nScript Hub QX转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
+`,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+          'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+        },
+      },
+    }
 	})
+  .finally(async () => {
+    $done(result)
+  })
+
+function notify ( title , subt , desc , opts ){
+	if (isShadowrocketL || isLooniOSL){		$notification.post(title,subt,desc,opts);
+	}else{
+		$notification.post(title,subt,desc,{url:opts});};
+};
 
 function http(req) {
   return new Promise((resolve, reject) =>
