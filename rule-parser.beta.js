@@ -27,7 +27,7 @@ const isLooniOSL = 'undefined' != typeof $loon;
 
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-	console.log("原始链接：" + req);
+	//console.log("原始链接：" + req);
 var urlArg = url.split(/\/_end_\//)[1];
 
 var resFile = urlArg.split("?")[0];
@@ -36,7 +36,7 @@ resFile.substring(0,resFile.lastIndexOf('.'));
 
 //获取参数
 const queryObject = parseQueryString(urlArg);
-console.log("参数:" + JSON.stringify(queryObject));
+//console.log("参数:" + JSON.stringify(queryObject));
 var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var ipNoResolve = istrue(queryObject.nore);
@@ -272,9 +272,6 @@ eval(evJsmodi);
       },
     }
 	})
-  .finally(async () => {
-    $done(result)
-  })
 
 function notify ( title , subt , desc , opts ){
 	if (isShadowrocketL || isLooniOSL){		$notification.post(title,subt,desc,opts);
