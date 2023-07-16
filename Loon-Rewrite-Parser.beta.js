@@ -9,11 +9,11 @@
 
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-	console.log("原始链接：" + req);
+	//console.log("原始链接：" + req);
 var urlArg = url.split(/\/_end_\//)[1];
 //获取参数
 const queryObject = parseQueryString(urlArg);
-console.log("参数:" + JSON.stringify(queryObject));
+//console.log("参数:" + JSON.stringify(queryObject));
 
 //目标app
 const isSurgeiOS = queryObject.target == "surge-module";
@@ -320,7 +320,7 @@ let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).to
 };
 
 const pluginIcon = icon;
-console.log("插件图标：" + pluginIcon);
+//console.log("插件图标：" + pluginIcon);
 
 !(async () => {
   let body
