@@ -393,6 +393,7 @@ if (body.match(/\/\*+\n[\s\S]*\n\*+\/\n/)){
 body = body.replace(/[\s\S]*(\/\*+\n[\s\S]*\n\*+\/\n)[\s\S]*/,"$1").match(/[^\r\n]+/g);
 }else{
     body = body.match(/[^\r\n]+/g);};
+	console.log("开始转换" + body);
 let pluginDesc = [];
 let httpFrame = "";
 let URLRewrite = [];
