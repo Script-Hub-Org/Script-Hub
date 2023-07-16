@@ -11,12 +11,12 @@
 
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-	console.log("原始链接：" + req);
+	//console.log("原始链接：" + req);
 var urlArg = url.split(/\/_end_\//)[1];
 
 //获取参数
 const queryObject = parseQueryString(urlArg);
-console.log("参数:" + JSON.stringify(queryObject));
+//console.log("参数:" + JSON.stringify(queryObject));
 
 //目标app
 const isSurgeiOS = queryObject.target == "surge-module";
@@ -330,7 +330,7 @@ let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).to
     icon = "#!icon=" + pluginPokemonIcon;
 };
 const pluginIcon = icon;
-console.log("插件图标：" + pluginIcon);
+//console.log("插件图标：" + pluginIcon);
 
 !(async () => {
   let body
@@ -674,15 +674,15 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				if (isLooniOS){
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
-				script.push(`${noteK}http-${reHdType} ${reHdPtn} script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/replace-header/index.js, timeout=60, tag=replaceHeader_${y}, argument="${reHdArg1}->${reHdArg2}"`);				
+				script.push(`${noteK}http-${reHdType} ${reHdPtn} script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-header.js, timeout=60, tag=replaceHeader_${y}, argument="${reHdArg1}->${reHdArg2}"`);				
 				}else if (isSurgeiOS || isShadowrocket){
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
-				script.push(`${noteK}replaceHeader_${y} = type=http-${reHdType}, pattern=${reHdPtn}, script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/replace-header/index.js, timeout=60, argument="${reHdArg1}->${reHdArg2}"`);
+				script.push(`${noteK}replaceHeader_${y} = type=http-${reHdType}, pattern=${reHdPtn}, script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-header.js, timeout=60, argument="${reHdArg1}->${reHdArg2}"`);
 				
 				}else if (isStashiOS){
 				body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 				script.push(`${noteK4}- match: ${reHdPtn}${noteKn6}name: "replace-Header"${noteKn6}type: ${reHdType}${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}${reHdArg1}->${reHdArg2}`);
-				providers.push(`${noteK2}"replace-Header":${noteKn4}url: https://raw.githubusercontent.com/xream/scripts/main/surge/modules/replace-header/index.js${noteKn4}interval: 86400`	);				
+				providers.push(`${noteK2}"replace-Header":${noteKn4}url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-header.js${noteKn4}interval: 86400`	);				
 				};
 				break;
 				
@@ -701,7 +701,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				
 				script.push(
-					`${noteK}http-request ${ptn} script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/echo-response/index.js, timeout=60, tag=${scname}_${y}, argument=type=text/json&url=${arg}`);
+					`${noteK}http-request ${ptn} script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js, timeout=60, tag=${scname}_${y}, argument=type=text/json&url=${arg}`);
 				}else if (isSurgeiOS){
 				body[y - 1]?.match(/^#/) && MapLocal.push(body[y - 1]);
 
@@ -714,7 +714,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				
 				script.push(
-					`${noteK}${scname}_${y} = type=http-request, pattern=${ptn}, script-path=https://raw.githubusercontent.com/xream/scripts/main/surge/modules/echo-response/index.js, timeout=60, argument=type=text/json&url=${arg}`)
+					`${noteK}${scname}_${y} = type=http-request, pattern=${ptn}, script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js, timeout=60, argument=type=text/json&url=${arg}`)
 				}else if (isStashiOS){
 				body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 				
@@ -722,7 +722,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					`${noteK4}- match: ${ptn}${noteKn6}name: "echo-response"${noteKn6}type: request${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}type=text/json&url=${arg}`)
 				
 				providers.push(
-							`${noteK2}"echo-response":${noteKn4}url: https://raw.githubusercontent.com/xream/scripts/main/surge/modules/echo-response/index.js${noteKn4}interval: 86400`);
+							`${noteK2}"echo-response":${noteKn4}url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js${noteKn4}interval: 86400`);
 				}; 
 
 			}else{others.push(x)};
@@ -774,18 +774,18 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 						
 					script.push(
-							`${noteK}http-${reBdType} ${reBdPtn} script-path=https://gitlab.com/lodepuly/vpn_tool/-/raw/main/Resource/Script/CommonScript/replace-body.js, requires-body=true, timeout=60 ,tag=replaceBody_${y}, argument="${reBdArg1}->${reBdArg2}"`);
+							`${noteK}http-${reBdType} ${reBdPtn} script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-body.js, requires-body=true, timeout=60 ,tag=replaceBody_${y}, argument="${reBdArg1}->${reBdArg2}"`);
 					}else if (isSurgeiOS || isShadowrocket){
 					body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 					script.push(
-							`${noteK}replaceBody_${y} = type=http-${reBdType}, pattern=${reBdPtn}, requires-body=true, max-size=3145728, script-path=https://gitlab.com/lodepuly/vpn_tool/-/raw/main/Resource/Script/CommonScript/replace-body.js, timeout=60, argument="${reBdArg1}->${reBdArg2}"`);
+							`${noteK}replaceBody_${y} = type=http-${reBdType}, pattern=${reBdPtn}, requires-body=true, max-size=3145728, script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-body.js, timeout=60, argument="${reBdArg1}->${reBdArg2}"`);
 					}else if (isStashiOS){
 					body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 					
 					script.push(
 							`${noteK4}- match: ${reBdPtn}${noteKn6}name: "replace-Body"${noteKn6}type: ${reBdType}${noteKn6}timeout: 30${noteKn6}require-body: true${noteKn6}max-size: 3145728${noteKn6}argument: |-${noteKn8}${reBdArg1}->${reBdArg2}`);
 					providers.push(
-							`${noteK2}"replace-Body":${noteKn4}url: https://gitlab.com/lodepuly/vpn_tool/-/raw/main/Resource/Script/CommonScript/replace-body.js${noteKn4}interval: 86400`);	
+							`${noteK2}"replace-Body":${noteKn4}url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-body.js${noteKn4}interval: 86400`);	
 					};
                     }else if (type.match(/\x20(https?|ftp|file)/)){
 //定时任务                    
@@ -1077,7 +1077,7 @@ if (url.search(/proto/i) != -1) {
 		} else {
 			const res = await http(url);
 	if (res == undefined){
-		console.log("Script Hub QX 转换器 查询脚本链接失败");
+		//console.log("Script Hub QX 转换器 查询脚本链接失败");
 		return "false";
 	}else if (res.includes(".bodyBytes")){
 		binaryInfo.push({"url":url,"binarymode":"true"});
