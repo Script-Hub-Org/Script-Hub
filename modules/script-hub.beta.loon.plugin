@@ -19,15 +19,15 @@ hostname = script.hub, *.script.hub
 
 [Script]
 
-http-request ^https?:\/\/script\.hub\/($|edit\/|reload) script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.beta.js, tag=Script Hub: 前端
+http-request ^https?:\/\/script\.hub\/($|edit\/|reload) script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.beta.js, timeout=30, tag=Script Hub: 前端
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.beta.js, tag=Script Hub: QX 转换 Loon
+http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.beta.js, timeout=30, tag=Script Hub: QX 转换 Loon
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=loon-plugin script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.beta.js, tag=Script Hub: Loon 插件控制器
+http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=loon-plugin script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.beta.js, timeout=30, tag=Script Hub: Loon 插件控制器
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=surge-module script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.beta.js, tag=Script Hub: Surge 转换 Loon
+http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=surge-module script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.beta.js, timeout=30, tag=Script Hub: Surge 转换 Loon
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.beta.js, tag=Script Hub: 规则集转换
+http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.beta.js, timeout=30, tag=Script Hub: 规则集转换
 
-http-request ^https?:\/\/script\.hub\/convert\/ script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.beta.js, tag=Script Hub: 脚本转换
+http-request ^https?:\/\/script\.hub\/convert\/ script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.beta.js, timeout=30, tag=Script Hub: 脚本转换
 
