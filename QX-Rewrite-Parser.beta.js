@@ -509,7 +509,7 @@ function isJsCon (arr) {
 	let type = x.match(
 		/^#!|\x20url\x20script-|\x20url\x20reject$|\x20url\x20reject-|\x20echo-response\x20|\-header\x20|^hostname| url 30|\x20(request|response)-body|[^\s]+ [^u\s]+ [^\s]+ [^\s]+ [^\s]+ ([^\s]+ )?(https?|ftp|file)/
 	)?.[0];
-	console.log(type);
+
 //判断注释
 if (isLooniOS || isSurgeiOS || isShadowrocket){
 	
@@ -1000,6 +1000,7 @@ ${providers}`
 
 others !="" && notify("不支持的类型已跳过",others,"点击查看原文，长按可展开查看剩余不支持内容",req)
 
+console.log(body);
 eval(evJsmodi);
 
  $done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
