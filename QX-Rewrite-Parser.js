@@ -392,6 +392,7 @@ if (body.match(/\/\*+\n[\s\S]*\n\*+\/\n/)){
 body = body.replace(/[\s\S]*(\/\*+\n[\s\S]*\n\*+\/\n)[\s\S]*/,"$1").match(/[^\r\n]+/g);
 }else{
     body = body.match(/[^\r\n]+/g);};
+
 let pluginDesc = [];
 let httpFrame = "";
 let URLRewrite = [];
@@ -503,11 +504,12 @@ function isJsCon (arr) {
 	if (x.indexOf(elem) != -1){return true};
 	};//循环结束
   };//if (arr != null)
-}//isJsCon1结束
+}//isJsCon结束
 
 	let type = x.match(
 		/^#!|\x20url\x20script-|\x20url\x20reject$|\x20url\x20reject-|\x20echo-response\x20|\-header\x20|^hostname| url 30|\x20(request|response)-body|[^\s]+ [^u\s]+ [^\s]+ [^\s]+ [^\s]+ ([^\s]+ )?(https?|ftp|file)/
 	)?.[0];
+
 //判断注释
 if (isLooniOS || isSurgeiOS || isShadowrocket){
 	
@@ -1021,9 +1023,6 @@ eval(evJsmodi);
       },
     }
 	})
-  .finally(async () => {
-    $done(result)
-  })
 
 function notify ( title , subt , desc , opts ){
 	if (isShadowrocketL || isLooniOSL){		$notification.post(title,subt,desc,opts);
