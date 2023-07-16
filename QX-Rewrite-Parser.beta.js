@@ -377,6 +377,7 @@ $persistentStore.write(JSON.stringify(oCache), 'parser_cache');
     }else{
         console.log("获取到缓存body")
         body = oCache[objIndex].body;
+		console.log("缓存body为" + body);
     }
       };
   };
