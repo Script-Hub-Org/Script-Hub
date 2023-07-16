@@ -9,11 +9,11 @@
 
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-	console.log("原始链接：" + req);
+	//console.log("原始链接：" + req);
 var urlArg = url.split(/\/_end_\//)[1];
 //获取参数
 const queryObject = parseQueryString(urlArg);
-console.log("参数:" + JSON.stringify(queryObject));
+//console.log("参数:" + JSON.stringify(queryObject));
 
 //目标app
 const isSurgeiOS = queryObject.target == "surge-module";
@@ -34,8 +34,8 @@ const isLooniOSL = 'undefined' != typeof $loon;
 
 var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
-console.log("修改原文参数" + evJsori);
-console.log("修改转换后参数" + evJsmodi);
+//console.log("修改原文参数" + evJsori);
+//console.log("修改转换后参数" + evJsmodi);
 var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;
 var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
@@ -326,7 +326,7 @@ let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).to
     icon = "#!icon=" + pluginPokemonIcon;
 };
 const pluginIcon = icon;
-console.log("插件图标：" + pluginIcon);
+//console.log("插件图标：" + pluginIcon);
 
 !(async () => {
   let body
