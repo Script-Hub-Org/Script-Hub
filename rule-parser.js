@@ -272,9 +272,6 @@ eval(evJsmodi);
       },
     }
 	})
-  .finally(async () => {
-    $done(result)
-  })
 
 function notify ( title , subt , desc , opts ){
 	if (isShadowrocketL || isLooniOSL){		$notification.post(title,subt,desc,opts);
