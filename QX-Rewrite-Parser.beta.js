@@ -338,7 +338,7 @@ const pluginIcon = icon;
   if (noCache == true){
 	body = await http(req);
 }else if (oCache == null){
-    //console.log("一个缓存也没有")
+    console.log("一个缓存也没有")
   body = await http(req);
   nCache[0].url = req;
   nCache[0].body = body;
@@ -352,7 +352,7 @@ const pluginIcon = icon;
 $persistentStore.write(JSON.stringify(oCache), 'parser_cache');
 
  if (!oCache.some(obj => obj.url === req)){
-     //console.log("有缓存但是没有这个URL的")
+     console.log("有缓存但是没有这个URL的")
   body = await http(req);
   nCache[0].url = req;
   nCache[0].body = body;
@@ -362,20 +362,20 @@ $persistentStore.write(JSON.stringify(mergedCache), 'parser_cache');
   }else if (oCache.some(obj => obj.url === req)){
     const objIndex = oCache.findIndex(obj => obj.url === req);
     if (seconds - oCache[objIndex].time > expirationTime){
-      //console.log("有缓存且有url,但是过期了")
+      console.log("有缓存且有url,但是过期了")
   body = await http(req);
   oCache[objIndex].body = body;
   oCache[objIndex].time = seconds;
 $persistentStore.write(JSON.stringify(oCache), 'parser_cache');
     }else{
-      //console.log("有缓存且有url且没过期")
+      console.log("有缓存且有url且没过期")
     if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
-        //console.log("但是body为null")
+        console.log("但是body为null")
         body = await http(req);
         oCache[objIndex].body = body;
         oCache[objIndex].time = seconds;        $persistentStore.write(JSON.stringify(oCache), "parser_cache");
     }else{
-        //console.log("获取到缓存body")
+        console.log("获取到缓存body")
         body = oCache[objIndex].body;
     }
       };
@@ -503,7 +503,7 @@ function isJsCon (arr) {
 	if (x.indexOf(elem) != -1){return true};
 	};//循环结束
   };//if (arr != null)
-}//isJsCon1结束
+}//isJsCon结束
 
 	let type = x.match(
 		/^#!|\x20url\x20script-|\x20url\x20reject$|\x20url\x20reject-|\x20echo-response\x20|\-header\x20|^hostname| url 30|\x20(request|response)-body|[^\s]+ [^u\s]+ [^\s]+ [^\s]+ [^\s]+ ([^\s]+ )?(https?|ftp|file)/
