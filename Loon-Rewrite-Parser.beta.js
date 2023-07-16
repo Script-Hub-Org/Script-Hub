@@ -1095,9 +1095,6 @@ others !="" && notify("不支持的类型已跳过",others,"点击查看原文�
       },
     }
 	})
-  .finally(async () => {
-    $done(result)
-  })
 
 function notify ( title , subt , desc , opts ){
 	if (isShadowrocketL || isLooniOSL){		$notification.post(title,subt,desc,opts);
