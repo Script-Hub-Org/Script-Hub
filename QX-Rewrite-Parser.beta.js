@@ -1002,7 +1002,7 @@ others !="" && notify("不支持的类型已跳过",others,"点击查看原文�
 
 eval(evJsmodi);
 
- $done({ response: { status: 200 ,body:body + "???" ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
+ $done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
 }//判断是否断网的反括号
 
 
