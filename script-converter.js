@@ -1,4 +1,3 @@
-const NAMESPACE = `xream`
 const NAME = `script-converter`
 
 const $ = new Env(NAME)
@@ -17,20 +16,19 @@ let url
 !(async () => {
   if (!$.isRequest()) throw new Error('不是 request')
 
-  let req = $request.url.split(/convert\/_start_\//)[1].split(/\/_end_\//)[0];
-	// console.log(req);
-  let urlArg = $request.url.split(/\/_end_\//)[1];
+  let req = $request.url.split(/convert\/_start_\//)[1].split(/\/_end_\//)[0]
+  // console.log(req);
+  let urlArg = $request.url.split(/\/_end_\//)[1]
   // console.log(urlArg);
 
+  const queryObject = parseQueryString(urlArg)
+  console.log('参数:' + JSON.stringify(queryObject))
 
-  const queryObject = parseQueryString(urlArg);
-  console.log("参数:" + JSON.stringify(queryObject));
-
-  const evJsori = queryObject.evalScriptori;
-  const evJsmodi = queryObject.evalScriptmodi;
-  const wrap_response = queryObject.wrap_response;
-  const type = queryObject.type;
-  const target = queryObject.target;
+  const evJsori = queryObject.evalScriptori
+  const evJsmodi = queryObject.evalScriptmodi
+  const wrap_response = queryObject.wrap_response
+  const type = queryObject.type
+  const target = queryObject.target
 
   let prefix = `
 // 转换时间: ${new Date().toLocaleString('zh')}
@@ -141,10 +139,10 @@ var _scriptSonverterDone = (val = {}) => {
   let body = String($.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody'))
   // $.log('ℹ️ res body', body)
   eval(evJsori)
-  if (target==='surge-script' || type === 'qx-script') {
-    body = `${prefix}\n${body.replace(/\$done\(/g, '_scriptSonverterDone(')}`  
+  if (target === 'surge-script' || type === 'qx-script') {
+    body = `${prefix}\n${body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
   }
-  
+
   eval(evJsmodi)
   result = {
     response: {
@@ -162,7 +160,7 @@ var _scriptSonverterDone = (val = {}) => {
   .catch(async e => {
     $.logErr(e)
     const msg = `${$.lodash_get(e, 'message') || $.lodash_get(e, 'error') || e}`
-    if($.isShadowrocket() && msg.includes(`未能完成操作`)) {
+    if ($.isShadowrocket() && msg.includes(`未能完成操作`)) {
       $.log(`脚本转换`, `⚠️`, msg, url)
     } else {
       await notify(`脚本转换`, `❌`, msg, url)
@@ -184,19 +182,19 @@ var _scriptSonverterDone = (val = {}) => {
     $.done(result)
   })
 function parseQueryString(url) {
-  const queryString = url.split('?')[1]; // 获取查询字符串部分
-  const regex = /([^=&]+)=([^&]*)/g; // 匹配键值对的正则表达式
-  const params = {};
-  let match;
+  const queryString = url.split('?')[1] // 获取查询字符串部分
+  const regex = /([^=&]+)=([^&]*)/g // 匹配键值对的正则表达式
+  const params = {}
+  let match
 
   while ((match = regex.exec(queryString))) {
-    const key = decodeURIComponent(match[1]); // 解码键
-    const value = decodeURIComponent(match[2]); // 解码值
-    params[key] = value; // 将键值对添加到对象中
+    const key = decodeURIComponent(match[1]) // 解码键
+    const value = decodeURIComponent(match[2]) // 解码值
+    params[key] = value // 将键值对添加到对象中
   }
 
-  return params;
-};
+  return params
+}
 // 通知
 async function notify(title, subt, desc, opts) {
   $.msg(title, subt, desc, opts)
