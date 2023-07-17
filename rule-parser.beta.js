@@ -36,7 +36,7 @@ resFile.substring(0,resFile.lastIndexOf('.'));
 
 //获取参数
 const queryObject = parseQueryString(urlArg);
-//console.log("参数:" + JSON.stringify(queryObject));
+//console.log("参数:" + toStr(queryObject));
 var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var ipNoResolve = istrue(queryObject.nore);
@@ -49,7 +49,7 @@ var evJsmodi = queryObject.evalScriptmodi;
 //缓存有效期相关
 var currentTime = new Date();
 var seconds = Math.floor(currentTime.getTime() / 1000); // 将毫秒转换为秒
-var boxjsSetExp = $persistentStore.read("Parser_cache_exp") ?? "1";
+var boxjsSetExp = getval("Parser_cache_exp") ?? "1";
 //设置有效期时间
 var expirationTime
 if (cachExp != null){
@@ -59,10 +59,10 @@ if (cachExp != null){
 };
 //console.log(expirationTime);
 var nCache = [{"url":"","body":"","time":""}];
-var oCache = $persistentStore.read("parser_cache");
+var oCache = getval("parser_cache");
 //检查是否有缓存
 if (oCache != "" && oCache != null){
-  oCache = JSON.parse(oCache);
+  oCache = toObj(oCache);
 }else{oCache = null;};
 
 !(async () => {
@@ -76,13 +76,13 @@ if (oCache != "" && oCache != null){
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
-  $persistentStore.write(JSON.stringify(nCache), 'parser_cache');
+  setval(toStr(nCache), 'parser_cache');
   }else{
     //删除大于一天的缓存防止缓存越来越大
     oCache = oCache.filter(obj => {
   return seconds - obj.time < 86400 ;
 });
-$persistentStore.write(JSON.stringify(oCache), 'parser_cache');
+setval(toStr(oCache), 'parser_cache');
 
  if (!oCache.some(obj => obj.url === req)){
      //console.log("有缓存但是没有这个URL的")
@@ -91,7 +91,7 @@ $persistentStore.write(JSON.stringify(oCache), 'parser_cache');
   nCache[0].body = body;
   nCache[0].time = seconds;
   var mergedCache = oCache.concat(nCache);
-$persistentStore.write(JSON.stringify(mergedCache), 'parser_cache');
+setval(toStr(mergedCache), 'parser_cache');
   }else if (oCache.some(obj => obj.url === req)){
     const objIndex = oCache.findIndex(obj => obj.url === req);
     if (seconds - oCache[objIndex].time > expirationTime){
@@ -99,14 +99,14 @@ $persistentStore.write(JSON.stringify(mergedCache), 'parser_cache');
   body = await http(req);
   oCache[objIndex].body = body;
   oCache[objIndex].time = seconds;
-$persistentStore.write(JSON.stringify(oCache), 'parser_cache');
+setval(toStr(oCache), 'parser_cache');
     }else{
       //console.log("有缓存且有url且没过期")
     if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
         //console.log("但是body为null")
         body = await http(req);
         oCache[objIndex].body = body;
-        oCache[objIndex].time = seconds;        $persistentStore.write(JSON.stringify(oCache), "parser_cache");
+        oCache[objIndex].time = seconds;        setval(toStr(oCache), "parser_cache");
     }else{
         //console.log("获取到缓存body")
         body = oCache[objIndex].body;
@@ -279,6 +279,30 @@ function notify ( title , subt , desc , opts ){
 		$notification.post(title,subt,desc,{url:opts});};
 };
 
+function getval(key) {
+          return $persistentStore.read(key)
+    };
+
+function setval(val, key) {
+          return $persistentStore.write(val, key)
+    };
+		
+function toObj(str, defaultValue = null) {
+      try {
+        return JSON.parse(str)
+      } catch {
+        return defaultValue
+      }
+    };
+
+function toStr(obj, defaultValue = null) {
+      try {
+        return JSON.stringify(obj)
+      } catch {
+        return defaultValue
+      }
+    };
+	
 function http(req) {
   return new Promise((resolve, reject) =>
     $httpClient.get(req, (err, resp,data) => {
