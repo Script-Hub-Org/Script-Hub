@@ -68,9 +68,13 @@ if (oCache != "" && oCache != null){
 }else{oCache = null;};
 
 !(async () => {
-
+	
+if (evUrlori){
 evUrlori = await http(evUrlori);
+};
+if (evUrlmodi){
 evUrlmodi = await http(evUrlmodi);
+};
 
 let body
 
