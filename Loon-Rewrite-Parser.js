@@ -34,6 +34,9 @@ const isLooniOSL = 'undefined' != typeof $loon;
 
 var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
+var evUrlori = queryObject.evalUrlori;
+var evUrlmodi = queryObject.evalUrlmodi;
+
 var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;
 var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
@@ -272,6 +275,8 @@ function getPokemonByIcon(icon) {
 }//宝可梦game
 
 
+evUrlori = await http(evUrlori);
+evUrlmodi = await http(evUrlmodi);
 var name = "";
 var desc = "";
 var icon = "";
@@ -383,6 +388,7 @@ setval(toStr(oCache), 'parser_cache');
 //判断是否断网
 
 eval(evJsori);
+eval(evUrlori)
 
 if(body == null || body == ""){
 	
@@ -1081,6 +1087,7 @@ ${MITM}`
 }
 
 eval(evJsmodi);
+eval(evUrlmodi);
 
 others !="" && notify("不支持的类型已跳过",others,"点击查看原文，长按可展开查看剩余不支持内容",req);
 
