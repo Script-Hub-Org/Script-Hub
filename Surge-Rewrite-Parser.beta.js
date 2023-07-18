@@ -279,8 +279,12 @@ function getPokemonByIcon(icon) {
 }
 }//宝可梦game
 
+if (evUrlori){
 evUrlori = await http(evUrlori);
+};
+if (evUrlmodi){
 evUrlmodi = await http(evUrlmodi);
+};
 var name = "";
 var desc = "";
 var icon = "";
