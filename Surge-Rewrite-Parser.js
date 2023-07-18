@@ -34,6 +34,8 @@ const isLooniOSL = 'undefined' != typeof $loon;
 
 var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
+var evUrlori = queryObject.evalUrlori;
+var evUrlmodi = queryObject.evalUrlmodi;
 //console.log("修改原文参数" + evJsori);
 //console.log("修改转换后参数" + evJsmodi);
 var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;
@@ -275,9 +277,10 @@ function getPokemonByIcon(icon) {
   }
   return null;
 }
-
 }//宝可梦game
 
+evUrlori = await http(evUrlori);
+evUrlmodi = await http(evUrlmodi);
 var name = "";
 var desc = "";
 var icon = "";
@@ -387,6 +390,7 @@ setval(toStr(oCache), 'parser_cache');
 };
 
 eval(evJsori);
+eval(evUrlori);
 //判断是否断网
 if(body == null || body == ""){
 	notify(`Surge转换："${notifyName}"未获取到body`,"请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈","https://t.me/zhangpeifu")
@@ -1353,6 +1357,7 @@ ${MITM}`
 }
 
 eval(evJsmodi);
+eval(evUrlmodi);
 
 others !="" && notify("不支持的类型已跳过",others,"点击查看原文，长按可展开查看剩余不支持内容",req)
 
