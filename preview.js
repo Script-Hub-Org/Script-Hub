@@ -27,7 +27,7 @@ const appBeta = new Koa()
 
 appBeta.use(async ctx => {
   const filePath = path.join(__dirname, './script-hub.beta.js')
-  const content = fs.readFile(filePath, { encoding: 'utf8' })
+  const content = fs.readFileSync(filePath, { encoding: 'utf8' })
   ctx.type = 'html'
   // ctx.body = content.match(/<!DOCTYPE html>([\s\S]*?)<\/html>/i)[1]
   ctx.body =
