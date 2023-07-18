@@ -4,6 +4,12 @@ const $ = new Env(NAME)
 
 $.isRequest = () => typeof $request !== 'undefined'
 $.isResponse = () => typeof $response !== 'undefined'
+$.isEgern = () => 'object' == typeof egern
+$.isLanceX = () => 'undefined' != typeof $native
+
+if ($.isEgern() || $.isLanceX()) {
+  var $rocket = {}
+}
 
 let arg
 if (typeof $argument != 'undefined') {
