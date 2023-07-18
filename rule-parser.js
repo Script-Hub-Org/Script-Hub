@@ -45,6 +45,8 @@ var noCache = istrue(queryObject.nocache);
 
 var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
+var evUrlori = queryObject.evalUrlori;
+var evUrlmodi = queryObject.evalUrlmodi;
 
 //缓存有效期相关
 var currentTime = new Date();
@@ -66,7 +68,11 @@ if (oCache != "" && oCache != null){
 }else{oCache = null;};
 
 !(async () => {
-  let body
+
+evUrlori = await http(evUrlori);
+evUrlmodi = await http(evUrlmodi);
+
+let body
 
   if (noCache == true){
 	body = await http(req);
@@ -116,6 +122,8 @@ setval(toStr(oCache), 'parser_cache');
 };
   
 eval(evJsori);
+eval(evUrlori);
+
 //判断是否断网
 if(body == null || body == ""){
 	
@@ -251,6 +259,7 @@ if (isStashiOS){
 body = `${ruleSet}`.replace(/t&zd;/g,',').replace(/ ;#/g," ");
 
 eval(evJsmodi);
+eval(evUrlmodi);
 
  $done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
 }//判断是否断网的反括号
