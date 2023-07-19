@@ -6,7 +6,7 @@
 #!icon=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/icon-dark.png
 #!select = 启用插件随机图标, 启用, 禁用
 #!select = 替换原始插件图标, 启用, 禁用
-#!select = 插件随机图标合集, Doraemon(100P),Shin-chan(100P),Weslie-Wolffy(100P),Tom-Jerry(100P),Genshin(160P),Shin-Miya(100P),OnePiece(100P),Stitch(100P),Pokemon(112P),PokemonGif(56P),Digimon(56P),Transformers(48P),Maruko-chan(100P)
+#!select = 插件随机图标合集, Doraemon(100P),Shin-chan(100P),Weslie-Wolffy(100P),Tom-Jerry(100P),Genshin(160P),Shin-Miya(100P),OnePiece(100P),Stitch(100P),Pokemon(112P),PokemonGif(56P),Digimon(56P),Transformers(48P),Maruko-chan(100P),AttackOnTitan(84P)
 #!input = Parser_cache_exp
 
 [General]
