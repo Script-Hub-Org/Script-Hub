@@ -886,6 +886,10 @@ const htmls = `
               <input type="checkbox" id="jsc_all" v-model.lazy="jsc_all" />
               <label for="jsc_all">全部转换</label>
             </div>
+            <div>
+              <input type="checkbox" id="compatibilityOnly" v-model.lazy="compatibilityOnly" />
+              <label class="button-over" for="compatibilityOnly">仅进行兼容性转换<small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%98%AF-%E4%BB%85%E8%BF%9B%E8%A1%8C%E5%85%BC%E5%AE%B9%E6%80%A7%E8%BD%AC%E6%8D%A2" target="_blank">什么是 <code>仅进行兼容性转换</code></a></small></label>
+            </div>
           </details>
 
           <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
@@ -895,6 +899,10 @@ const htmls = `
             <div>
               <input type="checkbox" id="jsc2_all" v-model.lazy="jsc2_all" />
               <label for="jsc2_all">全部转换</label>
+            </div>
+            <div>
+              <input type="checkbox" id="compatibilityOnly" v-model.lazy="compatibilityOnly" />
+              <label class="button-over" for="compatibilityOnly">仅进行兼容性转换<small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%98%AF-%E4%BB%85%E8%BF%9B%E8%A1%8C%E5%85%BC%E5%AE%B9%E6%80%A7%E8%BD%AC%E6%8D%A2" target="_blank">什么是 <code>仅进行兼容性转换</code></a></small></label>
             </div>
           </details>
         </details>
@@ -1055,6 +1063,11 @@ const htmls = `
         <label class="button-over" for="wrap_response">总是会在 $done(body) 里包一个 response</label>
       </div>
 
+      <div v-if="!target || target === 'surge-script' ">
+        <input type="checkbox" id="compatibilityOnly" v-model.lazy="compatibilityOnly" />
+        <label class="button-over" for="compatibilityOnly">仅进行兼容性转换<small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%98%AF-%E4%BB%85%E8%BF%9B%E8%A1%8C%E5%85%BC%E5%AE%B9%E6%80%A7%E8%BD%AC%E6%8D%A2" target="_blank">什么是 <code>仅进行兼容性转换</code></a></small></label>
+      </div>
+
 
       <details>
         <summary>高级操作(使用代码处理内容)</summary>
@@ -1126,6 +1139,7 @@ const htmls = `
     evalUrlmodi: '',
     nore: false,
     wrap_response: false,
+    compatibilityOnly: false,
     env: "${$.getEnv() || ''}",
     editMode: false,
   }
@@ -1140,7 +1154,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 

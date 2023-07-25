@@ -35,11 +35,13 @@ let url
   const evUrlori = queryObject.evalUrlori
   const evUrlmodi = queryObject.evalUrlmodi
   const wrap_response = queryObject.wrap_response
+  const compatibilityOnly = queryObject.compatibilityOnly
   const type = queryObject.type
   const target = queryObject.target
 
   let prefix = `
 // 转换时间: ${new Date().toLocaleString('zh')}
+// 兼容性转换
 if (typeof $request !== 'undefined') {
   const lowerCaseRequestHeaders = Object.fromEntries(
     Object.entries($request.headers).map(([k, v]) => [k.toLowerCase(), v])
@@ -68,6 +70,9 @@ if (typeof $response !== 'undefined') {
     },
   });
 }
+`
+  const qxMock = `
+// QX 相关
 var setInterval = () => {}
 var clearInterval = () => {}
 var $task = {
@@ -157,9 +162,10 @@ var _scriptSonverterDone = (val = {}) => {
     console.log(result)
   }
   $done(result)
-}
-`
-
+}`
+  if (!compatibilityOnly) {
+    prefix = `${prefix}\n${qxMock}`
+  }
   url = req || $request.url.replace(/_script-converter-(stash|surge|loon|shadowrocket)\.js$/i, '')
   let body = await http(url)
   eval(evJsori)
@@ -167,7 +173,7 @@ var _scriptSonverterDone = (val = {}) => {
     eval(await http(evUrlori))
   }
   if (target === 'surge-script' || type === 'qx-script') {
-    body = `${prefix}\n${body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
+    body = `${prefix}\n${compatibilityOnly ? body : body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
   }
 
   eval(evJsmodi)
