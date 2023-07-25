@@ -920,6 +920,10 @@ const htmls = `
           <a :href=" 'scriptable:///run/SurgeModuleTool?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">一键导入(Surge)</a>
           <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E7%9B%B8%E5%85%B3%E7%94%9F%E6%80%81:-Surge-%E6%A8%A1%E5%9D%97%E5%B7%A5%E5%85%B7" target="_blank">如何导入</a></small>
         </template>
+        <template v-if="result">
+          <br/>
+          <small>&#9432; 将此链接中的 <code>file</code> 改为 <code>edit</code> 即可在浏览器中再次对当前内容进行编辑</small>
+        </template>
         <textarea id="result" :value="result" placeholder="结果(请输入来源链接并选择类型)" readonly></textarea>
         
         <button v-if="copyInfo">{{copyInfo}}</button>
@@ -929,11 +933,6 @@ const htmls = `
             &nbsp;&nbsp;
             <button v-if="resetInfo">{{resetInfo}}</button>
             <button v-else @click="reset">重置</button>
-        <template v-if="copyInfo">
-          <br/>
-          <small>&#9432; 将此链接中的 <code>file</code> 改为 <code>edit</code> 即可在浏览器中再次对当前内容进行编辑</small>
-        </template>
-        
       </div>
       <br/>
 
