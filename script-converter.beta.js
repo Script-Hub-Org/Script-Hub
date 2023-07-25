@@ -40,6 +40,34 @@ let url
 
   let prefix = `
 // 转换时间: ${new Date().toLocaleString('zh')}
+if (typeof $request !== 'undefined') {
+  const lowerCaseRequestHeaders = Object.fromEntries(
+    Object.entries($request.headers).map(([k, v]) => [k.toLowerCase(), v])
+  );
+
+  $request.headers = new Proxy(lowerCaseRequestHeaders, {
+    get: function (target, propKey, receiver) {
+      return Reflect.get(target, propKey.toLowerCase(), receiver);
+    },
+    set: function (target, propKey, value, receiver) {
+      return Reflect.set(target, propKey.toLowerCase(), value, receiver);
+    },
+  });
+}
+if (typeof $response !== 'undefined') {
+  const lowerCaseResponseHeaders = Object.fromEntries(
+    Object.entries($response.headers).map(([k, v]) => [k.toLowerCase(), v])
+  );
+
+  $response.headers = new Proxy(lowerCaseResponseHeaders, {
+    get: function (target, propKey, receiver) {
+      return Reflect.get(target, propKey.toLowerCase(), receiver);
+    },
+    set: function (target, propKey, value, receiver) {
+      return Reflect.set(target, propKey.toLowerCase(), value, receiver);
+    },
+  });
+}
 var setInterval = () => {}
 var clearInterval = () => {}
 var $task = {
