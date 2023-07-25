@@ -32,12 +32,42 @@ let url
 
   const evJsori = queryObject.evalScriptori
   const evJsmodi = queryObject.evalScriptmodi
+  const evUrlori = queryObject.evalUrlori
+  const evUrlmodi = queryObject.evalUrlmodi
   const wrap_response = queryObject.wrap_response
   const type = queryObject.type
   const target = queryObject.target
 
   let prefix = `
 // 转换时间: ${new Date().toLocaleString('zh')}
+if (typeof $request !== 'undefined') {
+  const lowerCaseRequestHeaders = Object.fromEntries(
+    Object.entries($request.headers).map(([k, v]) => [k.toLowerCase(), v])
+  );
+
+  $request.headers = new Proxy(lowerCaseRequestHeaders, {
+    get: function (target, propKey, receiver) {
+      return Reflect.get(target, propKey.toLowerCase(), receiver);
+    },
+    set: function (target, propKey, value, receiver) {
+      return Reflect.set(target, propKey.toLowerCase(), value, receiver);
+    },
+  });
+}
+if (typeof $response !== 'undefined') {
+  const lowerCaseResponseHeaders = Object.fromEntries(
+    Object.entries($response.headers).map(([k, v]) => [k.toLowerCase(), v])
+  );
+
+  $response.headers = new Proxy(lowerCaseResponseHeaders, {
+    get: function (target, propKey, receiver) {
+      return Reflect.get(target, propKey.toLowerCase(), receiver);
+    },
+    set: function (target, propKey, value, receiver) {
+      return Reflect.set(target, propKey.toLowerCase(), value, receiver);
+    },
+  });
+}
 var setInterval = () => {}
 var clearInterval = () => {}
 var $task = {
@@ -131,25 +161,20 @@ var _scriptSonverterDone = (val = {}) => {
 `
 
   url = req || $request.url.replace(/_script-converter-(stash|surge|loon|shadowrocket)\.js$/i, '')
-  $.log(`🔗 原始文件链接`, url)
-  const res = await $.http.get({
-    url,
-    headers: {
-      'Cache-Control': 'no-cache',
-      Pragma: 'no-cache',
-    },
-  })
-  // $.log('ℹ️ res', $.toStr(res))
-  const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
-  $.log('ℹ️ res status', status)
-  let body = String($.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody'))
-  // $.log('ℹ️ res body', body)
+  let body = await http(url)
   eval(evJsori)
+  if (evUrlori) {
+    eval(await http(evUrlori))
+  }
   if (target === 'surge-script' || type === 'qx-script') {
     body = `${prefix}\n${body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
   }
 
   eval(evJsmodi)
+  if (evUrlmodi) {
+    eval(await http(evUrlmodi))
+  }
+
   result = {
     response: {
       status: 200,
@@ -200,6 +225,23 @@ function parseQueryString(url) {
   }
 
   return params
+}
+// 通知
+async function http(url) {
+  $.log(`🔗 链接`, url)
+  const res = await $.http.get({
+    url,
+    headers: {
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    },
+  })
+  // $.log('ℹ️ res', $.toStr(res))
+  const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
+  $.log('ℹ️ res status', status)
+  let body = String($.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody'))
+  // $.log('ℹ️ res body', body)
+  return body
 }
 // 通知
 async function notify(title, subt, desc, opts) {
