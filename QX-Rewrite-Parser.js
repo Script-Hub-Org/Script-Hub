@@ -514,7 +514,7 @@ jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script`;
 }else if (jsc2Status == true){
 jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script&wrap_response=true`;
 };
-if (compatibilityOnly = true && (jscStatus == true || jsc2Status == true)){
+if (compatibilityOnly == true && (jscStatus == true || jsc2Status == true)){
 jsSuf = jsSuf + "&compatibilityOnly=true"
 };
 function isJsCon (arr) {
