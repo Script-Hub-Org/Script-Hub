@@ -3,7 +3,7 @@
 // icon-color: blue; icon-glyph: cloud-download-alt;
 
 // prettier-ignore
-let ToolVersion = "1.99";
+let ToolVersion = "2.00";
 
 async function delay(milliseconds) {
   var before = Date.now()
@@ -87,8 +87,8 @@ if (idx == 3) {
     alert.addAction('下载')
     alert.addCancelAction('取消')
     await alert.presentAlert()
-    url = alert.textFieldValue(1)
-    name = alert.textFieldValue(0)
+    url = alert.textFieldValue(0)
+    name = alert.textFieldValue(1)
   }
   if (url) {
     if (!name) {
