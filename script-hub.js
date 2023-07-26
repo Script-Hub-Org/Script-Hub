@@ -922,7 +922,7 @@ const htmls = `
         </template>
         <template v-if="result">
           <br/>
-          <small>&#9432; 将此链接中的 <code>file</code> 改为 <code>edit</code> 即可在浏览器中再次对当前内容进行编辑</small>
+          <small>&#9432; 将此链接中的 <code>file</code> 或 <code>convert</code> 改为 <code>edit</code> 即可在浏览器中再次对当前内容进行编辑</small>
         </template>
         <textarea id="result" :value="result" placeholder="结果(请输入来源链接并选择类型)" readonly></textarea>
         
