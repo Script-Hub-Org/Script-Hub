@@ -1009,7 +1009,7 @@ others !="" && $.msg("不支持的类型已跳过",others,"点击查看原文，
 eval(evJsmodi);
 eval(evUrlmodi);
 
- $done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
+ $.done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
 
 
 })()
