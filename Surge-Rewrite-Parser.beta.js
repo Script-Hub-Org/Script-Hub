@@ -23,17 +23,6 @@ const isStashiOS = queryObject.target == "stash-stoverride";
 const isLooniOS = queryObject.target == "loon-plugin";
 const isShadowrocket = queryObject.target == "shadowrocket-module";
 
-//本机app
-const isEgernL = 'object' == typeof egern;
-const isLanceXL = 'undefined' != typeof $native;
-if (isEgernL || isLanceXL){
-	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"}
-};
-const isStashiOSL = 'undefined' !== typeof $environment && $environment['stash-version'];
-const isSurgeiOSL = 'undefined' !== typeof $environment && $environment['surge-version'];
-const isShadowrocketL = 'undefined' !== typeof $rocket;
-const isLooniOSL = 'undefined' != typeof $loon;
-
 var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
 var evUrlori = queryObject.evalUrlori;
