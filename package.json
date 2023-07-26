@@ -11,6 +11,11 @@
     "koa": "^2.14.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.0"
+    "nodemon": "^3.0.0",
+    "crypto-js": "^4.0.0",
+    "got": "^11.8.5",
+    "http-server": "^0.12.3",
+    "iconv-lite": "0.6.3",
+    "tough-cookie": "^4.0.0"
   }
 }
