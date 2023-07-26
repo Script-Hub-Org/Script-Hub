@@ -7,13 +7,15 @@
 宝可梦插件图标游戏 由ChatGPT @chengkongyiban @Toperlock 共同完成 再次感谢@xream佬
 ***************************/
 
+const $ = new Env("Surge-Rewrite-Parser");
+
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-	//console.log("原始链接：" + req);
+	//$.log("原始链接：" + req);
 var urlArg = url.split(/\/_end_\//)[1];
 //获取参数
 const queryObject = parseQueryString(urlArg);
-//console.log("参数:" + toStr(queryObject));
+//$.log("参数:" + $.toStr(queryObject));
 
 //目标app
 const isSurgeiOS = queryObject.target == "surge-module";
@@ -36,8 +38,8 @@ var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
 var evUrlori = queryObject.evalUrlori;
 var evUrlmodi = queryObject.evalUrlmodi;
-//console.log("修改原文参数" + evJsori);
-//console.log("修改转换后参数" + evJsmodi);
+//$.log("修改原文参数" + evJsori);
+//$.log("修改转换后参数" + evJsmodi);
 var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;
 var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
@@ -53,9 +55,9 @@ var nTilesColor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+"
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
 var noCache = istrue(queryObject.nocache);
 
-const iconStatus = getval("启用插件随机图标") ?? "启用";
-const iconReplace = getval("替换原始插件图标");
-const iconLibrary1 = getval("插件随机图标合集") ?? "Doraemon(100P)";
+const iconStatus = $.getval("启用插件随机图标") ?? "启用";
+const iconReplace = $.getval("替换原始插件图标");
+const iconLibrary1 = $.getval("插件随机图标合集") ?? "Doraemon(100P)";
 const iconLibrary2 = iconLibrary1.split("(")[0];
 const iconFormat = iconLibrary2.search(/gif/i) == -1 ? ".png" : ".gif";
 
@@ -66,15 +68,15 @@ var pluginPokemonHomepage
 !(async () => {
 if (isLooniOS && iconLibrary2 == "Pokemon" && iconStatus == "启用"){
 var pokemonJsVersion = "1.03";
-var pokemonVersion = getval("Pokemon_version") ?? 1.00;
+var pokemonVersion = $.getval("Pokemon_version") ?? 1.00;
 
 const poDataUrl = "https://github.com/chengkongyiban/stash/raw/main/js/Pokemon/pokemonData.json";
 var poDataObj = {};
 if (pokemonJsVersion * 1 > pokemonVersion * 1){
-poDataObj = toObj(await http(poDataUrl));
-setval(toStr(poDataObj),"Pokemon_data");
+poDataObj = $.toObj((await $.http.get(poDataUrl)).body);
+$.setval($.toStr(poDataObj),"Pokemon_data");
 }else{
-	poDataObj = toObj(getval("Pokemon_data"));};
+	poDataObj = $.toObj($.getval("Pokemon_data"));};
 //初阶宝可梦
 beginnerPokemon = poDataObj.beginnerPokemon;
 cloudPcp = poDataObj.cloudPcp;
@@ -90,47 +92,47 @@ var pokemonCdp = [];
 var count = {};
 
 //读取卡池
-if (getval("Pokemon_card_pool") == null || getval("Pokemon_card_pool") == ""){
+if ($.getval("Pokemon_card_pool") == null || $.getval("Pokemon_card_pool") == ""){
 	pokemonCdp = beginnerPokemon;
-	 setval(toStr(pokemonCdp), "Pokemon_card_pool")
+	 $.setval($.toStr(pokemonCdp), "Pokemon_card_pool")
 }else{
-    pokemonCdp = toObj(getval("Pokemon_card_pool"))
+    pokemonCdp = $.toObj($.getval("Pokemon_card_pool"))
     if (pokemonJsVersion * 1 > pokemonVersion * 1){
 	var filteredPokemonCdp = pokemonCdp.filter(function (pokemon) {
   return pokemon >= 1301 && pokemon <= 1800 && cloudPcp.includes(pokemon);
 });
 pokemonCdp = beginnerPokemon.concat(filteredPokemonCdp);
-setval(toStr(pokemonCdp), "Pokemon_card_pool");
+$.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
 
-count = toObj(getval("Pokemon_count"));
+count = $.toObj($.getval("Pokemon_count"));
 for (var key in count) {
   if (!pokemonCdp.includes(parseInt(key))) {
     delete count[key];
   }
 };
-setval(toStr(count), "Pokemon_count");
+$.setval($.toStr(count), "Pokemon_count");
 
-setval(pokemonJsVersion, "Pokemon_version");
+$.setval(pokemonJsVersion, "Pokemon_version");
 }
 };
 
 //抽卡并记录抽卡数据
-if (getval("Pokemon_count") == null || getval("Pokemon_count") == ""){
+if ($.getval("Pokemon_count") == null || $.getval("Pokemon_count") == ""){
     var result = getArrayItems(pokemonCdp, 1);
     var num = result[0];
     count[num] = (count[num] || 0) + 1;
-setval(toStr(count), "Pokemon_count");
+$.setval($.toStr(count), "Pokemon_count");
 	var pokemonInfo = getPokemonByIcon(result[0]);
     pluginPokemonIcon = "https://raw.githubusercontent.com/Toperlock/Quantumult/main/icon/Pokemon/Pokemon-" + result + ".png";
 	pluginPokemonAuthor = "#!author=" + pokemonInfo.name;
 	pluginPokemonHomepage = "#!homepage=" + pokemonPBUrl + pokemonInfo.number;
 }else{
-	getval("Pokemon_count")
-	count = toObj(getval("Pokemon_count"))
+	$.getval("Pokemon_count")
+	count = $.toObj($.getval("Pokemon_count"))
 	var result = getArrayItems(pokemonCdp, 1);
     var num = result[0];
     count[num] = (count[num] || 0) + 1;
-	setval(toStr(count), "Pokemon_count")
+	$.setval($.toStr(count), "Pokemon_count")
 	var pokemonInfo = getPokemonByIcon(result[0]);
     pluginPokemonIcon = "https://raw.githubusercontent.com/Toperlock/Quantumult/main/icon/Pokemon/Pokemon-" + result + ".png";
 	pluginPokemonAuthor = "#!author=" + pokemonInfo.name;
@@ -145,11 +147,11 @@ for (var index in pokemonCdp) {
         var evolvedNum = parseInt(num) + 300;
         if (!pokemonCdp.includes(evolvedNum)) {
             pokemonCdp.push(evolvedNum);
-            setval(toStr(pokemonCdp), "Pokemon_card_pool");
+            $.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
 						
 						var pokemonInfo = getPokemonByIcon(evolvedNum);
 						
-            $notification.post("恭喜您解锁了新的宝可梦", pokemonInfo.name, "当前已解锁" + pokemonCdp.length + "只宝可梦",pokemonPBUrl + pokemonInfo.number);
+            $.msg("恭喜您解锁了新的宝可梦", pokemonInfo.name, "当前已解锁" + pokemonCdp.length + "只宝可梦",pokemonPBUrl + pokemonInfo.number);
         }
     }
 };
@@ -162,11 +164,11 @@ for (var index in pokemonCdp) {
         var evolvedNum = parseInt(num) + 100;
         if (!pokemonCdp.includes(evolvedNum)) {
             pokemonCdp.push(evolvedNum);
-            setval(toStr(pokemonCdp), "Pokemon_card_pool");
+            $.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
 						
 						var pokemonInfo = getPokemonByIcon(evolvedNum);
 						
-            $notification.post("恭喜您解锁了新的宝可梦", pokemonInfo.name, "当前已解锁" + pokemonCdp.length + "只宝可梦",pokemonPBUrl + pokemonInfo.number);
+            $.msg("恭喜您解锁了新的宝可梦", pokemonInfo.name, "当前已解锁" + pokemonCdp.length + "只宝可梦",pokemonPBUrl + pokemonInfo.number);
         }
     }
 };
@@ -179,11 +181,11 @@ for (var index in pokemonCdp) {
 			var unlockedPokemon = [];
       pokemonCdp.push(1596,1597);
 			unlockedPokemon.push(1596,1597);
-setval(toStr(pokemonCdp), "Pokemon_card_pool");
+$.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
       unlockedPokemon.forEach(pokemonNumber => {
         var pokemonInfo = getPokemonByIcon(pokemonNumber);
         if (pokemonInfo !== null) {
-          $notification.post("恭喜您解锁了新的宝可梦", pokemonInfo.name, "当前已解锁" + pokemonCdp.length + "只宝可梦",  pokemonPBUrl + pokemonInfo.number );
+          $.msg("恭喜您解锁了新的宝可梦", pokemonInfo.name, "当前已解锁" + pokemonCdp.length + "只宝可梦",  pokemonPBUrl + pokemonInfo.number );
         }
       });
     }
@@ -199,11 +201,11 @@ for (var index in pokemonCdp) {
 			var unlockedPokemon = [];
       pokemonCdp.push(1598,1599,1600);
 			unlockedPokemon.push(1598,1599,1600);
-setval(toStr(pokemonCdp), "Pokemon_card_pool");
+$.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
       unlockedPokemon.forEach(pokemonNumber => {
         var pokemonInfo = getPokemonByIcon(pokemonNumber);
         if (pokemonInfo !== null) {
-          $notification.post("恭喜您解锁了新的宝可梦", pokemonInfo.name, "当前已解锁" + pokemonCdp.length + "只宝可梦",  pokemonPBUrl + pokemonInfo.number );
+          $.msg("恭喜您解锁了新的宝可梦", pokemonInfo.name, "当前已解锁" + pokemonCdp.length + "只宝可梦",  pokemonPBUrl + pokemonInfo.number );
         }
       });
     }
@@ -219,11 +221,11 @@ for (var index in pokemonCdp) {
 			var unlockedPokemon = [];
       pokemonCdp.push(1393, 1394, 1395, 1396, 1397, 1398, 1399, 1400);
 			unlockedPokemon.push(1393, 1394, 1395, 1396, 1397, 1398, 1399, 1400);
-setval(toStr(pokemonCdp), "Pokemon_card_pool");
+$.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
       unlockedPokemon.forEach(pokemonNumber => {
         var pokemonInfo = getPokemonByIcon(pokemonNumber);
         if (pokemonInfo !== null) {
-          $notification.post("恭喜您解锁了新的宝可梦", pokemonInfo.name, "当前已解锁" + pokemonCdp.length + "只宝可梦",  pokemonPBUrl + pokemonInfo.number );
+          $.msg("恭喜您解锁了新的宝可梦", pokemonInfo.name, "当前已解锁" + pokemonCdp.length + "只宝可梦",  pokemonPBUrl + pokemonInfo.number );
         }
       });
     }
@@ -243,9 +245,9 @@ if (pokemonCdp.length >= 96 && pokemonCdp.length < 100 && Object.values(count).e
 
   unlockedPokemon.forEach(pokemonNumber => {
     var pokemonInfo = getPokemonByIcon(pokemonNumber);
-    $notification.post("恭喜您解锁了新的宝可梦", pokemonInfo.name, "您已解锁全部112只宝可梦",  pokemonPBUrl + pokemonInfo.number );
+    $.msg("恭喜您解锁了新的宝可梦", pokemonInfo.name, "您已解锁全部112只宝可梦",  pokemonPBUrl + pokemonInfo.number );
   });
- setval(toStr(pokemonCdp), "Pokemon_card_pool");
+ $.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
 }
 
 function getArrayItems(arr, num) {
@@ -280,10 +282,10 @@ function getPokemonByIcon(icon) {
 }//宝可梦game
 
 if (evUrlori){
-evUrlori = await http(evUrlori);
+evUrlori = (await $.http.get(evUrlori)).body;
 };
 if (evUrlmodi){
-evUrlmodi = await http(evUrlmodi);
+evUrlmodi = (await $.http.get(evUrlmodi)).body;
 };
 var name = "";
 var desc = "";
@@ -298,7 +300,7 @@ if (nName != null && nName[0] != ""){notifyName = nName[0];}else{notifyName = re
 //缓存有效期相关
 var currentTime = new Date();
 var seconds = Math.floor(currentTime.getTime() / 1000); // 将毫秒转换为秒
-var boxjsSetExp = getval("Parser_cache_exp") ?? "1";
+var boxjsSetExp = $.getval("Parser_cache_exp") ?? "1";
 //设置有效期时间
 var expirationTime
 if (cachExp != null){
@@ -306,12 +308,12 @@ if (cachExp != null){
 }else{
   expirationTime = boxjsSetExp * 1 * 60 * 60;
 };
-//console.log(expirationTime);
+//$.log(expirationTime);
 var nCache = [{"url":"","body":"","time":""}];
-var oCache = getval("parser_cache");
+var oCache = $.getval("parser_cache");
 //检查是否有缓存
 if (oCache != "" && oCache != null){
-  oCache = toObj(oCache);
+  oCache = $.toObj(oCache);
 }else{oCache = null;};
 
 //修改名字和简介
@@ -342,51 +344,51 @@ let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).to
     icon = "#!icon=" + pluginPokemonIcon;
 };
 const pluginIcon = icon;
-//console.log("插件图标：" + pluginIcon);
+//$.log("插件图标：" + pluginIcon);
 
   let body
 
   if (noCache == true){
-	body = await http(req);
+	body = (await $.http.get(req)).body;
 }else if (oCache == null){
-    //console.log("一个缓存也没有")
-  body = await http(req);
+    //$.log("一个缓存也没有")
+  body = (await $.http.get(req)).body;
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
-  setval(toStr(nCache), 'parser_cache');
+  $.setval($.toStr(nCache), 'parser_cache');
   }else{
     //删除大于一天的缓存防止缓存越来越大
     oCache = oCache.filter(obj => {
   return seconds - obj.time < 86400 ;
 });
-setval(toStr(oCache), 'parser_cache');
+$.setval($.toStr(oCache), 'parser_cache');
 
  if (!oCache.some(obj => obj.url === req)){
-     //console.log("有缓存但是没有这个URL的")
-  body = await http(req);
+     //$.log("有缓存但是没有这个URL的")
+  body = (await $.http.get(req)).body;
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
   var mergedCache = oCache.concat(nCache);
-setval(toStr(mergedCache), 'parser_cache');
+$.setval($.toStr(mergedCache), 'parser_cache');
   }else if (oCache.some(obj => obj.url === req)){
     const objIndex = oCache.findIndex(obj => obj.url === req);
     if (seconds - oCache[objIndex].time > expirationTime){
-      //console.log("有缓存且有url,但是过期了")
-  body = await http(req);
+      //$.log("有缓存且有url,但是过期了")
+  body = (await $.http.get(req)).body;
   oCache[objIndex].body = body;
   oCache[objIndex].time = seconds;
-setval(toStr(oCache), 'parser_cache');
+$.setval($.toStr(oCache), 'parser_cache');
     }else{
-      //console.log("有缓存且有url且没过期")
+      //$.log("有缓存且有url且没过期")
     if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
-        //console.log("但是body为null")
-        body = await http(req);
+        //$.log("但是body为null")
+        body = (await $.http.get(req)).body;
         oCache[objIndex].body = body;
-        oCache[objIndex].time = seconds;        setval(toStr(oCache), "parser_cache");
+        oCache[objIndex].time = seconds;        $.setval($.toStr(oCache), "parser_cache");
     }else{
-        //console.log("获取到缓存body")
+        //$.log("获取到缓存body")
         body = oCache[objIndex].body;
     }
       };
@@ -395,13 +397,6 @@ setval(toStr(oCache), 'parser_cache');
 
 eval(evJsori);
 eval(evUrlori);
-//判断是否断网
-if(body == null || body == ""){
-	notify(`Surge转换："${notifyName}"未获取到body`,"请检查网络及节点是否畅通\n" + "源链接为" + $request.url,"认为是bug?点击通知反馈","https://t.me/zhangpeifu")
-	
- $done({ response: { status: 404 ,body:{} } });
-
-}else{//以下开始重写及脚本转换
 
 if (body.match(/\/\*+\n[\s\S]*\n\*+\/\n/)){
 body = body.replace(/[\s\S]*(\/\*+\n[\s\S]*\n\*+\/\n)[\s\S]*/,"$1").match(/[^\r\n]+/g);
@@ -1363,15 +1358,15 @@ ${MITM}`
 eval(evJsmodi);
 eval(evUrlmodi);
 
-others !="" && notify("不支持的类型已跳过",others,"点击查看原文，长按可展开查看剩余不支持内容",req)
+others !="" && $.msg("不支持的类型已跳过",others,"点击查看原文，长按可展开查看剩余不支持内容",req)
 
- $done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
+ $.done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
 }//判断是否断网的反括号
 
 
 })()
 .catch((e) => {
-		notify(`Script Hub: Surge转换`,`${e}`,'','https://t.me/zhetengsha_group');
+		$.msg(`Script Hub: Surge转换`,`${e}`,'','https://t.me/zhetengsha_group');
 		result = {
       response: {
         status: 500,
@@ -1385,45 +1380,9 @@ others !="" && notify("不支持的类型已跳过",others,"点击查看原文�
         },
       },
     }
+	$.done(result);
 	})
-
-function notify ( title , subt , desc , opts ){
-	if (isShadowrocketL || isLooniOSL){		$notification.post(title,subt,desc,opts);
-	}else{
-		$notification.post(title,subt,desc,{url:opts});};
-};
-
-function getval(key) {
-          return $persistentStore.read(key)
-    };
-
-function setval(val, key) {
-          return $persistentStore.write(val, key)
-    };
-		
-function toObj(str, defaultValue = null) {
-      try {
-        return JSON.parse(str)
-      } catch {
-        return defaultValue
-      }
-    };
-
-function toStr(obj, defaultValue = null) {
-      try {
-        return JSON.stringify(obj)
-      } catch {
-        return defaultValue
-      }
-    };
 	
-function http(req) {
-  return new Promise((resolve, reject) =>
-    $httpClient.get(req, (err, resp,data) => {
-  resolve(data)
-  })
-)
-};
 
 function istrue(str) {
 	if (str == true || str == 1 || str == "true"|| str == "1"){
@@ -1445,3 +1404,6 @@ function parseQueryString(url) {
 
   return params;
 };
+
+
+function Env(t,e){class s{constructor(t){this.env=t}send(t,e="GET"){t="string"==typeof t?{url:t}:t;let s=this.get;return"POST"===e&&(s=this.post),new Promise((e,a)=>{s.call(this,t,(t,s,r)=>{t?a(t):e(s)})})}get(t){return this.send.call(this.env,t)}post(t){return this.send.call(this.env,t,"POST")}}return new class{constructor(t,e){this.name=t,this.http=new s(this),this.data=null,this.dataFile="box.dat",this.logs=[],this.isMute=!1,this.isNeedRewrite=!1,this.logSeparator="\n",this.encoding="utf-8",this.startTime=(new Date).getTime(),Object.assign(this,e),this.log("",`🔔${this.name}, 开始!`)}getEnv(){return"undefined"!=typeof $environment&&$environment["surge-version"]?"Surge":"undefined"!=typeof $environment&&$environment["stash-version"]?"Stash":"undefined"!=typeof module&&module.exports?"Node.js":"undefined"!=typeof $task?"Quantumult X":"undefined"!=typeof $loon?"Loon":"undefined"!=typeof $rocket?"Shadowrocket":void 0}isNode(){return"Node.js"===this.getEnv()}isQuanX(){return"Quantumult X"===this.getEnv()}isSurge(){return"Surge"===this.getEnv()}isLoon(){return"Loon"===this.getEnv()}isShadowrocket(){return"Shadowrocket"===this.getEnv()}isStash(){return"Stash"===this.getEnv()}toObj(t,e=null){try{return JSON.parse(t)}catch{return e}}toStr(t,e=null){try{return JSON.stringify(t)}catch{return e}}getjson(t,e){let s=e;const a=this.getdata(t);if(a)try{s=JSON.parse(this.getdata(t))}catch{}return s}setjson(t,e){try{return this.setdata(JSON.stringify(t),e)}catch{return!1}}getScript(t){return new Promise(e=>{this.get({url:t},(t,s,a)=>e(a))})}runScript(t,e){return new Promise(s=>{let a=this.getdata("@chavy_boxjs_userCfgs.httpapi");a=a?a.replace(/\n/g,"").trim():a;let r=this.getdata("@chavy_boxjs_userCfgs.httpapi_timeout");r=r?1*r:20,r=e&&e.timeout?e.timeout:r;const[i,o]=a.split("@"),n={url:`http://${o}/v1/scripting/evaluate`,body:{script_text:t,mock_type:"cron",timeout:r},headers:{"X-Key":i,Accept:"*/*"},timeout:r};this.post(n,(t,e,a)=>s(a))}).catch(t=>this.logErr(t))}loaddata(){if(!this.isNode())return{};{this.fs=this.fs?this.fs:require("fs"),this.path=this.path?this.path:require("path");const t=this.path.resolve(this.dataFile),e=this.path.resolve(process.cwd(),this.dataFile),s=this.fs.existsSync(t),a=!s&&this.fs.existsSync(e);if(!s&&!a)return{};{const a=s?t:e;try{return JSON.parse(this.fs.readFileSync(a))}catch(t){return{}}}}}writedata(){if(this.isNode()){this.fs=this.fs?this.fs:require("fs"),this.path=this.path?this.path:require("path");const t=this.path.resolve(this.dataFile),e=this.path.resolve(process.cwd(),this.dataFile),s=this.fs.existsSync(t),a=!s&&this.fs.existsSync(e),r=JSON.stringify(this.data);s?this.fs.writeFileSync(t,r):a?this.fs.writeFileSync(e,r):this.fs.writeFileSync(t,r)}}lodash_get(t,e,s){const a=e.replace(/\[(\d+)\]/g,".$1").split(".");let r=t;for(const t of a)if(r=Object(r)[t],void 0===r)return s;return r}lodash_set(t,e,s){return Object(t)!==t?t:(Array.isArray(e)||(e=e.toString().match(/[^.[\]]+/g)||[]),e.slice(0,-1).reduce((t,s,a)=>Object(t[s])===t[s]?t[s]:t[s]=Math.abs(e[a+1])>>0==+e[a+1]?[]:{},t)[e[e.length-1]]=s,t)}getdata(t){let e=this.getval(t);if(/^@/.test(t)){const[,s,a]=/^@(.*?)\.(.*?)$/.exec(t),r=s?this.getval(s):"";if(r)try{const t=JSON.parse(r);e=t?this.lodash_get(t,a,""):e}catch(t){e=""}}return e}setdata(t,e){let s=!1;if(/^@/.test(e)){const[,a,r]=/^@(.*?)\.(.*?)$/.exec(e),i=this.getval(a),o=a?"null"===i?null:i||"{}":"{}";try{const e=JSON.parse(o);this.lodash_set(e,r,t),s=this.setval(JSON.stringify(e),a)}catch(e){const i={};this.lodash_set(i,r,t),s=this.setval(JSON.stringify(i),a)}}else s=this.setval(t,e);return s}getval(t){switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":return $persistentStore.read(t);case"Quantumult X":return $prefs.valueForKey(t);case"Node.js":return this.data=this.loaddata(),this.data[t];default:return this.data&&this.data[t]||null}}setval(t,e){switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":return $persistentStore.write(t,e);case"Quantumult X":return $prefs.setValueForKey(t,e);case"Node.js":return this.data=this.loaddata(),this.data[e]=t,this.writedata(),!0;default:return this.data&&this.data[e]||null}}initGotEnv(t){this.got=this.got?this.got:require("got"),this.cktough=this.cktough?this.cktough:require("tough-cookie"),this.ckjar=this.ckjar?this.ckjar:new this.cktough.CookieJar,t&&(t.headers=t.headers?t.headers:{},void 0===t.headers.Cookie&&void 0===t.cookieJar&&(t.cookieJar=this.ckjar))}get(t,e=(()=>{})){switch(t.headers&&(delete t.headers["Content-Type"],delete t.headers["Content-Length"],delete t.headers["content-type"],delete t.headers["content-length"]),t.params&&(t.url+="?"+this.queryStr(t.params)),this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":default:this.isSurge()&&this.isNeedRewrite&&(t.headers=t.headers||{},Object.assign(t.headers,{"X-Surge-Skip-Scripting":!1})),$httpClient.get(t,(t,s,a)=>{!t&&s&&(s.body=a,s.statusCode=s.status?s.status:s.statusCode,s.status=s.statusCode),e(t,s,a)});break;case"Quantumult X":this.isNeedRewrite&&(t.opts=t.opts||{},Object.assign(t.opts,{hints:!1})),$task.fetch(t).then(t=>{const{statusCode:s,statusCode:a,headers:r,body:i,bodyBytes:o}=t;e(null,{status:s,statusCode:a,headers:r,body:i,bodyBytes:o},i,o)},t=>e(t&&t.error||"UndefinedError"));break;case"Node.js":let s=require("iconv-lite");this.initGotEnv(t),this.got(t).on("redirect",(t,e)=>{try{if(t.headers["set-cookie"]){const s=t.headers["set-cookie"].map(this.cktough.Cookie.parse).toString();s&&this.ckjar.setCookieSync(s,null),e.cookieJar=this.ckjar}}catch(t){this.logErr(t)}}).then(t=>{const{statusCode:a,statusCode:r,headers:i,rawBody:o}=t,n=s.decode(o,this.encoding);e(null,{status:a,statusCode:r,headers:i,rawBody:o,body:n},n)},t=>{const{message:a,response:r}=t;e(a,r,r&&s.decode(r.rawBody,this.encoding))})}}post(t,e=(()=>{})){const s=t.method?t.method.toLocaleLowerCase():"post";switch(t.body&&t.headers&&!t.headers["Content-Type"]&&!t.headers["content-type"]&&(t.headers["content-type"]="application/x-www-form-urlencoded"),t.headers&&(delete t.headers["Content-Length"],delete t.headers["content-length"]),this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":default:this.isSurge()&&this.isNeedRewrite&&(t.headers=t.headers||{},Object.assign(t.headers,{"X-Surge-Skip-Scripting":!1})),$httpClient[s](t,(t,s,a)=>{!t&&s&&(s.body=a,s.statusCode=s.status?s.status:s.statusCode,s.status=s.statusCode),e(t,s,a)});break;case"Quantumult X":t.method=s,this.isNeedRewrite&&(t.opts=t.opts||{},Object.assign(t.opts,{hints:!1})),$task.fetch(t).then(t=>{const{statusCode:s,statusCode:a,headers:r,body:i,bodyBytes:o}=t;e(null,{status:s,statusCode:a,headers:r,body:i,bodyBytes:o},i,o)},t=>e(t&&t.error||"UndefinedError"));break;case"Node.js":let a=require("iconv-lite");this.initGotEnv(t);const{url:r,...i}=t;this.got[s](r,i).then(t=>{const{statusCode:s,statusCode:r,headers:i,rawBody:o}=t,n=a.decode(o,this.encoding);e(null,{status:s,statusCode:r,headers:i,rawBody:o,body:n},n)},t=>{const{message:s,response:r}=t;e(s,r,r&&a.decode(r.rawBody,this.encoding))})}}time(t,e=null){const s=e?new Date(e):new Date;let a={"M+":s.getMonth()+1,"d+":s.getDate(),"H+":s.getHours(),"m+":s.getMinutes(),"s+":s.getSeconds(),"q+":Math.floor((s.getMonth()+3)/3),S:s.getMilliseconds()};/(y+)/.test(t)&&(t=t.replace(RegExp.$1,(s.getFullYear()+"").substr(4-RegExp.$1.length)));for(let e in a)new RegExp("("+e+")").test(t)&&(t=t.replace(RegExp.$1,1==RegExp.$1.length?a[e]:("00"+a[e]).substr((""+a[e]).length)));return t}queryStr(t){let e="";for(const s in t){let a=t[s];null!=a&&""!==a&&("object"==typeof a&&(a=JSON.stringify(a)),e+=`${s}=${a}&`)}return e=e.substring(0,e.length-1),e}msg(e=t,s="",a="",r){const i=t=>{switch(typeof t){case void 0:return t;case"string":switch(this.getEnv()){case"Surge":case"Stash":default:return{url:t};case"Loon":case"Shadowrocket":return t;case"Quantumult X":return{"open-url":t};case"Node.js":return}case"object":switch(this.getEnv()){case"Surge":case"Stash":case"Shadowrocket":default:{let e=t.url||t.openUrl||t["open-url"];return{url:e}}case"Loon":{let e=t.openUrl||t.url||t["open-url"],s=t.mediaUrl||t["media-url"];return{openUrl:e,mediaUrl:s}}case"Quantumult X":{let e=t["open-url"]||t.url||t.openUrl,s=t["media-url"]||t.mediaUrl,a=t["update-pasteboard"]||t.updatePasteboard;return{"open-url":e,"media-url":s,"update-pasteboard":a}}case"Node.js":return}default:return}};if(!this.isMute)switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":default:$notification.post(e,s,a,i(r));break;case"Quantumult X":$notify(e,s,a,i(r));break;case"Node.js":}if(!this.isMuteLog){let t=["","==============📣系统通知📣=============="];t.push(e),s&&t.push(s),a&&t.push(a),console.log(t.join("\n")),this.logs=this.logs.concat(t)}}log(...t){t.length>0&&(this.logs=[...this.logs,...t]),console.log(t.join(this.logSeparator))}logErr(t,e){switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":case"Quantumult X":default:this.log("",`❗️${this.name}, 错误!`,t);break;case"Node.js":this.log("",`❗️${this.name}, 错误!`,t.stack)}}wait(t){return new Promise(e=>setTimeout(e,t))}done(t={}){const e=(new Date).getTime(),s=(e-this.startTime)/1e3;switch(this.log("",`🔔${this.name}, 结束! 🕛 ${s} 秒`),this.log(),this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":case"Quantumult X":default:$done(t);break;case"Node.js":process.exit(1)}}}(t,e)}
