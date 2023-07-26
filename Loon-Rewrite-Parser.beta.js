@@ -59,9 +59,9 @@ const poDataUrl = "https://github.com/chengkongyiban/stash/raw/main/js/Pokemon/p
 var poDataObj = {};
 if (pokemonJsVersion * 1 > pokemonVersion * 1){
 poDataObj = $.toObj((await $.http.get(poDataUrl)).body);
-$.setval($.toStr(poDataObj),"Pokemon_data");
+$.setjson(poDataObj,"Pokemon_data");
 }else{
-	poDataObj = $.toObj($.getval("Pokemon_data"));};
+	poDataObj = $.getjson("Pokemon_data");};
 //初阶宝可梦
 beginnerPokemon = poDataObj.beginnerPokemon;
 cloudPcp = poDataObj.cloudPcp;
@@ -79,23 +79,23 @@ var count = {};
 //读取卡池
 if ($.getval("Pokemon_card_pool") == null || $.getval("Pokemon_card_pool") == ""){
 	pokemonCdp = beginnerPokemon;
-	 $.setval($.toStr(pokemonCdp), "Pokemon_card_pool")
+	 $.setjson(pokemonCdp, "Pokemon_card_pool")
 }else{
-    pokemonCdp = $.toObj($.getval("Pokemon_card_pool"))
+    pokemonCdp = $.getjson("Pokemon_card_pool")
     if (pokemonJsVersion * 1 > pokemonVersion * 1){
 	var filteredPokemonCdp = pokemonCdp.filter(function (pokemon) {
   return pokemon >= 1301 && pokemon <= 1800 && cloudPcp.includes(pokemon);
 });
 pokemonCdp = beginnerPokemon.concat(filteredPokemonCdp);
-$.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
+$.setjson(pokemonCdp, "Pokemon_card_pool");
 
-count = $.toObj($.getval("Pokemon_count"));
+count = $.getjson("Pokemon_count");
 for (var key in count) {
   if (!pokemonCdp.includes(parseInt(key))) {
     delete count[key];
   }
 };
-$.setval($.toStr(count), "Pokemon_count");
+$.setjson(count, "Pokemon_count");
 
 $.setval(pokemonJsVersion, "Pokemon_version");
 }
@@ -106,17 +106,17 @@ if ($.getval("Pokemon_count") == null || $.getval("Pokemon_count") == ""){
     var result = getArrayItems(pokemonCdp, 1);
     var num = result[0];
     count[num] = (count[num] || 0) + 1;
-$.setval($.toStr(count), "Pokemon_count");
+$.setjson(count, "Pokemon_count");
 	var pokemonInfo = getPokemonByIcon(result[0]);
     pluginPokemonIcon = "https://raw.githubusercontent.com/Toperlock/Quantumult/main/icon/Pokemon/Pokemon-" + result + ".png";
 	pluginPokemonAuthor = "#!author=" + pokemonInfo.name;
 	pluginPokemonHomepage = "#!homepage=" + pokemonPBUrl + pokemonInfo.number;
 }else{
-	count = $.toObj($.getval("Pokemon_count"))
+	count = $.getjson("Pokemon_count")
 	var result = getArrayItems(pokemonCdp, 1);
     var num = result[0];
     count[num] = (count[num] || 0) + 1;
-	$.setval($.toStr(count), "Pokemon_count")
+	$.setjson(count, "Pokemon_count")
 	var pokemonInfo = getPokemonByIcon(result[0]);
     pluginPokemonIcon = "https://raw.githubusercontent.com/Toperlock/Quantumult/main/icon/Pokemon/Pokemon-" + result + ".png";
 	pluginPokemonAuthor = "#!author=" + pokemonInfo.name;
@@ -130,7 +130,7 @@ for (var index in pokemonCdp) {
         var evolvedNum = parseInt(num) + 300;
         if (!pokemonCdp.includes(evolvedNum)) {
             pokemonCdp.push(evolvedNum);
-            $.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
+            $.setjson(pokemonCdp, "Pokemon_card_pool");
 						
 						var pokemonInfo = getPokemonByIcon(evolvedNum);
 						
@@ -147,7 +147,7 @@ for (var index in pokemonCdp) {
         var evolvedNum = parseInt(num) + 100;
         if (!pokemonCdp.includes(evolvedNum)) {
             pokemonCdp.push(evolvedNum);
-            $.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
+            $.setjson(pokemonCdp, "Pokemon_card_pool");
 						
 						var pokemonInfo = getPokemonByIcon(evolvedNum);
 						
@@ -164,7 +164,7 @@ for (var index in pokemonCdp) {
 			var unlockedPokemon = [];
       pokemonCdp.push(1596,1597);
 			unlockedPokemon.push(1596,1597);
-$.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
+$.setjson(pokemonCdp, "Pokemon_card_pool");
       unlockedPokemon.forEach(pokemonNumber => {
         var pokemonInfo = getPokemonByIcon(pokemonNumber);
         if (pokemonInfo !== null) {
@@ -184,7 +184,7 @@ for (var index in pokemonCdp) {
 			var unlockedPokemon = [];
       pokemonCdp.push(1598,1599,1600);
 			unlockedPokemon.push(1598,1599,1600);
-$.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
+$.setjson(pokemonCdp, "Pokemon_card_pool");
       unlockedPokemon.forEach(pokemonNumber => {
         var pokemonInfo = getPokemonByIcon(pokemonNumber);
         if (pokemonInfo !== null) {
@@ -204,7 +204,7 @@ for (var index in pokemonCdp) {
 			var unlockedPokemon = [];
       pokemonCdp.push(1393, 1394, 1395, 1396, 1397, 1398, 1399, 1400);
 			unlockedPokemon.push(1393, 1394, 1395, 1396, 1397, 1398, 1399, 1400);
-$.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
+$.setjson(pokemonCdp, "Pokemon_card_pool");
       unlockedPokemon.forEach(pokemonNumber => {
         var pokemonInfo = getPokemonByIcon(pokemonNumber);
         if (pokemonInfo !== null) {
@@ -230,7 +230,7 @@ if (pokemonCdp.length >= 96 && pokemonCdp.length < 100 && Object.values(count).e
     var pokemonInfo = getPokemonByIcon(pokemonNumber);
     $.msg("恭喜您解锁了新的宝可梦", pokemonInfo.name, "您已解锁全部112只宝可梦",  pokemonPBUrl + pokemonInfo.number );
   });
- $.setval($.toStr(pokemonCdp), "Pokemon_card_pool");
+ $.setjson(pokemonCdp, "Pokemon_card_pool");
 }
 
 function getArrayItems(arr, num) {
@@ -340,13 +340,13 @@ const pluginIcon = icon;
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
-  $.setval($.toStr(nCache), 'parser_cache');
+  $.setjson(nCache, 'parser_cache');
   }else{
     //删除大于一天的缓存防止缓存越来越大
     oCache = oCache.filter(obj => {
   return seconds - obj.time < 86400 ;
 });
-$.setval($.toStr(oCache), 'parser_cache');
+$.setjson(oCache, 'parser_cache');
 
  if (!oCache.some(obj => obj.url === req)){
      //$.log("有缓存但是没有这个URL的")
@@ -355,7 +355,7 @@ $.setval($.toStr(oCache), 'parser_cache');
   nCache[0].body = body;
   nCache[0].time = seconds;
   var mergedCache = oCache.concat(nCache);
-$.setval($.toStr(mergedCache), 'parser_cache');
+$.setjson(mergedCache, 'parser_cache');
   }else if (oCache.some(obj => obj.url === req)){
     const objIndex = oCache.findIndex(obj => obj.url === req);
     if (seconds - oCache[objIndex].time > expirationTime){
@@ -363,14 +363,14 @@ $.setval($.toStr(mergedCache), 'parser_cache');
   body = (await $.http.get(req)).body;
   oCache[objIndex].body = body;
   oCache[objIndex].time = seconds;
-$.setval($.toStr(oCache), 'parser_cache');
+$.setjson(oCache, 'parser_cache');
     }else{
       //$.log("有缓存且有url且没过期")
     if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
         //$.log("但是body为null")
         body = (await $.http.get(req)).body;
         oCache[objIndex].body = body;
-        oCache[objIndex].time = seconds;        $.setval($.toStr(oCache), "parser_cache");
+        oCache[objIndex].time = seconds;        $.setjson(oCache, "parser_cache");
     }else{
         //$.log("获取到缓存body")
         body = oCache[objIndex].body;
