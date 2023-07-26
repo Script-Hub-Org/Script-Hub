@@ -78,13 +78,13 @@ let body
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
-  $.setval($.toStr(nCache), 'parser_cache');
+  $.setjson(nCache, 'parser_cache');
   }else{
     //删除大于一天的缓存防止缓存越来越大
     oCache = oCache.filter(obj => {
   return seconds - obj.time < 86400 ;
 });
-$.setval($.toStr(oCache), 'parser_cache');
+$.setjson(oCache, 'parser_cache');
 
  if (!oCache.some(obj => obj.url === req)){
      //console.log("有缓存但是没有这个URL的")
@@ -93,7 +93,7 @@ $.setval($.toStr(oCache), 'parser_cache');
   nCache[0].body = body;
   nCache[0].time = seconds;
   var mergedCache = oCache.concat(nCache);
-$.setval($.toStr(mergedCache), 'parser_cache');
+$.setjson(mergedCache, 'parser_cache');
   }else if (oCache.some(obj => obj.url === req)){
     const objIndex = oCache.findIndex(obj => obj.url === req);
     if (seconds - oCache[objIndex].time > expirationTime){
@@ -101,14 +101,14 @@ $.setval($.toStr(mergedCache), 'parser_cache');
   body = (await $.http.get(req)).body;
   oCache[objIndex].body = body;
   oCache[objIndex].time = seconds;
-$.setval($.toStr(oCache), 'parser_cache');
+$.setjson(oCache, 'parser_cache');
     }else{
       //console.log("有缓存且有url且没过期")
     if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
         //console.log("但是body为null")
         body = (await $.http.get(req)).body;
         oCache[objIndex].body = body;
-        oCache[objIndex].time = seconds;        $.setval($.toStr(oCache), "parser_cache");
+        oCache[objIndex].time = seconds;        $.setjson(oCache, "parser_cache");
     }else{
         //console.log("获取到缓存body")
         body = oCache[objIndex].body;
