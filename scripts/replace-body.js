@@ -49,6 +49,8 @@ if (typeof $argument == 'undefined') {
 }
 
 if (body) {
+  console.log('$argument')
+  console.log($argument)
   $argument.split('&').forEach(item => {
     let [match, replace] = item.split('->')
     console.log('match')
