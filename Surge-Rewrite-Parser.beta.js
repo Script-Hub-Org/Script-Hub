@@ -387,9 +387,8 @@ $.setjson(oCache, 'parser_cache');
 eval(evJsori);
 eval(evUrlori);
 
-if (body.match(/\/\*+\n[\s\S]*\n\*+\/\n/)){
-body = body.replace(/[\s\S]*(\/\*+\n[\s\S]*\n\*+\/\n)[\s\S]*/,"$1").match(/[^\r\n]+/g);
-}else{
+if (body.match(/\/\*[\s\S]*?\*\//)){
+body = body.match(/(\/\*[\s\S]*?\*\/)/)[1].match(/[^\r\n]+/g);
     body = body.match(/[^\r\n]+/g);};
 
 let pluginDesc = [];
