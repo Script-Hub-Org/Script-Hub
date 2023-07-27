@@ -329,7 +329,6 @@ let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).to
 const pluginIcon = icon;
 //$.log("插件图标：" + pluginIcon);
 
-
   let body
 
   if (noCache == true){
@@ -378,7 +377,6 @@ $.setjson(oCache, 'parser_cache');
       };
   };
 };
-//判断是否断网
 
 eval(evJsori);
 eval(evUrlori);
