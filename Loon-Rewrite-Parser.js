@@ -383,6 +383,7 @@ eval(evUrlori);
 
 if (body.match(/\/\*[\s\S]*?\*\//)){
 body = body.match(/(\/\*[\s\S]*?\*\/)/)[1].match(/[^\r\n]+/g);
+}else{
     body = body.match(/[^\r\n]+/g);};
 
 let pluginDesc = [];
