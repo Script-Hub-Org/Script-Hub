@@ -797,7 +797,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					};
                     }else if (type.match(/\x20(https?|ftp|file)/)){
 //定时任务                    
-				cronExp = x.replace(/\x20{2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/^#/,'');
+				cronExp = x.replace(/\x20{2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/^#? */,'');
 				
 				cronJs = x.replace(/^#/,"")
 				.replace(/\x20{2,}/g," ")
