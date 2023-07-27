@@ -431,7 +431,7 @@ let Urx2Reject = "";   //URL-REGEX转reject
 let scriptBox = [];    //存放脚本信息待下一步处理
 
 for await (var [y, x] of body.entries()) {
-	x = x.replace(/^ *(#|;|\/\/)/,'#').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/, *REJECT([^,\s]*)$/i,',REJECT$1').replace(/, *DIRECT$/i,',DIRECT').replace(/ reject/i,' reject').replace(/(hostname|force-http-engine-hosts|skip-proxy|always-real-ip)\x20*=/,'$1=').replace(/cronexpr?\x20*=\x20*/gi,'cronexp=').replace(/type *= *generic *,/i,"type=generic,").replace(/script-name *=/,"script-name=");
+	x = x.replace(/^ *(#|;|\/\/)/,'#').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/, *REJECT([^,\s]*)$/i,',REJECT$1').replace(/, *DIRECT$/i,',DIRECT').replace(/ reject/i,' reject').replace(/^ *(hostname|force-http-engine-hosts|skip-proxy|always-real-ip)\x20*=/,'$1=').replace(/cronexpr?\x20*=\x20*/gi,'cronexp=').replace(/type *= *generic *,/i,"type=generic,").replace(/script-name *=/,"script-name=");
 //去掉注释
 if(Pin0 != null)	{
 	for (let i=0; i < Pin0.length; i++) {
