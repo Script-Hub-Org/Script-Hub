@@ -396,7 +396,7 @@ if (body.match(/\/\*[\s\S]*?\*\//)){
 body = body.match(/(\/\*[\s\S]*?\*\/)/)[1].match(/[^\r\n]+/g);
 }else{
     body = body.match(/[^\r\n]+/g);};
-
+	
 let pluginDesc = [];
 let httpFrame = "";
 let URLRewrite = [];
@@ -435,7 +435,7 @@ let reBdArg2 = "";     //替换
 let scriptBox = [];    //存放脚本信息待下一步处理
 
 for await (var [y, x] of body.entries()) {
-	x = x.replace(/^ *(#|;|\/\/)/,'#').replace(/\x20.+url-and-header\x20/,' url ').replace(/\x20+url\x20+/," url ").replace(/^hostname\x20*=/,"hostname=").replace(/(^[^#].+)\x20+\/\/.+/,"$1");
+	x = x.replace(/^ *(#|;|\/\/)/,'#').replace(/\x20.+url-and-header\x20/,' url ').replace(/\x20+url\x20+/," url ").replace(/^ *hostname\x20*=/,"hostname=").replace(/(^[^#].+)\x20+\/\/.+/,"$1");
 //去掉注释
 if (Pin0 != null)	{
 	for (let i=0; i < Pin0.length; i++) {
