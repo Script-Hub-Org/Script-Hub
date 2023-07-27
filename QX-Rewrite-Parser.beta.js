@@ -676,9 +676,9 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				if (isSurgeiOS){
 					reHdPtn = reHdPtn.replace(/(.+,.+)/,'"$1"');};
 				
-				reHdArg1 = x.split(" " + reHdType + "-header ")[1];
+				reHdArg1 = encodeURIComponent(x.split(" " + reHdType + "-header ")[1]);
 				
-				reHdArg2 = x.split(" " + reHdType + "-header ")[2];
+				reHdArg2 = encodeURIComponent(x.split(" " + reHdType + "-header ")[2]);
 				
 				if (isLooniOS){
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
@@ -775,9 +775,9 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				reBdPtn = x.replace(/\x20{2,}/g," ").split(" url re")[0].replace(/^#/,"");
 				if (isSurgeiOS){
 					reBdPtn = reBdPtn.replace(/(.+,.+)/,'"$1"');};
-				reBdArg1 = x.split(" " + reBdType + "-body ")[1];
+				reBdArg1 = encodeURIComponent(x.split(" " + reBdType + "-body ")[1]);
 				
-				reBdArg2 = x.split(" " + reBdType + "-body ")[2];
+				reBdArg2 = encodeURIComponent(x.split(" " + reBdType + "-body ")[2]);
 					if (isLooniOS){
 					body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 						
