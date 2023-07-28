@@ -4,18 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "preview": "nodemon preview.js"
+    "preview": "nodemon preview.js",
+    "export_html": "cross-env EXPORT_HTML=true node preview.js"
   },
   "license": "GPL-3.0",
   "dependencies": {
     "koa": "^2.14.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.0",
+    "cross-env": "^7.0.3",
     "crypto-js": "^4.0.0",
     "got": "^11.8.5",
     "http-server": "^0.12.3",
     "iconv-lite": "0.6.3",
+    "nodemon": "^3.0.0",
     "tough-cookie": "^4.0.0"
   }
 }
