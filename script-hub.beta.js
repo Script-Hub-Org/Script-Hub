@@ -37,7 +37,12 @@ const reloaded = () => {
 if (isReloadRequest()) {
   if ($.isSurge()) {
     httpAPI('/v1/profiles/reload', 'POST', {}).then(() => {
-      $.msg('Surge 重载', '✅ 完成', '点此通知打开 Surge', 'surge://')
+      $.msg(
+        'Surge 重载',
+        '✅ 完成',
+        '点此通知打开 Surge (⚠️ 更新已有模块时 可能仍需要杀掉 Surge 的后台重新打开才能生效)',
+        'surge://'
+      )
       // 重载后这里不会执行...所以下面又写了一段
       reloaded()
     })
