@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const Koa = require('Koa')
+const Koa = require('koa')
 
 const PORT = process.env.PORT || 9000
 const BETA_PORT = process.env.BETA_PORT || 9001
