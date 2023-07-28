@@ -6,7 +6,6 @@
 const $ = new Env("rule-parser");
 
 //目标app
-
 const isEgern = 'object' == typeof egern;
 const isLanceX = 'undefined' != typeof $native;
 if (isLanceX){
@@ -26,6 +25,25 @@ resFile.substring(0,resFile.lastIndexOf('.'));
 //获取参数
 const queryObject = parseQueryString(urlArg);
 //$.log("参数:" + $.toStr(queryObject));
+
+//目标类型
+const isSurgetarget = queryObject.target == "surge-rule-set";
+const isStashtarget = queryObject.target == "stash-rule-set";
+const isLoontarget = queryObject.target == "loon-rule-set";
+const isRockettarget = queryObject.target == "shadowrocket-rule-set";
+
+if (queryObject.target == 'rule-set'){
+	isSurgeiOS = $.isSurge();
+	isStashiOS = $.isStash();
+	isLooniOS = $.isLoon();
+	isShadowrocket = $.isShadowrocket();
+}else{
+	isSurgeiOS = isSurgetarget;
+	isStashiOS = isStashtarget;
+	isLooniOS = isLoontarget;
+	isShadowrocket = isRockettarget;
+};
+
 var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var ipNoResolve = istrue(queryObject.nore);
@@ -159,7 +177,7 @@ if(ipNoResolve === true){
 
 	x = x.replace(/^#.+/,'').replace(/^host-wildcard/i,'HO-ST-WILDCARD').replace(/^host/i,'DOMAIN').replace(/^dest-port/i,'DST-PORT').replace(/^ip6-cidr/i,'IP-CIDR6')
 	
-	if ($.isStash()){
+	if (isStashiOS){
 	
 	if (x.match(/^;#/)){
 		outRules.push(x.replace(/^;#/,"").replace(/^HO-ST/i,'HOST'))
@@ -181,7 +199,7 @@ if(ipNoResolve === true){
 			`  - ${ruleType},${ruleValue}${noResolve}`
 			)
 	};
-	}else if ($.isLoon()){
+	}else if (isLooniOS){
 	
 	if (x.match(/^;#/)){
 		
@@ -201,7 +219,7 @@ if(ipNoResolve === true){
 			`${ruleType},${ruleValue}${noResolve}`
 			)
 	};
-	}else if ($.isSurge() || $.isShadowrocket()){
+	}else if (isSurgeiOS || isShadowrocket){
 		
 		if (x.match(/^;#/)){
 		
@@ -216,7 +234,7 @@ if(ipNoResolve === true){
 		
 		ruleType = x.split(/ *, */)[0].toUpperCase().replace(/^PROCESS-PATH/i,"PROCESS-NAME");
         
-        if ($.isSurge()){
+        if (isSurgeiOS){
             ruleType = ruleType.replace(/^DST-PORT/i,"DEST-PORT");
         };
 		
@@ -235,9 +253,9 @@ let outRuleNum = outRules.length;
 others = (others[0] || '') && `\n#不支持的规则:\n#${others.join("\n#")}`;
 outRules = (outRules[0] || '') && `\n#已排除规则:\n#${outRules.join("\n#")}`;
 
-if ($.isStash()){
+if (isStashiOS){
 	ruleSet = (ruleSet[0] || '') && `#规则数量:${ruleNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\npayload:\n${ruleSet.join("\n")}`;
-}else if ($.isSurge() || $.isShadowrocket() || $.isLoon()){
+}else if (isSurgeiOS || isShadowrocket || isLooniOS){
 	ruleSet = (ruleSet[0] || '') && `#规则数量:${ruleNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n${ruleSet.join("\n")}`;
 }
 
@@ -250,11 +268,11 @@ eval(evUrlmodi);
 
 })()
 .catch((e) => {
-		$.msg(`Script Hub: 规则集转换`,`${e}\n${url}`,'','https://t.me/zhetengsha_group');
+		$.msg(`Script Hub: 规则集转换`,`${resFileName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
 		result = {
       response: {
         status: 500,
-        body: `${e}\n\n\n\n\n\nScript Hub 规则集转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
+        body: `${resFileName}：${e}\n\n\n\n\n\nScript Hub 规则集转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
 `,
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
