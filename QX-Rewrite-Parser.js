@@ -393,8 +393,9 @@ $.setjson(oCache, 'parser_cache');
 eval(evJsori);
 eval(evUrlori);
 
-if (body.match(/^\/\*[\s\S]*?(\r|\n)\*+\//)){
-body = body.match(/(^\/\*[\s\S]*?(\r|\n)\*+\/)/)[1].match(/[^\r\n]+/g);
+if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)){
+	$.log("test")
+body = body.match(/(^(?:\n|\r)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\/)/)[1].match(/[^\r\n]+/g);
 }else{
     body = body.match(/[^\r\n]+/g);};
 	
