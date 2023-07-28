@@ -852,10 +852,12 @@ const htmls = `
 
       <div>
         <code>&nbsp;目标类型: </code>
-        <div v-for="item in targets">
-            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model.lazy="target" :disabled=" (type === 'qx-script' && item.value !== 'surge-script') || (type === 'rule-set' && item.value !== 'rule-set') || (type === 'plain-text' && item.value !== 'plain-text') " />
+        <template v-for="item in targets">
+          <div v-if="(item.value.endsWith('rule-set') && type === 'rule-set') || (type !== 'rule-set' && !item.value.endsWith('-rule-set'))">
+            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model.lazy="target" :disabled=" (type === 'qx-script' && item.value !== 'surge-script') || (type === 'rule-set' && !item.value.endsWith('rule-set')) || (type === 'plain-text' && item.value !== 'plain-text') " />
             <label :for="'target-' + item.value" class="radio-label">{{item.label}}</label>
-        </div>
+          </div>
+        </template>
       </div>
     </div>
     <br/>
@@ -1111,9 +1113,9 @@ const htmls = `
       const { createApp, ref } = Vue
   const init = {
     baseUrl: location.protocol + '//script.hub',
-    types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'rule-set', label: '规则集'}, {value: 'plain-text', label: '纯文本'}, { value: "iso", label: "画个饼", disabled: true }],
+    types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'rule-set', label: '规则集'}, {value: 'plain-text', label: '纯文本'}],
     type: '',
-    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'rule-set', label: '规则集', suffix: '.list' }, {value: 'plain-text', label: '纯文本'}],
+    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'rule-set', label: '规则集(自动识别)', suffix: '.list' }, {value: 'surge-rule-set', label: '规则集(Surge)', suffix: '.list' }, {value: 'stash-rule-set', label: '规则集(Stash)', suffix: '.list' }, {value: 'loon-rule-set', label: '规则集(Loon)', suffix: '.list' }, {value: 'shadowrocket-rule-set', label: '规则集(Shadowrocket)', suffix: '.list' }, {value: 'plain-text', label: '纯文本'}],
     target: '',
     src: '',
     n: '',
