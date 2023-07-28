@@ -53,6 +53,14 @@ const iconFormat = iconLibrary2.search(/gif/i) == -1 ? ".png" : ".gif";
 var pluginPokemonIcon
 var pluginPokemonAuthor
 var pluginPokemonHomepage
+
+var rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
+var resFile = urlArg.split("?")[0];
+var resFileName = 
+resFile.substring(0,resFile.lastIndexOf('.'));
+var notifyName
+if (nName != null && nName[0] != ""){notifyName = nName[0];}else{notifyName = resFileName;};
+
 //宝可梦插件图标game
 !(async () => {
 if (isLooniOS && iconLibrary2 == "Pokemon" && iconStatus == "启用"){
@@ -279,12 +287,6 @@ evUrlmodi = (await $.http.get(evUrlmodi)).body;
 var name = "";
 var desc = "";
 var icon = "";
-var rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
-var resFile = urlArg.split("?")[0];
-var resFileName = 
-resFile.substring(0,resFile.lastIndexOf('.'));
-var notifyName
-if (nName != null && nName[0] != ""){notifyName = nName[0];}else{notifyName = resFileName;};
 
 //缓存有效期相关
 var currentTime = new Date();
@@ -1354,11 +1356,11 @@ others !="" && $.msg("不支持的类型已跳过",others,"点击查看原文，
 
 })()
 .catch((e) => {
-		$.msg(`Script Hub: Surge转换`,`${e}`,'','https://t.me/zhetengsha_group');
+		$.msg(`Script Hub: Surge转换`,`${notifyName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
 		result = {
       response: {
         status: 500,
-        body: `${e}\n\n\n\n\n\nScript Hub Surge转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
+        body: `${notifyName}：${e}\n\n\n\n\n\nScript Hub Surge转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
 `,
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
