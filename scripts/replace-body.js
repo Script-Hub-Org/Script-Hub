@@ -48,10 +48,14 @@ if (typeof $argument == 'undefined') {
   }
 }
 
+let argument = $argument ?? ''
 if (body) {
-  console.log('$argument')
-  console.log($argument)
-  $argument.split('&').forEach(item => {
+  try {
+    argument = decodeURIComponent(argument)
+  } catch (e) {}
+  console.log('argument')
+  console.log(argument)
+  argument.split('&').forEach(item => {
     let [match, replace] = item.split('->')
     console.log('match')
     console.log(match)
@@ -60,8 +64,8 @@ if (body) {
     let re = getRegexp(match)
     body = body.replace(re, replace)
   })
-  console.log('body')
-  console.log(body)
+  // console.log('body')
+  // console.log(body)
   $done({ body })
 } else {
   console.log('Not Modify')

@@ -52,8 +52,13 @@ let result = {}
   // $.log(`urlPrefix: ${urlPrefix}`)
   // $.log(`path: ${path}`)
   $.log(`⏺ headers,`, headersTxt)
-
-  $argument.split('&').forEach(item => {
+  let argument = $argument ?? ''
+  try {
+    argument = decodeURIComponent(argument)
+  } catch (e) {}
+  console.log('argument')
+  console.log(argument)
+  argument.split('&').forEach(item => {
     let [match, replace] = item.split('->')
     let re = getRegexp(match)
     $.log('✏️', re, '->', replace)
