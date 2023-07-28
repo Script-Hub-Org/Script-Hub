@@ -16,7 +16,7 @@ app.use(async ctx => {
   ctx.body =
     content.match(/<!DOCTYPE html>([\s\S]*?<body style="margin-bottom: 80px;"><script>)/i)[1] +
     '</script><script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>' +
-    content.match(/(<div id="app">[\s\S]*?)<\/html>/i)[1]
+    content.match(/(<div id="app">[\s\S]*?)<\/html>/i)[1].replace("${$.getEnv() || ''}", 'node')
 })
 
 app.listen(PORT, HOST, async ctx => {
@@ -33,7 +33,7 @@ appBeta.use(async ctx => {
   ctx.body =
     content.match(/<!DOCTYPE html>([\s\S]*?<body style="margin-bottom: 80px;"><script>)/i)[1] +
     '</script><script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>' +
-    content.match(/(<div id="app">[\s\S]*?)<\/html>/i)[1]
+    content.match(/(<div id="app">[\s\S]*?)<\/html>/i)[1].replace("${$.getEnv() || ''}", 'node')
 })
 
 appBeta.listen(BETA_PORT, HOST, async ctx => {

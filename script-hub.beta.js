@@ -1216,6 +1216,11 @@ const htmls = `
 
   console.log("init", init)
 
+  const envDom = document.createElement("small");
+  envDom.textContent = "运行环境: " + init.env;
+
+  document.querySelector('footer').appendChild(envDom);
+
   createApp({
     data() {
       return { ...init }
