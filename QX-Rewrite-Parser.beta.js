@@ -349,6 +349,7 @@ const pluginIcon = icon;
 }else if (oCache == null){
     //$.log("一个缓存也没有")
   body = (await $.http.get(req)).body;
+$.log('body字节数:' + body.length + '字');
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
@@ -363,6 +364,7 @@ $.setjson(oCache, 'parser_cache');
  if (!oCache.some(obj => obj.url === req)){
      //$.log("有缓存但是没有这个URL的")
   body = (await $.http.get(req)).body;
+$.log('body字节数:' + body.length + '字');
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
@@ -373,6 +375,7 @@ $.setjson(mergedCache, 'parser_cache');
     if (seconds - oCache[objIndex].time > expirationTime){
       //$.log("有缓存且有url,但是过期了")
   body = (await $.http.get(req)).body;
+$.log('body字节数:' + body.length + '字');
   oCache[objIndex].body = body;
   oCache[objIndex].time = seconds;
 $.setjson(oCache, 'parser_cache');
@@ -381,6 +384,7 @@ $.setjson(oCache, 'parser_cache');
     if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
         //$.log("但是body为null")
         body = (await $.http.get(req)).body;
+$.log('body字节数:' + body.length + '字');
         oCache[objIndex].body = body;
         oCache[objIndex].time = seconds;        $.setjson(oCache, "parser_cache");
     }else{
