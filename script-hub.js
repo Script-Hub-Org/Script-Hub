@@ -899,7 +899,7 @@ const htmls = `
             </div>
           </details>
 
-          <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
+          <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
             <summary>启用脚本转换 2(仅在转换 QX 资源时可用)</summary>
             <span>根据关键词为脚本启用脚本转换(与 <code>启用脚本转换 1</code> 的区别: 总是会在$done(body)里包一个response)</span>
             <textarea id="jsc2" v-model.lazy="jsc2" placeholder=""></textarea>
@@ -943,7 +943,7 @@ const htmls = `
       </div>
       <br/>
 
-      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
         <summary>名称 简介</summary>
         <span>名字+简介 ，名字和简介以"+"相连，可缺省名字或简介</span>
         <textarea id="n" v-model.lazy="n" placeholder=""></textarea>
@@ -954,7 +954,7 @@ const htmls = `
         <textarea id="filename" v-model.lazy="filename" :placeholder=" target === 'plain-text' ? '当前为纯文本类型, 此处为包含后缀的完整文件名' : '不包含后缀' "></textarea>
       </details>
 
-      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
         <summary>重写相关</summary>
         <details>
           <summary>保留重写</summary>
@@ -972,7 +972,7 @@ const htmls = `
         </div>
       </details>
 
-      <details v-if="!target || target === 'rule-set'">
+      <details v-if="!target || target.endsWith('rule-set')">
         <summary>规则相关</summary>
         <details>
           <summary>保留规则</summary>
@@ -990,7 +990,7 @@ const htmls = `
 
 
 
-      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
         <summary>修改 MITM 主机名</summary>
         <details>
           <summary>添加 MITM 主机名</summary>
@@ -1006,7 +1006,7 @@ const htmls = `
       </details>
       
 
-      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
         <summary>修改定时任务</summary>
         <details>
           <summary>修改定时任务(cron)</summary>
@@ -1021,7 +1021,7 @@ const htmls = `
       </details>
 
 
-      <details v-if="!target || (target !== 'rule-set' && target !== 'surge-script' && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
         <summary>修改参数</summary>
         <details>
           <summary>修改参数(arg)</summary>
@@ -1059,7 +1059,7 @@ const htmls = `
         </div>
       </details>
 
-      <div v-if="!target || target === 'rule-set' ">
+      <div v-if="!target || target.endsWith('rule-set') ">
         <input type="checkbox" id="nore" v-model.lazy="nore" />
         <label class="button-over" for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
       </div>
@@ -1256,7 +1256,7 @@ const htmls = `
     },
     watch: {
       type(v) {
-        if(v === 'rule-set' && this.target !== 'rule-set'){
+        if(v === 'rule-set' && !this.target.endsWith('rule-set')){
           this.target='rule-set'
         } else if(v === 'qx-script' && this.target !== 'surge-script'){
           this.target='surge-script'
@@ -1265,7 +1265,7 @@ const htmls = `
         }
       },
       target(v) {
-        if(v === 'rule-set' && this.type !== 'rule-set'){
+        if(v.endsWith('rule-set') && this.type !== 'rule-set'){
           this.type='rule-set'
         } else if(v === 'surge-script' && this.type !== 'qx-script'){
           this.type='qx-script'
