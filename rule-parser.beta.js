@@ -5,6 +5,13 @@
 
 const $ = new Env("rule-parser");
 
+//目标app
+const isEgern = 'object' == typeof egern;
+const isLanceX = 'undefined' != typeof $native;
+if (isLanceX || isEgern){
+	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"};
+};
+
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
 	//$.log("原始链接：" + req);
@@ -28,10 +35,17 @@ const isLoontarget = queryObject.target == "loon-rule-set";
 const isRockettarget = queryObject.target == "shadowrocket-rule-set";
 
 if (queryObject.target == 'rule-set'){
+	if (appUa.search(/Surge|curl|Egern|Stash|Loon|Shadowrocket/i) != -1){
 	isSurgeiOS = appUa.search(/Surge|curl|Egern/i) != -1;
 	isStashiOS = appUa.search(/Stash/i) != -1;
 	isLooniOS = appUa.search(/Loon/i) != -1;
 	isShadowrocket = appUa.search(/Shadowrocket/i) != -1;
+	}else{
+	isSurgeiOS = $.isSurge();
+	isStashiOS = $.isStash();
+	isLooniOS = $.isLoon();
+	isShadowrocket = $.isShadowrocket();	
+	};
 }else{
 	isSurgeiOS = isSurgetarget;
 	isStashiOS = isStashtarget;
