@@ -8,10 +8,9 @@ const $ = new Env("rule-parser");
 //目标app
 const isEgern = 'object' == typeof egern;
 const isLanceX = 'undefined' != typeof $native;
-if (isLanceX){
+if (isLanceX || isEgern){
 	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"};
 };
-if (isEgern){$rocket = {};};
 
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
@@ -21,6 +20,9 @@ var urlArg = url.split(/\/_end_\//)[1];
 var resFile = urlArg.split("?")[0];
 var resFileName = 
 resFile.substring(0,resFile.lastIndexOf('.'));
+
+//通过请求头中的UA识别app
+const appUa = $request.headers['user-agent'] || $request.headers['User-Agent'];
 
 //获取参数
 const queryObject = parseQueryString(urlArg);
@@ -33,10 +35,17 @@ const isLoontarget = queryObject.target == "loon-rule-set";
 const isRockettarget = queryObject.target == "shadowrocket-rule-set";
 
 if (queryObject.target == 'rule-set'){
+	if (appUa.search(/Surge|curl|Egern|Stash|Loon|Shadowrocket/i) != -1){
+	isSurgeiOS = appUa.search(/Surge|curl|Egern/i) != -1;
+	isStashiOS = appUa.search(/Stash/i) != -1;
+	isLooniOS = appUa.search(/Loon/i) != -1;
+	isShadowrocket = appUa.search(/Shadowrocket/i) != -1;
+	}else{
 	isSurgeiOS = $.isSurge();
 	isStashiOS = $.isStash();
 	isLooniOS = $.isLoon();
-	isShadowrocket = $.isShadowrocket();
+	isShadowrocket = $.isShadowrocket();	
+	};
 }else{
 	isSurgeiOS = isSurgetarget;
 	isStashiOS = isStashtarget;
