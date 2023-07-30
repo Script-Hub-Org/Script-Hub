@@ -47,8 +47,9 @@ var noCache = istrue(queryObject.nocache);
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
 const iconLibrary1 = $.getval("插件随机图标合集") ?? "Doraemon(100P)";
-const iconLibrary2 = iconLibrary1.split("(")[0];
+var iconLibrary2 = iconLibrary1.split("(")[0];
 const iconFormat = iconLibrary2.search(/gif/i) == -1 ? ".png" : ".gif";
+if (iconStatus == "禁用" && iconReplace == "禁用"){iconLibrary2 = "Doraemon"};
 
 var pluginPokemonIcon
 var pluginPokemonAuthor
@@ -529,8 +530,6 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
             if (iconReplace == "启用"){
                 x = x.replace(/^#!icon *=.*/,pluginIcon);
             };
-			x = x.replace(/^(#!author *=).*/i,pluginPokemonAuthor)
-			x = x.replace(/^(#!homepage *=).*/i,pluginPokemonHomepage)
             pluginDesc.push(x);
 				
 			}else if (isLooniOS || isSurgeiOS || isShadowrocket){
@@ -1136,22 +1135,17 @@ if (isLooniOS){
     
     pluginDesc = (pluginDesc[0] || '') && `${pluginDesc.join("\n")}`;
     
-    if (pluginDesc !="" && pluginDesc.search(/#! *name *=/) != -1){
+    if (pluginDesc != "" && pluginDesc.search(/#! *name *=/) != -1){
         //没有图标的插入图标
-        if (pluginDesc.search(/#! *icon *= *.+/) == -1){
+        if (pluginDesc.search(/#! *icon *= *.*/) == -1){
         pluginDesc = pluginDesc + "\n" + pluginIcon;
             
-        }else{pluginDesc = pluginDesc;};
+        };
 		
-        //Pokemon没有作者的插入作者
-        if (iconLibrary2 == "Pokemon" && pluginDesc.search(/#! *author *= *.+/i) == -1){
-        pluginDesc = pluginDesc + "\n" + pluginPokemonAuthor;
-        }else{pluginDesc = pluginDesc;};
-		
-        //Pokemon没有homepage的插入homepage
-        if (iconLibrary2 == "Pokemon" && pluginDesc.search(/#! *homepage *= *.+/i) == -1){
-        pluginDesc = pluginDesc + "\n" + pluginPokemonHomepage;
-        }else{pluginDesc = pluginDesc;};
+        //Pokemon修改author和homepage为图鉴
+        if (iconLibrary2 == "Pokemon" && pluginDesc.search(/^#! *icon *= *.+Pokemon-[0-9]+\.png$/mi) != -1){
+        pluginDesc = pluginDesc.replace(/^#!(?:author|homepage) *= *.*/gmi,'') + "\n" + pluginPokemonAuthor + "\n" + pluginPokemonHomepage;
+        };
 		
     }else{
         if (iconLibrary2 == "Pokemon"){
@@ -1160,10 +1154,7 @@ if (isLooniOS){
                     pluginDesc = npluginDesc + "\n" + pluginIcon;
         };
     };
-    
-    if (iconReplace == "启用" && pluginDesc.search(/#!icon=/) == -1 ){
-        pluginDesc = pluginDesc + "\n" + pluginIcon};
-    
+	
     General = (General[0] || '') && `[General]\n\n${General.join("\n\n")}`;
     
     script = (script[0] || '') && `[Script]\n\n${script.join("\n\n")}`;
