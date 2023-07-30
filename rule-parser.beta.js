@@ -5,14 +5,6 @@
 
 const $ = new Env("rule-parser");
 
-//目标app
-const isEgern = 'object' == typeof egern;
-const isLanceX = 'undefined' != typeof $native;
-if (isLanceX){
-	$environment = {"language":"zh-Hans","system":"iOS","surge-build":"2806","surge-version":"5.20.0"};
-};
-if (isEgern){$rocket = {};};
-
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
 	//$.log("原始链接：" + req);
@@ -21,6 +13,9 @@ var urlArg = url.split(/\/_end_\//)[1];
 var resFile = urlArg.split("?")[0];
 var resFileName = 
 resFile.substring(0,resFile.lastIndexOf('.'));
+
+//通过请求头中的UA识别app
+const appUa = $request.headers['user-agent'] || $request.headers['User-Agent'];
 
 //获取参数
 const queryObject = parseQueryString(urlArg);
@@ -33,10 +28,10 @@ const isLoontarget = queryObject.target == "loon-rule-set";
 const isRockettarget = queryObject.target == "shadowrocket-rule-set";
 
 if (queryObject.target == 'rule-set'){
-	isSurgeiOS = $.isSurge();
-	isStashiOS = $.isStash();
-	isLooniOS = $.isLoon();
-	isShadowrocket = $.isShadowrocket();
+	isSurgeiOS = appUa.search(/Surge|curl|Egern/i) != -1;
+	isStashiOS = appUa.search(/Stash/i) != -1;
+	isLooniOS = appUa.search(/Loon/i) != -1;
+	isShadowrocket = appUa.search(/Shadowrocket/i) != -1;
 }else{
 	isSurgeiOS = isSurgetarget;
 	isStashiOS = isStashtarget;
@@ -90,7 +85,6 @@ let body
 }else if (oCache == null){
     //$.log("一个缓存也没有")
   body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
@@ -105,7 +99,6 @@ $.setjson(oCache, 'parser_cache');
  if (!oCache.some(obj => obj.url === req)){
      //$.log("有缓存但是没有这个URL的")
   body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
@@ -116,7 +109,6 @@ $.setjson(mergedCache, 'parser_cache');
     if (seconds - oCache[objIndex].time > expirationTime){
       //$.log("有缓存且有url,但是过期了")
   body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
   oCache[objIndex].body = body;
   oCache[objIndex].time = seconds;
 $.setjson(oCache, 'parser_cache');
@@ -125,7 +117,6 @@ $.setjson(oCache, 'parser_cache');
     if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
         //$.log("但是body为null")
         body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
         oCache[objIndex].body = body;
         oCache[objIndex].time = seconds;        $.setjson(oCache, "parser_cache");
     }else{
