@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 9100
 const BETA_PORT = process.env.BETA_PORT || 9101
 const HOST = process.env.HOST || '0.0.0.0'
 const BASE_URL = process.env.BASE_URL || `http://127.0.0.1:${PORT}`
+const BETA_BASE_URL = process.env.BETA_BASE_URL || `http://127.0.0.1:${BETA_PORT}`
 
 const scriptMap = {
   './script-hub.js': /^https?:\/\/script\.hub\/($|edit\/|reload)/,
@@ -74,7 +75,7 @@ const evalFn = async ({ $request, scriptFilePath }) => {
     eval(content)
   })
 }
-const reqFn = async ({ ctx, scriptMap }) => {
+const reqFn = async ({ ctx, scriptMap, baseUrl }) => {
   let scriptFilePath
   let url = `http://script.hub${ctx.req.url}`
 
@@ -98,13 +99,13 @@ const reqFn = async ({ ctx, scriptMap }) => {
     ctx.set(k, v)
   }
 
-  ctx.body = result?.response?.body.replace(/https?:\/\/script.hub\//g, `${BASE_URL}/`)
+  ctx.body = result?.response?.body.replace(/https?:\/\/script.hub\//g, `${baseUrl}/`)
 }
 
 const app = new Koa()
 
 app.use(async ctx => {
-  await reqFn({ ctx, scriptMap })
+  await reqFn({ ctx, scriptMap, baseUrl: BASE_URL })
 })
 
 app.listen(PORT, HOST, async ctx => {
@@ -114,9 +115,9 @@ app.listen(PORT, HOST, async ctx => {
 const appBeta = new Koa()
 
 appBeta.use(async ctx => {
-  await reqFn({ ctx, scriptMap: scriptMapBeta })
+  await reqFn({ ctx, scriptMap: scriptMapBeta, baseUrl: BETA_BASE_URL })
 })
 
 appBeta.listen(BETA_PORT, HOST, async ctx => {
-  console.log(`β listening on port ${HOST}:${BETA_PORT}, http://127.0.0.1:${BETA_PORT}, BASE URL: ${BASE_URL}`)
+  console.log(`β listening on port ${HOST}:${BETA_PORT}, http://127.0.0.1:${BETA_PORT}, BASE URL: ${BETA_BASE_URL}`)
 })
