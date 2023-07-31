@@ -35,8 +35,8 @@ const isLoontarget = queryObject.target == "loon-rule-set";
 const isRockettarget = queryObject.target == "shadowrocket-rule-set";
 
 if (queryObject.target == 'rule-set'){
-	if (appUa.search(/Surge|curl|Egern|Stash|Loon|Shadowrocket/i) != -1){
-	isSurgeiOS = appUa.search(/Surge|curl|Egern/i) != -1;
+	if (appUa.search(/Surge|LanceX|Egern|Stash|Loon|Shadowrocket/i) != -1){
+	isSurgeiOS = appUa.search(/Surge|LanceX|Egern/i) != -1;
 	isStashiOS = appUa.search(/Stash/i) != -1;
 	isLooniOS = appUa.search(/Loon/i) != -1;
 	isShadowrocket = appUa.search(/Shadowrocket/i) != -1;
