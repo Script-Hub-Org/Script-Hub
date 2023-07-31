@@ -1112,7 +1112,8 @@ const htmls = `
     
       const { createApp, ref } = Vue
   const init = {
-    baseUrl: location.protocol + '//script.hub',
+    // baseUrl: location.protocol + '//script.hub/',
+    baseUrl: 'http://script.hub/',
     types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'rule-set', label: '规则集'}, {value: 'plain-text', label: '纯文本'}],
     type: '',
     targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'rule-set', label: '规则集(自动识别)', suffix: '.list' }, {value: 'surge-rule-set', label: '规则集(Surge)', suffix: '.list' }, {value: 'stash-rule-set', label: '规则集(Stash)', suffix: '.list' }, {value: 'loon-rule-set', label: '规则集(Loon)', suffix: '.list' }, {value: 'shadowrocket-rule-set', label: '规则集(Shadowrocket)', suffix: '.list' }, {value: 'plain-text', label: '纯文本'}],
@@ -1294,7 +1295,7 @@ const htmls = `
         const target = this.targets.find(i => i.value === this.target)
         if (this.src && target && type) {
           const suffix = target.suffix || ''
-          const pathType = (this.target === 'surge-script' || this.target === 'plain-text') ? '/convert' : '/file'
+          const pathType = (this.target === 'surge-script' || this.target === 'plain-text') ? 'convert' : 'file'
         
           const plainUrl = this.src.split('?')[0]
           const plainUrlFilename = plainUrl.substring(plainUrl.lastIndexOf('/') + 1)

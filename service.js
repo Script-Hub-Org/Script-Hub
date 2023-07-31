@@ -98,7 +98,7 @@ const reqFn = async ({ ctx, scriptMap }) => {
     ctx.set(k, v)
   }
 
-  ctx.body = result?.response?.body.replace(/https?:\/\/script.hub\/convert\//g, `${BASE_URL}/convert/`)
+  ctx.body = result?.response?.body.replace(/https?:\/\/script.hub\//g, `${BASE_URL}/`)
 }
 
 const app = new Koa()
@@ -108,7 +108,7 @@ app.use(async ctx => {
 })
 
 app.listen(PORT, HOST, async ctx => {
-  console.log(`listening on port ${HOST}:${PORT}, http://127.0.0.1:${PORT}`)
+  console.log(`listening on port ${HOST}:${PORT}, http://127.0.0.1:${PORT}, BASE URL: ${BASE_URL}`)
 })
 
 const appBeta = new Koa()
@@ -118,5 +118,5 @@ appBeta.use(async ctx => {
 })
 
 appBeta.listen(BETA_PORT, HOST, async ctx => {
-  console.log(`β listening on port ${HOST}:${BETA_PORT}, http://127.0.0.1:${BETA_PORT}`)
+  console.log(`β listening on port ${HOST}:${BETA_PORT}, http://127.0.0.1:${BETA_PORT}, BASE URL: ${BASE_URL}`)
 })
