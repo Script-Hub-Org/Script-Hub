@@ -193,7 +193,7 @@ var _scriptSonverterDone = (val = {}) => {
       },
     })
   } else {
-    if (!compatibilityOnly) {
+    if (!compatibilityOnly && type === 'qx-script') {
       prefix = `${prefix}\n${qxMock}`
     }
     url = req || $request.url.replace(/_script-converter-(stash|surge|loon|shadowrocket)\.js$/i, '')
@@ -203,7 +203,7 @@ var _scriptSonverterDone = (val = {}) => {
   if (evUrlori) {
     eval(await http(evUrlori))
   }
-  if (target === 'surge-script' || type === 'qx-script') {
+  if (type === 'qx-script') {
     body = `${prefix}\n${compatibilityOnly ? body : body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
   }
 
