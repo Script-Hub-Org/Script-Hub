@@ -39,6 +39,8 @@ var noCache = istrue(queryObject.nocache);
 var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : null;
 var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
+var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
+var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
@@ -339,7 +341,7 @@ const pluginIcon = icon;
 }else if (oCache == null){
     //$.log("一个缓存也没有")
   body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
+$.log('body:' + body.length + '个字符');
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
@@ -354,7 +356,7 @@ $.setjson(oCache, 'parser_cache');
  if (!oCache.some(obj => obj.url === req)){
      //$.log("有缓存但是没有这个URL的")
   body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
+$.log('body:' + body.length + '个字符');
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
@@ -365,7 +367,7 @@ $.setjson(mergedCache, 'parser_cache');
     if (seconds - oCache[objIndex].time > expirationTime){
       //$.log("有缓存且有url,但是过期了")
   body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
+$.log('body:' + body.length + '个字符');
   oCache[objIndex].body = body;
   oCache[objIndex].time = seconds;
 $.setjson(oCache, 'parser_cache');
@@ -374,7 +376,7 @@ $.setjson(oCache, 'parser_cache');
     if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
         //$.log("但是body为null")
         body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
+$.log('body:' + body.length + '个字符');
         oCache[objIndex].body = body;
         oCache[objIndex].time = seconds;        $.setjson(oCache, "parser_cache");
     }else{
@@ -407,8 +409,9 @@ let providers = [];
 let MITM = "";
 let others = [];       //不支持的内容
 
-let scname = "";       //脚本名
+let scname = "";       //脚本重写名
 let js = "";           //脚本链接
+let jsname = "";       //脚本名
 let arg = "";          //用户传入的argument
 let originalArg = "";  //原始argument
 let sctype = "";       //脚本类型
@@ -474,6 +477,35 @@ x = "hostname=" + x;
 if (delNoteSc === true && x.match(/^#/) && x.indexOf("#!") == -1){
 		x = "";
 };
+
+let jscStatus,jsc2Status
+if (jsConverter != null){
+	jscStatus = isJsCon(jsConverter);}
+if (jsConverter2 != null){
+	jsc2Status = isJsCon(jsConverter2);}
+if (jsc2Status == true){jscStatus = false};
+
+let jsPre = "";
+let jsSuf = "";
+let oriType = queryObject.type.split("-")[0];
+let jsTarget = queryObject.target.split("-")[0];
+if (jscStatus == true || jsc2Status == true){
+jsPre = "http://script.hub/convert/_start_/";
+};
+if (jscStatus == true){
+jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script`;
+}else if (jsc2Status == true){
+jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script&wrap_response=true`;
+};
+
+function isJsCon (arr) {
+	if (arr != null){
+		for (let i=0; i < arr.length; i++) {
+  const elem = arr[i];
+	if (x.indexOf(elem) != -1){return true};
+	};//循环结束
+  };//if (arr != null)
+};//isJsCon结束
 
 	let type = x.match(
 		/^#!|generic script-path|http-re|\x20header-|cron |\x20reject|^hostname|^force-http-engine-hosts|^skip-proxy|^real-ip|\x20(302|307|header)($|\x20)|^#?(URL-REGEX|USER-AGENT|IP-CIDR|GEOIP|IP-ASN|DOMAIN)/
@@ -551,9 +583,11 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					
 				js = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
 					
-				sctype = x.match('http-response') ? 'response' : 'request';
-					
 				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
+				
+				js = toJsc(js);
+				
+				sctype = x.match('http-response') ? 'response' : 'request';
 
 				proto = x.replace(/\x20/gi,'').match('binary-body-mode=(true|1)') ? ', binary-body-mode=true' : '';
 				
@@ -683,6 +717,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
             }else{
 				croName = cronJs.substring(cronJs.lastIndexOf('/') + 1, cronJs.lastIndexOf('.'));};
                 
+				cronJs = toJsc(cronJs);
+				
 				if (isLooniOS){
                     
 				script.push(
@@ -864,6 +900,15 @@ scriptBox.push({"jsurl":cronJs,"name":croName + "_" + y,"cron":cronExp});
                         }else{others.push(x)};
                     }//Stash rules处理完毕
                 }//rules处理完毕
+//开启脚本转换
+function toJsc (js) {
+	if (jscStatus == true || jsc2Status == true){
+				jsname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
+                		
+				return js = jsPre + js + jsSuf.replace(/_yuliu_/,jsname);
+		
+	}else{return js}
+};
 		} //switch结束
 	}
 }; //循环结束
