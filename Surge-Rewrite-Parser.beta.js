@@ -43,6 +43,8 @@ var nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+")
 var nTilesColor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
 var noCache = istrue(queryObject.nocache);
+var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
+var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
@@ -345,7 +347,7 @@ const pluginIcon = icon;
 }else if (oCache == null){
     //$.log("一个缓存也没有")
   body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
+  $.log('body:' + body.length + '个字符');
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
@@ -360,7 +362,7 @@ $.setjson(oCache, 'parser_cache');
  if (!oCache.some(obj => obj.url === req)){
      //$.log("有缓存但是没有这个URL的")
   body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
+  $.log('body:' + body.length + '个字符');
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
@@ -371,7 +373,7 @@ $.setjson(mergedCache, 'parser_cache');
     if (seconds - oCache[objIndex].time > expirationTime){
       //$.log("有缓存且有url,但是过期了")
   body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
+  $.log('body:' + body.length + '个字符');
   oCache[objIndex].body = body;
   oCache[objIndex].time = seconds;
 $.setjson(oCache, 'parser_cache');
@@ -380,7 +382,7 @@ $.setjson(oCache, 'parser_cache');
     if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
         //$.log("但是body为null")
         body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
+  $.log('body:' + body.length + '个字符');
         oCache[objIndex].body = body;
         oCache[objIndex].time = seconds;        $.setjson(oCache, "parser_cache");
     }else{
@@ -415,8 +417,9 @@ let providers = [];
 let MITM = "";
 let others = [];       //不支持的内容
 
-let scname = "";       //脚本名
+let scname = "";       //脚本重写名
 let js = "";           //脚本链接
+let jsname = "";       //脚本名
 let arg = "";          //用户传入的argument
 let originalArg = "";  //原始argument
 let sctype = "";       //脚本类型
@@ -484,6 +487,35 @@ if (delNoteSc === true && x.match(/^#/) && x.indexOf("#!") == -1){
 		x = "";
 };
 
+let jscStatus,jsc2Status
+if (jsConverter != null){
+	jscStatus = isJsCon(jsConverter);}
+if (jsConverter2 != null){
+	jsc2Status = isJsCon(jsConverter2);}
+if (jsc2Status == true){jscStatus = false};
+
+let jsPre = "";
+let jsSuf = "";
+let oriType = queryObject.type.split("-")[0];
+let jsTarget = queryObject.target.split("-")[0];
+if (jscStatus == true || jsc2Status == true){
+jsPre = "http://script.hub/convert/_start_/";
+};
+if (jscStatus == true){
+jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script`;
+}else if (jsc2Status == true){
+jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script&wrap_response=true`;
+};
+
+function isJsCon (arr) {
+	if (arr != null){
+		for (let i=0; i < arr.length; i++) {
+  const elem = arr[i];
+	if (x.indexOf(elem) != -1){return true};
+	};//循环结束
+  };//if (arr != null)
+}//isJsCon结束
+
 	let type = x.match(
 		/^#!|http-re|\x20header-|type=generic,|script-name=|cronexp=|\x20reject|\x20data=|^hostname|^force-http-engine-hosts|^skip-proxy|^always-real-ip|\x20(302|307|header)$|,REJECT[^,\s]*$|,DIRECT/
 	)?.[0];
@@ -547,8 +579,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
                     
 				scname = x.split(/ *=/)[0].replace(/^#/,'');
 				
-				js = x.replace(/\x20/g,"").split("script-path=")[1].split(",")[0];
-                
+				js = toJsc(x.replace(/\x20/g,"").split("script-path=")[1].split(",")[0]);
+				
                 if (x.match(/icon=/)){
                 tilesIcon = x.split("icon=")[1].split("&")[0];};
                 
@@ -641,7 +673,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				ptn = x.replace(/(\{[0-9]+)\,([0-9]*\})/g,'$1t&zd;$2').replace(/\x20/g,"").split("pattern=")[1].split(",")[0].replace(/"/gi,'');
 				
-				js = x.replace(/\x20/g,"").split("script-path=")[1].split(",")[0];
+				js = toJsc(x.replace(/\x20/g,"").split("script-path=")[1].split(",")[0]);
 
 				proto = x.replace(/\x20/gi,'').match('binary-body-mode=(true|1)') ? ', binary-body-mode=true' : '';
 				
@@ -748,10 +780,12 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					
 				js = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
 					
-				sctype = x.match('http-response') ? 'response' : 'request';
-					
 				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
-
+				
+				js = toJsc(js);
+					
+				sctype = x.match('http-response') ? 'response' : 'request';
+				
 				proto = x.replace(/\x20/gi,'').match('binary-body-mode=(true|1)') ? ', binary-body-mode=true' : '';
 				
 				rebody = x.replace(/\x20/gi,'').match('requires-body=(true|1)') ? ', requires-body=true' : '';
@@ -880,7 +914,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
             
 				croName = x.split("=")[0].replace(/\x20/g,"").replace(/^#/,'')
 				
-				cronJs = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
+				cronJs = toJsc(x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0]);
                 
 				if (isLooniOS){
 				
@@ -1126,9 +1160,18 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":cronJs,"name":croName + "_" + y,"cro
                  rules.push(
                     x.replace(/^#?(.+),(DIRECT$|REJECT)[^,]*$/,`${noteK2}- $1,$2`).replace(/- DEST-PORT/,"- DST-PORT"));   
                 };//整个rule结束
-                
+//开启脚本转换
+function toJsc (js) {
+	if (jscStatus == true || jsc2Status == true){
+				jsname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
+                		
+				return js = jsPre + js + jsSuf.replace(/_yuliu_/,jsname);
+		
+	}else{return js}
+};						             
 		} //switch结束
 	}
+	
 }; //循环结束
 
 if (isLooniOS){
@@ -1368,7 +1411,6 @@ others !="" && $.msg("不支持的类型已跳过",others,"点击查看原文，
     }
 	$.done(result);
 	})
-	
 
 function istrue(str) {
 	if (str == true || str == 1 || str == "true"|| str == "1"){
