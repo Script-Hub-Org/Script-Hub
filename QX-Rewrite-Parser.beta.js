@@ -591,8 +591,6 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				js = x.replace(/\x20{2,}/g," ").split(" ")[urlInNum + 2];
 				
 				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
-				
-				js = toJsc(js);
 
 				if (isSurgeiOS){
 					ptn = ptn.replace(/(.+,.+)/,'"$1"');};
@@ -613,6 +611,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				size = x.match(/\x20script[^\s]*(-body|-analyze)/) ? '3145728' : '0';
 				};
+
+				js = toJsc(js);
 				
 				if (isLooniOS){			
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
