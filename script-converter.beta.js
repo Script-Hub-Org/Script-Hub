@@ -203,7 +203,7 @@ var _scriptSonverterDone = (val = {}) => {
   if (evUrlori) {
     eval(await http(evUrlori))
   }
-  if (type === 'qx-script') {
+  if (type === 'qx-script' || compatibilityOnly) {
     body = `${prefix}\n${compatibilityOnly ? body : body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
   }
 
