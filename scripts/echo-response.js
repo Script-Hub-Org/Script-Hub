@@ -67,14 +67,15 @@ let result = {}
         response: {
           status: 200,
           body,
-          headers: type
-            ? {
-                'Content-Type': type,
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
-                'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-              }
-            : newHeaders,
+          headers:
+            Object.keys(newHeaders).length > 0
+              ? newHeaders
+              : {
+                  'Content-Type': type,
+                  'Access-Control-Allow-Origin': '*',
+                  'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+                  'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+                },
         },
       }
     } else {
