@@ -35,7 +35,7 @@ let result = {}
   let url = $.lodash_get(arg, 'url')
   let type = $.lodash_get(arg, 'type')
   let header = $.lodash_get(arg, 'header') || ''
-  $.log('指定 Content-Type', type)
+
   let newHeaders = {}
   header.split(/\s*\|\s*/g).forEach(i => {
     if (/.+:.+/.test(i)) {
@@ -45,7 +45,12 @@ let result = {}
       }
     }
   })
-  $.log(`指定 headers`, $.toStr(newHeaders))
+
+  if (Object.keys(newHeaders).length > 0) {
+    $.log(`指定 headers`, $.toStr(newHeaders))
+  } else if (type) {
+    $.log('指定 Content-Type', type)
+  }
   if (/^(https?|ftp|file):\/\/.*/.test(url)) {
     if (type || Object.keys(newHeaders).length > 0) {
       $.log('需下载', url)
