@@ -10,6 +10,10 @@ n = type=http-request,pattern=https?:\/\/a\.b\.app\/c\?id=\d{5,10},requires-body
 
 [MITM]
 hostname = %APPEND% restore-access.indream.app
+不指定 type 时, 自动跳转
+指定 type 时, 下载并设置 type
+
+新参数 header=Content-Type: image/png|field2: value2
 */
 const NAME = 'echo-response'
 const TITLE = 'echo-response'
@@ -17,43 +21,74 @@ const $ = new Env(NAME)
 
 let arg
 if (typeof $argument != 'undefined') {
-  arg = Object.fromEntries($argument.split('&').map(item => item.split('=')));
+  let argument = $argument ?? ''
+  try {
+    argument = decodeURIComponent(argument)
+  } catch (e) {}
+  console.log('argument')
+  console.log(argument)
+  arg = Object.fromEntries(argument.split('&').map(item => item.split('=')))
 }
 
 let result = {}
 !(async () => {
   let url = $.lodash_get(arg, 'url')
   let type = $.lodash_get(arg, 'type')
-  $.log(`🔗 原始文件链接`, url)
-  $.log(`Content-Type`, type)
-  if (/^(https?|ftp|file):\/\/.*/.test(url)) {
-
-    const res = await $.http.get({
-      url,
-      headers: {
-        // 'Accept-Encoding': 'gzip, deflate, br',
-        // 'Cache-Control': 'no-cache',
-        // Pragma: 'no-cache',
-      },
-    })
-    // $.log('ℹ️ res', $.toStr(res))
-    const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
-    $.log('ℹ️ res status', status)
-    let body = String($.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody'))
-    // $.log('ℹ️ res body', content)
-    result = {
-      response: {
-        status: 200,
-        body,
-        headers: {
-          'Content-Type': type,
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
-          'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-        },
-      },
+  let header = $.lodash_get(arg, 'header') || ''
+  $.log('指定 Content-Type', type)
+  let newHeaders = {}
+  header.split(/\s*\|\s*/g).forEach(i => {
+    if (/.+:.+/.test(i)) {
+      const kv = i.split(/\s*\:\s*/)
+      if (kv.length === 2) {
+        newHeaders[kv[0]] = kv[1]
+      }
     }
-
+  })
+  $.log(`指定 headers`, newHeaders)
+  if (/^(https?|ftp|file):\/\/.*/.test(url)) {
+    if (type || Object.keys(newHeaders).length > 0) {
+      $.log('需下载', url)
+      const res = await $.http.get({
+        url,
+        // headers: $.lodash_get($request, 'headers'),
+      })
+      // $.log('ℹ️ res', $.toStr(res))
+      const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
+      $.log('ℹ️ res status', status)
+      if (!type) {
+        const headers = $.lodash_get(res, 'headers')
+        type = $.lodash_get(headers, 'content-type') || $.lodash_get(headers, 'Content-Type')
+        $.log('ℹ️ res type', type)
+      }
+      let body = $.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody')
+      // $.log('ℹ️ res body', body)
+      result = {
+        response: {
+          status: 200,
+          body,
+          headers: type
+            ? {
+                'Content-Type': type,
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+                'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+              }
+            : newHeaders,
+        },
+      }
+    } else {
+      $.log('未指定 Content-Type, 自动跳转', url)
+      result = {
+        response: {
+          status: 302,
+          body: $.isLoon() ? 'loon' : undefined,
+          headers: {
+            location: url,
+          },
+        },
+      }
+    }
   } else {
     $.log('不支持此 url')
   }
@@ -64,7 +99,7 @@ let result = {}
     await notify(TITLE, '❌', `${$.lodash_get(e, 'message') || $.lodash_get(e, 'error') || e}`)
   })
   .finally(async () => {
-    $.log($.toStr(result))
+    // $.log($.toStr(result))
     $.done(result)
   })
 

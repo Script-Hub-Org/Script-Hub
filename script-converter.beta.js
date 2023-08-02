@@ -268,10 +268,10 @@ async function http(url, opts = {}) {
   $.log(`🔗 链接`, url)
   const res = await $.http.get({
     url,
-    headers: {
-      'Cache-Control': 'no-cache',
-      Pragma: 'no-cache',
-    },
+    // headers: {
+    //   'Cache-Control': 'no-cache',
+    //   Pragma: 'no-cache',
+    // },
     ...opts,
   })
   // $.log('ℹ️ res', $.toStr(res))

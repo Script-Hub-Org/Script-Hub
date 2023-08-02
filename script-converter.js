@@ -237,10 +237,10 @@ async function http(url) {
   $.log(`🔗 链接`, url)
   const res = await $.http.get({
     url,
-    headers: {
-      'Cache-Control': 'no-cache',
-      Pragma: 'no-cache',
-    },
+    // headers: {
+    //   'Cache-Control': 'no-cache',
+    //   Pragma: 'no-cache',
+    // },
   })
   // $.log('ℹ️ res', $.toStr(res))
   const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
