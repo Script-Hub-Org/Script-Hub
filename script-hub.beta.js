@@ -862,7 +862,7 @@ const htmls = `
     </div>
     <br/>
 
-    <details v-if="!target || type === 'qx-script' || target === 'surge-script'">
+    <details v-if="!target || type === 'qx-script' || target.endsWith('-script')">
       <summary>
       QX 专属脚本说明：
       <br/>
@@ -880,13 +880,13 @@ const htmls = `
       
     </details>
 
-    <template v-if="!target || type === 'qx-rewrite'">
+    <template v-if="!target || !type || type === 'qx-rewrite'">
         <small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">什么时候应该启用脚本转换</a></small>
         <details>
-          <summary>启用脚本转换(仅在转换 QX 资源时可用)</summary>
+          <summary>启用脚本转换</summary>
           <small> &#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">脚本转换 1 和 2 怎么选</a></small>
           <details>
-            <summary>启用脚本转换 1(仅在转换 QX 资源时可用)</summary>
+            <summary>启用脚本转换 1</summary>
             <span>根据关键词为脚本启用脚本转换(多关键词以"+"分隔，主要用途 将使用了QX独有api的脚本转换为通用脚本，谨慎开启，大部分脚本本身就通用，无差别启用，只会徒增功耗)</span>
             <textarea id="jsc" v-model.lazy="jsc" placeholder=""></textarea>
             <div>
@@ -899,8 +899,8 @@ const htmls = `
             </div>
           </details>
 
-          <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
-            <summary>启用脚本转换 2(仅在转换 QX 资源时可用)</summary>
+          <details>
+            <summary>启用脚本转换 2</summary>
             <span>根据关键词为脚本启用脚本转换(与 <code>启用脚本转换 1</code> 的区别: 总是会在$done(body)里包一个response)</span>
             <textarea id="jsc2" v-model.lazy="jsc2" placeholder=""></textarea>
             <div>
@@ -1064,12 +1064,12 @@ const htmls = `
         <label class="button-over" for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
       </div>
 
-      <div v-if="!target || target === 'surge-script' ">
+      <div v-if="!target || target.endsWith('-script') ">
         <input type="checkbox" id="wrap_response" v-model.lazy="wrap_response" />
         <label class="button-over" for="wrap_response">总是会在 $done(body) 里包一个 response</label>
       </div>
 
-      <div v-if="!target || target === 'surge-script' ">
+      <div v-if="!target || target.endsWith('-script') ">
         <input type="checkbox" id="compatibilityOnly" v-model.lazy="compatibilityOnly" />
         <label class="button-over" for="compatibilityOnly">仅进行兼容性转换<small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%98%AF-%E4%BB%85%E8%BF%9B%E8%A1%8C%E5%85%BC%E5%AE%B9%E6%80%A7%E8%BD%AC%E6%8D%A2" target="_blank">什么是 <code>仅进行兼容性转换</code></a></small></label>
       </div>
@@ -1264,12 +1264,20 @@ const htmls = `
             this.target = 'stash-rule-set'
           } else if (this.env === 'Shadowrocket') {
             this.target = 'shadowrocket-rule-set'
+          } else {
+            this.target=''
           }
+        } else if(v !== 'rule-set' && this.target.endsWith('rule-set')){
+          this.target=''
         } else if(v === 'qx-script' && this.target !== 'surge-script'){
           this.target='surge-script'
+        } else if(v !== 'qx-script' && this.target === 'surge-script'){
+          this.target=''
         } else if(v === 'plain-text' && this.target !== 'plain-text'){
           this.target='plain-text'
-        }
+        } else if(v !== 'plain-text' && this.target === 'plain-text'){
+          this.target=''
+        } 
       },
       target(v) {
         if(v.endsWith('rule-set') && this.type !== 'rule-set'){
