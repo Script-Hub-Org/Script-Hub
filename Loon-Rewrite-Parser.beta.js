@@ -704,6 +704,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 			case "cron ":
 
             oricronExp = x.split('"')[1];
+			
+			cronExp = oricronExp;
             
             if (isStashiOS){
                 
