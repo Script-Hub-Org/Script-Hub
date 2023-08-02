@@ -853,8 +853,8 @@ const htmls = `
       <div>
         <code>&nbsp;目标类型: </code>
         <template v-for="item in targets">
-          <div v-if="(item.value.endsWith('rule-set') && type === 'rule-set') || (type !== 'rule-set' && !item.value.endsWith('-rule-set'))">
-            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model.lazy="target" :disabled="item.disabled || (type === 'qx-script' && item.value !== 'surge-script') || (type === 'rule-set' && !item.value.endsWith('rule-set')) || (type === 'plain-text' && item.value !== 'plain-text') " />
+          <div v-if="type === 'rule-set' ? item.value.endsWith('rule-set') : ( item.value.endsWith('-rule-set') ? false : ( type.endsWith('-script') ? item.value.endsWith('-script') : !item.value.endsWith('-script') ) ) ">
+            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model.lazy="target" :disabled="item.disabled || (type.endsWith('-script') && !item.value.endsWith('-script')) || (type === 'rule-set' && !item.value.endsWith('rule-set')) || (type === 'plain-text' && item.value !== 'plain-text') " />
             <label :for="'target-' + item.value" class="radio-label">{{item.label}}</label>
           </div>
         </template>
@@ -880,7 +880,7 @@ const htmls = `
       
     </details>
 
-    <template v-if="!target || !type || type === 'qx-rewrite'">
+    <template v-if="!target || !type || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">什么时候应该启用脚本转换</a></small>
         <details>
           <summary>启用脚本转换</summary>
@@ -943,7 +943,7 @@ const htmls = `
       </div>
       <br/>
 
-      <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>名称 简介</summary>
         <span>名字+简介 ，名字和简介以"+"相连，可缺省名字或简介</span>
         <textarea id="n" v-model.lazy="n" placeholder=""></textarea>
@@ -954,7 +954,7 @@ const htmls = `
         <textarea id="filename" v-model.lazy="filename" :placeholder=" target === 'plain-text' ? '当前为纯文本类型, 此处为包含后缀的完整文件名' : '不包含后缀' "></textarea>
       </details>
 
-      <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>重写相关</summary>
         <details>
           <summary>保留重写</summary>
@@ -990,7 +990,7 @@ const htmls = `
 
 
 
-      <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改 MITM 主机名</summary>
         <details>
           <summary>添加 MITM 主机名</summary>
@@ -1006,7 +1006,7 @@ const htmls = `
       </details>
       
 
-      <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改定时任务</summary>
         <details>
           <summary>修改定时任务(cron)</summary>
@@ -1021,7 +1021,7 @@ const htmls = `
       </details>
 
 
-      <details v-if="!target || (!target.endsWith('rule-set') && target !== 'surge-script' && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改参数</summary>
         <details>
           <summary>修改参数(arg)</summary>
@@ -1049,7 +1049,7 @@ const htmls = `
         </details>
       </details>
 
-      <details v-if="!target || (target !== 'surge-script' && target !== 'plain-text' ) ">
+      <details v-if="!target || (!target.endsWith('-script') && target !== 'plain-text' ) ">
         <summary>缓存(默认开启)</summary>
         <span>cachexp= 设置缓存有效期，单位：小时，不传入此参数默认有效期一小时。也可以用 BoxJs 修改 <code>Parser_cache_exp</code> 的值来修改全局有效期。单位：小时，支持小数，设置为0.0001即立即过期。</span>
         <input id="cachexp" v-model.number.lazy="cachexp" placeholder=""></input>
@@ -1114,9 +1114,9 @@ const htmls = `
   const init = {
     // baseUrl: location.protocol + '//script.hub/',
     baseUrl: 'http://script.hub/',
-    types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'rule-set', label: '规则集'}, {value: 'plain-text', label: '纯文本'}],
+    types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'rule-set', label: '规则集'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'plain-text', label: '纯文本'}],
     type: '',
-    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'surge-rule-set', label: '规则集(Surge)', suffix: '.list' }, {value: 'stash-rule-set', label: '规则集(Stash)', suffix: '.list' }, {value: 'loon-rule-set', label: '规则集(Loon)', suffix: '.list' }, {value: 'shadowrocket-rule-set', label: '规则集(Shadowrocket)', suffix: '.list' }, {value: 'plain-text', label: '纯文本'}],
+    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'surge-rule-set', label: '规则集(Surge)', suffix: '.list' }, {value: 'stash-rule-set', label: '规则集(Stash)', suffix: '.list' }, {value: 'loon-rule-set', label: '规则集(Loon)', suffix: '.list' }, {value: 'shadowrocket-rule-set', label: '规则集(Shadowrocket)', suffix: '.list' }, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'plain-text', label: '纯文本'}],
     target: '',
     src: '',
     n: '',
@@ -1269,9 +1269,20 @@ const htmls = `
           }
         } else if(v !== 'rule-set' && this.target.endsWith('rule-set')){
           this.target=''
-        } else if(v === 'qx-script' && this.target !== 'surge-script'){
-          this.target='surge-script'
-        } else if(v !== 'qx-script' && this.target === 'surge-script'){
+        } else if(v.endsWith('-script') && !this.target.endsWith('-script')){
+          // this.target='surge-script'
+          if (this.env === 'Surge') {
+            this.target = 'surge-script'
+          } else if (this.env === 'Loon') {
+            this.target = 'loon-script'
+          } else if (this.env === 'Stash') {
+            this.target = 'stash-script'
+          } else if (this.env === 'Shadowrocket') {
+            this.target = 'shadowrocket-script'
+          } else {
+            this.target=''
+          }
+        } else if(!v.endsWith('-script') && this.target.endsWith('-script')){
           this.target=''
         } else if(v === 'plain-text' && this.target !== 'plain-text'){
           this.target='plain-text'
@@ -1282,8 +1293,19 @@ const htmls = `
       target(v) {
         if(v.endsWith('rule-set') && this.type !== 'rule-set'){
           this.type='rule-set'
-        } else if(v === 'surge-script' && this.type !== 'qx-script'){
-          this.type='qx-script'
+        } else if(v.endsWith('-script') && !this.type.endsWith('-script')){
+          // this.type='qx-script'
+          if (this.env === 'Surge') {
+            this.type = 'surge-script'
+          } else if (this.env === 'Loon') {
+            this.type = 'loon-script'
+          } else if (this.env === 'Stash') {
+            this.type = 'stash-script'
+          } else if (this.env === 'Shadowrocket') {
+            this.type = 'shadowrocket-script'
+          } else {
+            this.type=''
+          }
         } else if(v === 'plain-text' && this.type !== 'plain-text'){
           this.type='plain-text'
         }
@@ -1309,7 +1331,7 @@ const htmls = `
         const target = this.targets.find(i => i.value === this.target)
         if (this.src && target && type) {
           const suffix = target.suffix || ''
-          const pathType = (this.target === 'surge-script' || this.target === 'plain-text') ? 'convert' : 'file'
+          const pathType = (this.target.endsWith('-script') || this.target === 'plain-text') ? 'convert' : 'file'
         
           const plainUrl = this.src.split('?')[0]
           const plainUrlFilename = plainUrl.substring(plainUrl.lastIndexOf('/') + 1)
