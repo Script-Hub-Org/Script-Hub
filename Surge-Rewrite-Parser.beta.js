@@ -45,6 +45,7 @@ var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
 var noCache = istrue(queryObject.nocache);
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
+var compatibilityOnly = istrue(queryObject.compatibilityOnly);
 
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
@@ -506,6 +507,10 @@ if (jscStatus == true){
 jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script`;
 }else if (jsc2Status == true){
 jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script&wrap_response=true`;
+};
+
+if (compatibilityOnly == true && (jscStatus == true || jsc2Status == true)){
+jsSuf = jsSuf + "&compatibilityOnly=true"
 };
 
 function isJsCon (arr) {
