@@ -45,7 +45,7 @@ let result = {}
       }
     }
   })
-  $.log(`指定 headers`, newHeaders)
+  $.log(`指定 headers`, $.toStr(newHeaders))
   if (/^(https?|ftp|file):\/\/.*/.test(url)) {
     if (type || Object.keys(newHeaders).length > 0) {
       $.log('需下载', url)
