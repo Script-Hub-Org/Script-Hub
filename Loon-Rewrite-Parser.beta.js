@@ -410,7 +410,8 @@ let MITM = "";
 let others = [];       //不支持的内容
 
 let scname = "";       //脚本重写名
-let js = "";           //脚本链接
+let oriJs = "";        //原始脚本链接
+let js = "";           //转换后的脚本链接
 let jsname = "";       //脚本名
 let arg = "";          //用户传入的argument
 let originalArg = "";  //原始argument
@@ -420,9 +421,9 @@ let rebody = "";       //是否需要body
 let size = "";         //允许最大body大小
 let proto = "";        //是否开启binary-body-mode
 let hdtype = "";       //HeaderRewrite 类型
+let oricronExp = "";   //原始cron表达式
 let cronExp = "";      //cron表达式
 let croName = "";      //cron任务名
-let cronJs = "";       //cron脚本链接
 let rejectType = "";   //重写reject类型
 let rejectPtn = "";    //重写reject正则
 let file = "";         //Mock的文件链接
@@ -581,11 +582,11 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				if (isSurgeiOS){
 					ptn = ptn.replace(/(.*,.*)/,'"$1"');};
 					
-				js = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
+				oriJs = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
 					
 				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
 				
-				js = toJsc(js);
+				js = toJsc(oriJs);
 				
 				sctype = x.match('http-response') ? 'response' : 'request';
 
@@ -630,10 +631,16 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
         arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
             };};};
 			
-                if (arg == ""){
+                if (arg == "" && oriJs == js){
 					script.push(x);
-				}else{
-		script.push(x.replace(originalArg,"") + arg);};
+				}else if (arg != ""){
+		script.push(
+	x.replace(originalArg,"")
+	.replace(oriJs,js) + arg);
+				}else if (arg == ""){
+		script.push(
+			x.replace(oriJs,js));
+				};
 		
 				}else if (isSurgeiOS || isShadowrocket){
 				arg = originalArg;
@@ -696,11 +703,11 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 //定时任务
 			case "cron ":
 
-            cronExp = x.split('"')[1];
+            oricronExp = x.split('"')[1];
             
             if (isStashiOS){
                 
-				cronExp = cronExp.replace(/[^\s]+ ([^\s]+ [^\s]+ [^\s]+ [^\s]+ [^\s]+)/,'$1');
+				cronExp = oricronExp.replace(/[^\s]+ ([^\s]+ [^\s]+ [^\s]+ [^\s]+ [^\s]+)/,'$1');
             };
             
             if (nCron != null){
@@ -710,25 +717,81 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
         cronExp = nCronExp[i];   
             };};};
             
-            cronJs = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
+            oriJs = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
                 
             if (x.search(/, *tag *=/) != -1){
 				croName = x.replace(/\x20/g,"").split("tag=")[1].split(",")[0];
             }else{
-				croName = cronJs.substring(cronJs.lastIndexOf('/') + 1, cronJs.lastIndexOf('.'));};
+				croName = oriJs.substring(oriJs.lastIndexOf('/') + 1, oriJs.lastIndexOf('.'));};
                 
-				cronJs = toJsc(cronJs);
+				js = toJsc(oriJs);
+				
+			if (isLooniOS || isSurgeiOS || isShadowrocket){
+					if (x.match(/,\x20*argument\x20*=.+/)){
+						if (x.match(/,\x20*argument\x20*=\x20*"+.*?,.*?"+/)
+	){
+				originalArg = x.match(/(,\x20*argument\x20*=\x20*"+.*?,.*?"+)/)[1];
+	}else{
+				originalArg = x.match(/(,\x20*argument\x20*=[^,]*),?/)[1];}
+				}else{};
+
+				}else if (isStashiOS){
+					if (x.match(/,\x20*argument\x20*=.+/)){
+						if (x.match(/,\x20*argument\x20*=\x20*"+.*?,.*?"+/)
+	){
+				arg = x.match(/,\x20*argument\x20*=\x20*("+.*?,.*?"+)/)[1];
+				
+				if (arg.match(/^".+"$/)){
+				arg = `${noteKn6}argument: |-${noteKn8}` + arg.replace(/^"(.+)"$/,'$1');};
+	}else{
+				arg = `${noteKn6}argument: |-${noteKn8}` + x.replace(/,\x20*argument\x20*=/gi,",argument=").split(",argument=")[1].split(",")[0];}
+				
+				}else{};
+
+				};
 				
 				if (isLooniOS){
-                    
+                
+            if (nArgTarget != null){
+	for (let i=0; i < nArgTarget.length; i++) {
+  const elem = nArgTarget[i];
+	if (x.indexOf(elem) != -1){
+        arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
+            };};};
+			
+			if (arg != ""){
 				script.push(
-					x.split('"')[0] + `"${cronExp}"` + x.split('"')[2]);
+		x.replace(originalArg,"")
+		.replace(oriJs,js)
+		.replace(oricronExp,cronExp) + arg);
+			}else if (arg == ""){
+				script.push(
+		x.replace(oriJs,js)
+		.replace(oricronExp,cronExp)
+		);
+			};
                 
                 }else if (isStashiOS){
-scriptBox.push({"jsurl":cronJs,"name":croName + "_" + y,"cron":cronExp});
+                
+            if (nArgTarget != null){
+	for (let i=0; i < nArgTarget.length; i++) {
+  const elem = nArgTarget[i];
+	if (x.indexOf(elem) != -1){
+        arg = `${noteKn6}argument: |-${noteKn8}` + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
+            };};};
+			
+scriptBox.push({"jsurl":js,"name":croName + "_" + y,"cron":cronExp,"argument":arg});
                 }else if (isSurgeiOS || isShadowrocket){
+				arg = originalArg;
+                
+            if (nArgTarget != null){
+	for (let i=0; i < nArgTarget.length; i++) {
+  const elem = nArgTarget[i];
+	if (x.indexOf(elem) != -1){
+        arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
+            };};};
                     script.push(
-                        `${noteK}${croName} = type=cron, cronexp="${cronExp}", script-path=${cronJs}, timeout=60, wake-system=1`
+                        `${noteK}${croName} = type=cron, cronexp="${cronExp}", script-path=${js}, timeout=60, wake-system=1${arg}`
                         )
                 };
 				break;
@@ -1001,7 +1064,7 @@ for (let i = 0; i < scriptBox.length; i++) {
 	
 	providers.push(`${noteK2}"` + scriptBox[i].name + '":' + `${noteKn4}url: ` + scriptBox[i].jsurl + `${noteKn4}interval: 86400`);
 	}else{
-		cron.push(`${noteKn4}- name: "` + scriptBox[i].name + `"${noteKn6}cron: "` + scriptBox[i].cron + `"${noteKn6}timeout: 60`);
+		cron.push(`${noteKn4}- name: "` + scriptBox[i].name + `"${noteKn6}cron: "` + scriptBox[i].cron + `"${noteKn6}timeout: 60` + `${noteKn6}` + scriptBox[i].argument);
 		
 		providers.push(`${noteK2}"` + scriptBox[i].name + '":' + `${noteKn4}url: ` + scriptBox[i].jsurl + `${noteKn4}interval: 86400`);
 	}
