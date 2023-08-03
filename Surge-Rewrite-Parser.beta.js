@@ -1092,7 +1092,7 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":js,"name":croName + "_" + y,"cron":c
 				ptn = x.replace(/\x20{2,}/g," ").split(" data=")[0].replace(/^#|"/g,"");
 				file = x.split(' data="')[1].split('"')[0];
 				fileName = file.substring(file.lastIndexOf('/') + 1);
-				file = file + sufcachExp + sufnoCache;
+				file = isSurgeiOS ? file : file + sufcachExp + sufnoCache;
 				scname = fileName.split(".")[0];
 				x.search(/ header="/) != -1 ? mockHeader = x.split(' header="')[1].split('"')[0] : mockHeader = "";
 				
