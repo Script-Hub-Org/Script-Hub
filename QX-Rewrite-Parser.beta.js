@@ -46,6 +46,9 @@ var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") :
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
 var keepHeader = istrue(queryObject.keepHeader);
 
+var sufnoCache = noCache == true ? `&nocache=true` : "";
+var sufcachExp = cachExp != null ? `&cachexp=${cachExp}` : "";
+
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
 const iconLibrary1 = $.getval("插件随机图标合集") ?? "Doraemon(100P)";
@@ -352,7 +355,7 @@ const pluginIcon = icon;
 }else if (oCache == null){
     //$.log("一个缓存也没有")
   body = (await $.http.get(req)).body;
-  $.log('body:' + body.length + '个字符');
+  //$.log('body:' + body.length + '个字符');
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
@@ -367,7 +370,7 @@ $.setjson(oCache, 'parser_cache');
  if (!oCache.some(obj => obj.url === req)){
      //$.log("有缓存但是没有这个URL的")
   body = (await $.http.get(req)).body;
-  $.log('body:' + body.length + '个字符');
+  //$.log('body:' + body.length + '个字符');
   nCache[0].url = req;
   nCache[0].body = body;
   nCache[0].time = seconds;
@@ -378,7 +381,7 @@ $.setjson(mergedCache, 'parser_cache');
     if (seconds - oCache[objIndex].time > expirationTime){
       //$.log("有缓存且有url,但是过期了")
   body = (await $.http.get(req)).body;
-  $.log('body:' + body.length + '个字符');
+  //$.log('body:' + body.length + '个字符');
   oCache[objIndex].body = body;
   oCache[objIndex].time = seconds;
 $.setjson(oCache, 'parser_cache');
@@ -387,7 +390,7 @@ $.setjson(oCache, 'parser_cache');
     if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
         //$.log("但是body为null")
         body = (await $.http.get(req)).body;
-  $.log('body:' + body.length + '个字符');
+  //$.log('body:' + body.length + '个字符');
         oCache[objIndex].body = body;
         oCache[objIndex].time = seconds;        $.setjson(oCache, "parser_cache");
     }else{
@@ -515,8 +518,7 @@ jsSuf = jsSuf + "&compatibilityOnly=true"
 };
 
 if (jscStatus == true || jsc2Status == true){
-	noCache == true ? jsSuf = jsSuf + '&nocache=true' : jsSuf = jsSuf;
-	cachExp != null ? jsSuf = jsSuf + `&cachexp=${cachExp}` : jsSuf = jsSuf;
+jsSuf = `${jsSuf}${sufnoCache}${sufcachExp}`;
 };
 
 function isJsCon (arr) {
@@ -709,6 +711,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 			case " echo-response ":
 			
 				arg = x.split(" echo-response ")[2];
+				arg = isSurgeiOS ? arg : arg + sufcachExp + sufnoCache;
+				
 				echotype = x.replace(/\x20{2,}/g," ").split(" echo-response ")[1];
 				
 				keepHeader == true ? echotype = `type=${echotype}&` : echotype = "";
