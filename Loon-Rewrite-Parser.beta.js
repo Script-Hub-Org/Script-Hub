@@ -491,6 +491,7 @@ let jsPre = "";
 let jsSuf = "";
 let oriType = queryObject.type.split("-")[0];
 let jsTarget = queryObject.target.split("-")[0];
+
 if (jscStatus == true || jsc2Status == true){
 jsPre = "http://script.hub/convert/_start_/";
 };
@@ -502,6 +503,12 @@ jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script&wrap
 
 if (compatibilityOnly == true && (jscStatus == true || jsc2Status == true)){
 jsSuf = jsSuf + "&compatibilityOnly=true"
+};
+
+if (jscStatus == true || jsc2Status == true){
+	$.log(cachExp)
+	noCache == true ? jsSuf = jsSuf + '&nocache=true' : jsSuf = jsSuf;
+	cachExp != null ? jsSuf = jsSuf + `&cachexp=${cachExp}` : jsSuf = jsSuf;
 };
 
 function isJsCon (arr) {
