@@ -44,6 +44,7 @@ var noCache = istrue(queryObject.nocache);
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
+var keepHeader = istrue(queryObject.keepHeader);
 
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
@@ -434,8 +435,7 @@ let reHdPtn = "";      //re-header 正则
 let reHdArg1 = "";     //用以匹配的headers
 let reHdArg2 = "";     //替换
 let arg = "";          //echo-response 返回内容
-let mockPtn = "";      //echo-res转mock 正则
-let dataCon = "";      //echo-res转mock 返回内容
+let echotype = "";     //echo-response 返回类型
 let reBdType = "";     //request|response-body
 let reBdPtn = "";      //re-header 正则
 let reBdArg1 = "";     //用以匹配的headers
@@ -500,6 +500,7 @@ let jsPre = "";
 let jsSuf = "";
 let oriType = queryObject.type.split("-")[0];
 let jsTarget = queryObject.target.split("-")[0];
+
 if (jscStatus == true || jsc2Status == true){
 jsPre = "http://script.hub/convert/_start_/";
 };
@@ -508,9 +509,17 @@ jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script`;
 }else if (jsc2Status == true){
 jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script&wrap_response=true`;
 };
+
 if (compatibilityOnly == true && (jscStatus == true || jsc2Status == true)){
 jsSuf = jsSuf + "&compatibilityOnly=true"
 };
+
+if (jscStatus == true || jsc2Status == true){
+	$.log(cachExp)
+	noCache == true ? jsSuf = jsSuf + '&nocache=true' : jsSuf = jsSuf;
+	cachExp != null ? jsSuf = jsSuf + `&cachexp=${cachExp}` : jsSuf = jsSuf;
+};
+
 function isJsCon (arr) {
 	if (arr != null){
 		for (let i=0; i < arr.length; i++) {
@@ -701,8 +710,11 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 			case " echo-response ":
 			
 				arg = x.split(" echo-response ")[2];
-			
-			if(/^(https?|ftp|file):\/\/.*/.test(arg)){
+				echotype = x.replace(/\x20{2,}/g," ").split(" echo-response ")[1];
+				
+				keepHeader == true ? echotype = `type=${echotype}&` : echotype = "";
+				
+			if (/^(https?|ftp|file):\/\/.*/.test(arg)){
 				
 				urlInNum = x.replace(/\x20{2,}/g," ").split(" ").indexOf("url");
 				
@@ -713,25 +725,21 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				
 				script.push(
-					`${noteK}http-request ${ptn} script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js, timeout=60, tag=${scname}_${y}, argument=type=text/json&url=${arg}`);
+					`${noteK}http-request ${ptn} script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js, timeout=60, tag=${scname}_${y}, argument=${echotype}url=${arg}`);
 				}else if (isSurgeiOS){
 				body[y - 1]?.match(/^#/) && MapLocal.push(body[y - 1]);
-
-				mockPtn = x.replace(/\x20{2,}/g," ").split(" url echo-response")[0].replace(/^#/,"");
 				
-				dataCon = x.replace(/\x20{2,}/g," ").split(" echo-response ")[2];
-				
-				MapLocal.push(`${noteK}${mockPtn} data="${dataCon}"`);
+				MapLocal.push(`${noteK}${ptn} data="${arg}"`);
 				}else if (isShadowrocket){
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				
 				script.push(
-					`${noteK}${scname}_${y} = type=http-request, pattern=${ptn}, script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js, timeout=60, argument=type=text/json&url=${arg}`)
+					`${noteK}${scname}_${y} = type=http-request, pattern=${ptn}, script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js, timeout=60, argument=${echotype}url=${arg}`)
 				}else if (isStashiOS){
 				body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 				
 				script.push(
-					`${noteK4}- match: ${ptn}${noteKn6}name: "echo-response"${noteKn6}type: request${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}type=text/json&url=${arg}`)
+					`${noteK4}- match: ${ptn}${noteKn6}name: "echo-response"${noteKn6}type: request${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}${echotype}url=${arg}`)
 				
 				providers.push(
 							`${noteK2}"echo-response":${noteKn4}url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js${noteKn4}interval: 86400`);
