@@ -1049,7 +1049,7 @@ const htmls = `
         </details>
       </details>
 
-      <details v-if="!target || (!target.endsWith('-script') && target !== 'plain-text' ) ">
+      <details>
         <summary>缓存(默认开启)</summary>
         <span>cachexp= 设置缓存有效期，单位：小时，不传入此参数默认有效期一小时。也可以用 BoxJs 修改 <code>Parser_cache_exp</code> 的值来修改全局有效期。单位：小时，支持小数，设置为0.0001即立即过期。</span>
         <input id="cachexp" v-model.number.lazy="cachexp" placeholder=""></input>

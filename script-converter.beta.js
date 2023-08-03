@@ -40,6 +40,30 @@ let url
   const target = queryObject.target
   const subconverter = queryObject.subconverter
 
+  let cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null
+  let noCache = istrue(queryObject.nocache)
+
+  //缓存有效期相关
+  let currentTime = new Date()
+  let seconds = Math.floor(currentTime.getTime() / 1000) // 将毫秒转换为秒
+  let boxjsSetExp = $.getval('Parser_cache_exp') ?? '1'
+  //设置有效期时间
+  let expirationTime
+  if (cachExp != null) {
+    expirationTime = cachExp * 1 * 60 * 60
+  } else {
+    expirationTime = boxjsSetExp * 1 * 60 * 60
+  }
+  //$.log(expirationTime);
+  let nCache = [{ url: '', body: '', time: '' }]
+  let oCache = $.getval('parser_cache')
+  //检查是否有缓存
+  if (oCache != '' && oCache != null) {
+    oCache = $.toObj(oCache)
+  } else {
+    oCache = null
+  }
+
   let prefix = `
 // 转换时间: ${new Date().toLocaleString('zh')}
 // 兼容性转换
@@ -166,40 +190,100 @@ var _scriptSonverterDone = (val = {}) => {
 }`
 
   let body
-  if (subconverter) {
-    body = await http(subconverter, {
-      params: {
-        insert: false,
-        append_type: false,
-        strict: false,
-        sort: true,
-        emoji: false,
-        list: true,
-        udp: true,
-        tfo: false,
-        expand: true,
-        scv: true,
-        fdn: true,
-        'surge.doh': true,
-        'clash.doh': true,
-        new_name: true,
-        url: req,
-        ...queryObject,
-        type: undefined,
-        evalScriptori: undefined,
-        evalScriptmodi: undefined,
-        evalUrlori: undefined,
-        evalUrlmodi: undefined,
-      },
-    })
-  } else {
-    if (!compatibilityOnly && type === 'qx-script') {
-      prefix = `${prefix}\n${qxMock}`
+
+  const getBody = async () => {
+    let body
+    if (subconverter) {
+      body = await http(subconverter, {
+        params: {
+          insert: false,
+          append_type: false,
+          strict: false,
+          sort: true,
+          emoji: false,
+          list: true,
+          udp: true,
+          tfo: false,
+          expand: true,
+          scv: true,
+          fdn: true,
+          'surge.doh': true,
+          'clash.doh': true,
+          new_name: true,
+          url: req,
+          ...queryObject,
+          type: undefined,
+          evalScriptori: undefined,
+          evalScriptmodi: undefined,
+          evalUrlori: undefined,
+          evalUrlmodi: undefined,
+        },
+      })
+    } else {
+      if (!compatibilityOnly && type === 'qx-script') {
+        prefix = `${prefix}\n${qxMock}`
+      }
+      url = req || $request.url.replace(/_script-converter-(stash|surge|loon|shadowrocket)\.js$/i, '')
+      body = await http(url)
     }
-    url = req || $request.url.replace(/_script-converter-(stash|surge|loon|shadowrocket)\.js$/i, '')
-    body = await http(url)
+    return body
   }
-  eval(evJsori)
+
+  if (noCache == true) {
+    body = await getBody()
+  } else if (oCache == null) {
+    // $.log('一个缓存也没有')
+    body = await getBody()
+    $.log('body:' + body.length + '个字符')
+    nCache[0].url = req
+    nCache[0].body = body
+    nCache[0].time = seconds
+    $.setjson(nCache, 'parser_cache')
+  } else {
+    //删除大于一天的缓存防止缓存越来越大
+    oCache = oCache.filter(obj => {
+      return seconds - obj.time < 86400
+    })
+    $.setjson(oCache, 'parser_cache')
+
+    if (!oCache.some(obj => obj.url === req)) {
+      // $.log('有缓存但是没有这个URL的')
+      body = await getBody()
+      $.log('body:' + body.length + '个字符')
+      nCache[0].url = req
+      nCache[0].body = body
+      nCache[0].time = seconds
+      var mergedCache = oCache.concat(nCache)
+      $.setjson(mergedCache, 'parser_cache')
+    } else if (oCache.some(obj => obj.url === req)) {
+      const objIndex = oCache.findIndex(obj => obj.url === req)
+      if (seconds - oCache[objIndex].time > expirationTime) {
+        // $.log('有缓存且有url,但是过期了')
+        body = await getBody()
+        $.log('body:' + body.length + '个字符')
+        oCache[objIndex].body = body
+        oCache[objIndex].time = seconds
+        $.setjson(oCache, 'parser_cache')
+      } else {
+        // $.log('有缓存且有url且没过期')
+        if (oCache[objIndex].body == null || oCache[objIndex].body == '') {
+          // $.log('但是body为null')
+          body = await getBody()
+          $.log('body:' + body.length + '个字符')
+          oCache[objIndex].body = body
+          oCache[objIndex].time = seconds
+          $.setjson(oCache, 'parser_cache')
+        } else {
+          // $.log('获取到缓存body')
+          body = oCache[objIndex].body
+        }
+      }
+    }
+  }
+
+  if (evJsori) {
+    eval(evJsori)
+  }
   if (evUrlori) {
     eval(await http(evUrlori))
   }
@@ -207,7 +291,9 @@ var _scriptSonverterDone = (val = {}) => {
     body = `${prefix}\n${compatibilityOnly ? body : body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
   }
 
-  eval(evJsmodi)
+  if (evJsmodi) {
+    eval(evJsmodi)
+  }
   if (evUrlmodi) {
     eval(await http(evUrlmodi))
   }
@@ -249,6 +335,8 @@ var _scriptSonverterDone = (val = {}) => {
   .finally(async () => {
     $.done(result)
   })
+
+// 参数 与其他脚本逻辑一致
 function parseQueryString(url) {
   const queryString = url.split('?')[1] // 获取查询字符串部分
   const regex = /([^=&]+)=([^&]*)/g // 匹配键值对的正则表达式
@@ -263,7 +351,15 @@ function parseQueryString(url) {
 
   return params
 }
-// 通知
+// 是否为真 与其他脚本逻辑一致
+function istrue(str) {
+  if (str == true || str == 1 || str == 'true' || str == '1') {
+    return true
+  } else {
+    return false
+  }
+}
+// 请求
 async function http(url, opts = {}) {
   $.log(`🔗 链接`, url)
   const res = await $.http.get({
