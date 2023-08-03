@@ -19,6 +19,8 @@ const NAME = 'echo-response'
 const TITLE = 'echo-response'
 const $ = new Env(NAME)
 
+const shouldFixLoonRedirectBody = true
+
 let arg
 if (typeof $argument != 'undefined') {
   let argument = $argument ?? ''
@@ -32,9 +34,32 @@ if (typeof $argument != 'undefined') {
 
 let result = {}
 !(async () => {
-  let url = $.lodash_get(arg, 'url')
-  let type = $.lodash_get(arg, 'type')
+  let url = $.lodash_get(arg, 'url') || ''
+  let type = $.lodash_get(arg, 'type') || ''
   let header = $.lodash_get(arg, 'header') || ''
+  let cachExp = $.lodash_get(arg, 'cachexp') != undefined ? $.lodash_get(arg, 'cachexp') : null
+  let noCache = istrue($.lodash_get(arg, 'nocache'))
+
+  //缓存有效期相关
+  let currentTime = new Date()
+  let seconds = Math.floor(currentTime.getTime() / 1000) // 将毫秒转换为秒
+  let boxjsSetExp = $.getval('Parser_cache_exp') ?? '1'
+  //设置有效期时间
+  let expirationTime
+  if (cachExp != null) {
+    expirationTime = cachExp * 1 * 60 * 60
+  } else {
+    expirationTime = boxjsSetExp * 1 * 60 * 60
+  }
+  //$.log(expirationTime);
+  let nCache = [{ url: '', res: {}, time: '' }]
+  let oCache = $.getval('parser_cache')
+  //检查是否有缓存
+  if (oCache != '' && oCache != null) {
+    oCache = $.toObj(oCache)
+  } else {
+    oCache = null
+  }
 
   let newHeaders = {}
   header.split(/\s*\|\s*/g).forEach(i => {
@@ -53,34 +78,129 @@ let result = {}
   }
   if (/^(https?|ftp|file):\/\/.*/.test(url)) {
     if (type || Object.keys(newHeaders).length > 0) {
-      $.log('需下载', url)
-      const res = await $.http.get({
-        url,
-        // headers: $.lodash_get($request, 'headers'),
-      })
-      // $.log('ℹ️ res', $.toStr(res))
-      const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
-      $.log('ℹ️ res status', status)
-      if (!type) {
+      const getRes = async () => {
+        $.log('需下载', url)
+        const res = await $.http.get({
+          url,
+          // headers: $.lodash_get($request, 'headers'),
+        })
+        // $.log('ℹ️ res', $.toStr(res))
+        const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
+        $.log('ℹ️ res status', status)
         const headers = $.lodash_get(res, 'headers')
-        type = $.lodash_get(headers, 'content-type') || $.lodash_get(headers, 'Content-Type')
-        $.log('ℹ️ res type', type)
+        $.log('ℹ️ res headers', headers)
+
+        if (!type) {
+          type = $.lodash_get(headers, 'content-type') || $.lodash_get(headers, 'Content-Type')
+
+          $.log('ℹ️ res type', type)
+        }
+
+        let body = $.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody')
+
+        // $.log('ℹ️ res body', body)
+        return { body, type, status, headers, shouldCache: typeof body === 'string' }
       }
-      let body = $.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody')
-      // $.log('ℹ️ res body', body)
+
+      let req = url
+      let res
+
+      if (noCache == true) {
+        res = await getRes()
+      } else if (oCache == null) {
+        // $.log('一个缓存也没有')
+        res = await getRes()
+        if ($.lodash_get(res, 'shouldCache')) {
+          // $.log('body:' + body.length + '个字符')
+          nCache[0].url = req
+          nCache[0].res = res
+          nCache[0].time = seconds
+          $.setjson(nCache, 'parser_cache')
+        }
+      } else {
+        //删除大于一天的缓存防止缓存越来越大
+        oCache = oCache.filter(obj => {
+          return seconds - obj.time < 86400
+        })
+        $.setjson(oCache, 'parser_cache')
+
+        if (!oCache.some(obj => obj.url === req)) {
+          // $.log('有缓存但是没有这个URL的')
+          res = await getRes()
+          if ($.lodash_get(res, 'shouldCache')) {
+            // $.log('body:' + body.length + '个字符')
+            nCache[0].url = req
+            nCache[0].res = res
+            nCache[0].time = seconds
+            var mergedCache = oCache.concat(nCache)
+            $.setjson(mergedCache, 'parser_cache')
+          }
+        } else if (oCache.some(obj => obj.url === req)) {
+          const objIndex = oCache.findIndex(obj => obj.url === req)
+          if (seconds - oCache[objIndex].time > expirationTime) {
+            // $.log('有缓存且有url,但是过期了')
+            res = await getRes()
+            if ($.lodash_get(res, 'shouldCache')) {
+              // $.log('body:' + body.length + '个字符')
+              oCache[objIndex].res = res
+              oCache[objIndex].time = seconds
+              $.setjson(oCache, 'parser_cache')
+            }
+          } else {
+            // $.log('有缓存且有url且没过期')
+            const cachedBody = $.lodash_get(oCache[objIndex].res, 'body')
+            if (cachedBody == null || cachedBody == '') {
+              // $.log('但是body为null')
+              res = await getRes()
+              if ($.lodash_get(res, 'shouldCache')) {
+                // $.log('body:' + body.length + '个字符')
+                oCache[objIndex].res = res
+                oCache[objIndex].time = seconds
+                $.setjson(oCache, 'parser_cache')
+              }
+            } else {
+              // $.log('获取到缓存body')
+              res = oCache[objIndex].res
+            }
+          }
+        }
+      }
+
+      const { body, type: cachedType, status, headers } = res
+
+      const newTypeHeaders = {
+        ...headers,
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+      }
+      if (!type) {
+        type = cachedType
+      }
+      if (type) {
+        if (newTypeHeaders['Content-Type']) {
+          newTypeHeaders['Content-Type'] = type
+        } else {
+          newTypeHeaders['content-type'] = type
+        }
+      }
+      if (
+        shouldFixLoonRedirectBody &&
+        /^3\d{2}$/.test(status) &&
+        $.isLoon() &&
+        (body == null || body == '' || body.length === 0)
+      ) {
+        body = 'loon'
+      }
+      const respHeaders = Object.keys(newHeaders).length > 0 ? newHeaders : newTypeHeaders
+
+      $.log($.toStr(respHeaders))
+
       result = {
         response: {
-          status: 200,
+          status,
+          headers: respHeaders,
           body,
-          headers:
-            Object.keys(newHeaders).length > 0
-              ? newHeaders
-              : {
-                  'Content-Type': type,
-                  'Access-Control-Allow-Origin': '*',
-                  'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
-                  'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-                },
         },
       }
     } else {
@@ -88,7 +208,7 @@ let result = {}
       result = {
         response: {
           status: 302,
-          body: $.isLoon() ? 'loon' : undefined,
+          body: shouldFixLoonRedirectBody && $.isLoon() ? 'loon' : undefined,
           headers: {
             location: url,
           },
@@ -112,6 +232,15 @@ let result = {}
 // 通知
 async function notify(title, subt, desc, opts) {
   $.msg(title, subt, desc, opts)
+}
+
+// 是否为真 与其他脚本逻辑一致
+function istrue(str) {
+  if (str == true || str == 1 || str == 'true' || str == '1') {
+    return true
+  } else {
+    return false
+  }
 }
 
 // prettier-ignore

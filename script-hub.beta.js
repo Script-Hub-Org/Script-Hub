@@ -956,6 +956,7 @@ const htmls = `
 
       <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>重写相关</summary>
+
         <details>
           <summary>保留重写</summary>
           <span>根据关键词保留重写(即去掉注释符#) 多关键词以"+"分隔</span>
@@ -969,6 +970,10 @@ const htmls = `
         <div>
           <input type="checkbox" id="del" v-model.lazy="del" />
           <label for="del">从转换结果中剔除被注释的重写</label>
+        </div>
+        <div>
+          <input type="checkbox" id="del" v-model.lazy="keepHeader" />
+          <label for="keepHeader">保留 <code>Map Local</code>/<code>echo-response</code> 中的 <code>header</code>/<code>Content-Type</code>(将影响性能)</label>
         </div>
       </details>
 
@@ -1144,6 +1149,7 @@ const htmls = `
     evalScriptmodi: '',
     evalUrlori: '',
     evalUrlmodi: '',
+    keepHeader: false,
     nore: false,
     wrap_response: false,
     compatibilityOnly: false,
@@ -1161,7 +1167,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
