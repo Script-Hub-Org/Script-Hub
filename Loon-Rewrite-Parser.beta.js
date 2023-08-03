@@ -506,7 +506,6 @@ jsSuf = jsSuf + "&compatibilityOnly=true"
 };
 
 if (jscStatus == true || jsc2Status == true){
-	$.log(cachExp)
 	noCache == true ? jsSuf = jsSuf + '&nocache=true' : jsSuf = jsSuf;
 	cachExp != null ? jsSuf = jsSuf + `&cachexp=${cachExp}` : jsSuf = jsSuf;
 };
