@@ -46,6 +46,7 @@ var noCache = istrue(queryObject.nocache);
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
+var keepHeader = istrue(queryObject.keepHeader);
 
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
@@ -436,6 +437,7 @@ let croName = "";      //cron任务名
 let rejectType = "";   //重写reject类型
 let rejectPtn = "";    //重写reject正则
 let file = "";         //Mock的文件链接
+let mockHeader = ""    //Mock的header值
 let fileName = "";     //文件名
 let mock2Reject = "";  //Mock转reject类型
 let tilesIcon = "";    //Stash磁贴图标
@@ -500,6 +502,7 @@ let jsPre = "";
 let jsSuf = "";
 let oriType = queryObject.type.split("-")[0];
 let jsTarget = queryObject.target.split("-")[0];
+
 if (jscStatus == true || jsc2Status == true){
 jsPre = "http://script.hub/convert/_start_/";
 };
@@ -511,6 +514,12 @@ jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script&wrap
 
 if (compatibilityOnly == true && (jscStatus == true || jsc2Status == true)){
 jsSuf = jsSuf + "&compatibilityOnly=true"
+};
+
+if (jscStatus == true || jsc2Status == true){
+	$.log(cachExp)
+	noCache == true ? jsSuf = jsSuf + '&nocache=true' : jsSuf = jsSuf;
+	cachExp != null ? jsSuf = jsSuf + `&cachexp=${cachExp}` : jsSuf = jsSuf;
 };
 
 function isJsCon (arr) {
@@ -1082,10 +1091,20 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":js,"name":croName + "_" + y,"cron":c
 				file = x.split(' data="')[1].split('"')[0];
 				fileName = file.substring(file.lastIndexOf('/') + 1);
 				scname = fileName.split(".")[0];
+				x.search(/ header="/) != -1 ? mockHeader = x.split(' header="')[1].split('"')[0] : mockHeader = "";
+				
+				if (mockHeader != "" && keepHeader == true){
+					if (isSurgeiOS){
+						mockHeader = ` header="${mockHeader}"`;
+					}else{
+						mockHeader = `header=${mockHeader}&`;
+					}
+				}else{mockHeader = ""};
+				
                 if (isSurgeiOS){
                     
 				body[y - 1]?.match(/^#/) &&  MapLocal.push(body[y - 1]);
-                MapLocal.push(`${noteK}${ptn} data="${file}"`);
+                MapLocal.push(`${noteK}${ptn} data="${file}"${mockHeader}`);
                 }else if (fileName.match(/(img|dict|array|200|blank|tinygif)\.[^.]+$/i)){
                 
                 
@@ -1125,14 +1144,14 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":js,"name":croName + "_" + y,"cron":c
                 body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
                 
                 script.push(
-			`${noteK}http-request ${ptn} script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js, tag=${scname}_${y}, argument=type=text/json&url=${file}`)
+			`${noteK}http-request ${ptn} script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js, tag=${scname}_${y}, argument=${mockHeader}url=${file}`)
                         
                 }else if (isStashiOS){
                     
                 body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 		
 		script.push(
-			`${noteK4}- match: ${ptn}${noteKn6}name: "echo-response"${noteKn6}type: request${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}type=text/json&url=${file}`)
+			`${noteK4}- match: ${ptn}${noteKn6}name: "echo-response"${noteKn6}type: request${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}${mockHeader}url=${file}`)
 				
 				providers.push(
 							`${noteK2}"echo-response":${noteKn4}url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js${noteKn4}interval: 86400`);    
