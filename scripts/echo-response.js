@@ -275,7 +275,7 @@ let result = {}
 
 // 通知
 function utf8ContentType(type) {
-  if (shouldFixCharset && /^text\/.+/i.test(type) && !/;\s*?charset\s*?=\s*?/i.test(type)) {
+  if (shouldFixCharset && /^(text|application)\/.+/i.test(type) && !/;\s*?charset\s*?=\s*?/i.test(type)) {
     return `${type}; charset=UTF-8`
   }
   return type
@@ -292,71 +292,6 @@ function istrue(str) {
     return true
   } else {
     return false
-  }
-}
-
-class JSONCache {
-  constructor(maxSize, maxAge, initialCache = {}) {
-    this.maxSize = maxSize // 最大字符串大小
-    this.maxAge = maxAge // 缓存过期时间
-    this.cache = initialCache // 初始缓存
-    this.keys = Object.keys(initialCache) // 缓存键的数组，用于实现 LRU 策略
-  }
-
-  set(key, value) {
-    const jsonValue = JSON.stringify(value)
-    if (jsonValue.length > this.maxSize) {
-      // console.warn(`Value for key ${key} is too large for cache.`)
-      return
-    }
-
-    // 如果缓存中已存在该键，则将其移动到最前面
-    const index = this.keys.indexOf(key)
-    if (index > -1) {
-      this.keys.splice(index, 1)
-    }
-    this.keys.unshift(key)
-
-    // 设置新的缓存
-    this.cache[key] = {
-      value,
-      timestamp: Date.now(),
-    }
-
-    // 如果缓存大小超出了限制，则删除最旧的缓存
-    while (JSON.stringify(this.cache).length > this.maxSize) {
-      const oldestKey = this.keys.pop()
-      delete this.cache[oldestKey]
-    }
-  }
-
-  get(key) {
-    const cacheItem = this.cache[key]
-    if (!cacheItem) {
-      return undefined
-    }
-
-    // 如果缓存已过期，则删除该缓存并返回 undefined
-    if (Date.now() - cacheItem.timestamp > this.maxAge) {
-      delete this.cache[key]
-      const index = this.keys.indexOf(key)
-      if (index > -1) {
-        this.keys.splice(index, 1)
-      }
-      return undefined
-    }
-
-    // 如果缓存存在且尚未过期，则返回其值
-    return cacheItem.value
-  }
-
-  clear() {
-    this.cache = {}
-    this.keys = []
-  }
-
-  size() {
-    return JSON.stringify(this.cache).length
   }
 }
 
