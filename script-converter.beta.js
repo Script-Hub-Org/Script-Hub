@@ -25,6 +25,7 @@ if (typeof $argument != 'undefined') {
 
 let result = {}
 
+let shouldRedirect
 let url
 !(async () => {
   if (!$.isRequest()) throw new Error('不是 request')
@@ -239,6 +240,7 @@ var _scriptSonverterDone = (val = {}) => {
     if (keepHeader) {
       res = await http(url)
     } else {
+      shouldRedirect = true
       res = redirect(url)
     }
 
@@ -261,7 +263,7 @@ var _scriptSonverterDone = (val = {}) => {
 
   status = status ?? 200
 
-  if (Object.keys(setHeaders).length > 0) {
+  if (!shouldRedirect && Object.keys(setHeaders).length > 0) {
     headers = setHeaders
   } else {
     headers = {
@@ -476,6 +478,7 @@ async function http(url, opts = {}) {
       throw new Error(e)
     }
     notify(TITLE, `⚠️ ${info} 将启用 302 跳转`, `无法使用自定义 content-type/header\n${url}`, url)
+    shouldRedirect = true
     return redirect(url)
   }
 }
