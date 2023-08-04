@@ -41,8 +41,6 @@ var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : nul
 var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;
 var nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+") : null;
 var nTilesColor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
-var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
-var noCache = istrue(queryObject.nocache);
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
@@ -367,9 +365,6 @@ let cronExp = "";      //cron表达式
 let croName = "";      //cron任务名
 let rejectType = "";   //重写reject类型
 let rejectPtn = "";    //重写reject正则
-let file = "";         //Mock的文件链接
-let mockHeader = ""    //Mock的header值
-let fileName = "";     //文件名
 let mock2Reject = "";  //Mock转reject类型
 let tilesIcon = "";    //Stash磁贴图标
 let tilesColor = "";   //Stash磁贴颜色
