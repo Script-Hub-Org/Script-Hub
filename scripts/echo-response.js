@@ -276,7 +276,9 @@ let result = {}
 // 通知
 function utf8ContentType(type) {
   if (shouldFixCharset && /^(text|application)\/.+/i.test(type) && !/;\s*?charset\s*?=\s*?/i.test(type)) {
-    return `${type}; charset=UTF-8`
+    let newType = `${type}; charset=UTF-8`
+    $.log('增加 UTF-8', newType)
+    return newType
   }
   return type
 }
