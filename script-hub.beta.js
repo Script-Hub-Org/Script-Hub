@@ -975,6 +975,10 @@ const htmls = `
           <input type="checkbox" id="del" v-model.lazy="keepHeader" />
           <label for="keepHeader">保留 <code>Map Local</code>/<code>echo-response</code> 中的 <code>header</code>/<code>content-type</code>(占用内存多 但响应快)</label>
         </div>
+        <div>
+          <input type="checkbox" id="del" v-model.lazy="jsDelivr" />
+          <label for="jsDelivr">GitHub 转 jsDelivr(修复 content-type)</label>
+        </div>
       </details>
 
       <details v-if="!target || target.endsWith('rule-set')">
@@ -1152,6 +1156,7 @@ const htmls = `
     keepHeader: false,
     nore: false,
     wrap_response: false,
+    jsDelivr: false,
     compatibilityOnly: false,
     env: "${$.getEnv() || ''}",
     editMode: false,
@@ -1167,7 +1172,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 

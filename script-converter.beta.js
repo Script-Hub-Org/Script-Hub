@@ -25,6 +25,7 @@ if (typeof $argument != 'undefined') {
 
 let result = {}
 
+let jsDelivr
 let shouldRedirect
 let url
 !(async () => {
@@ -38,6 +39,8 @@ let url
   const queryObject = parseQueryString(urlArg)
   console.log('参数:' + JSON.stringify(queryObject))
 
+  jsDelivr = queryObject.jsDelivr
+
   const keepHeader = queryObject.keepHeader
   const setHeader = queryObject.header ?? ''
   const setContentType = queryObject.contentType ?? ''
@@ -49,6 +52,7 @@ let url
   const compatibilityOnly = queryObject.compatibilityOnly
   const type = queryObject.type ?? ''
   const target = queryObject.target ?? ''
+
   const subconverter = queryObject.subconverter
   // let cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null
   // let noCache = istrue(queryObject.nocache)
@@ -426,7 +430,7 @@ function redirect(url) {
     contentType: '',
     status: 302,
     headers: {
-      Location: url,
+      Location: jsDelivr ? migratingFromGitHubToJsDelivr(url) : url,
     },
     shouldCache: true,
   }
@@ -507,6 +511,26 @@ function createRound(methodName) {
 }
 function round(...args) {
   return createRound('round')(...args)
+}
+
+function migratingFromGitHubToJsDelivr(url) {
+  // 如果是jsdelivr的原始链接,直接返回
+  if (url.startsWith('https://cdn.jsdelivr.net/')) {
+    return url
+  }
+
+  // 提取Github仓库信息
+  const match = url.match(/https:\/\/(raw.githubusercontent.com|github.com)\/([^/]+)\/([^/]+)\/?(.*)/)
+
+  if (!match) {
+    // 非Github链接,不做转换
+    return url
+  }
+
+  const [, , user, repo, path] = match
+
+  // 构建jsdelivr链接
+  return `https://cdn.jsdelivr.net/gh/${user}/${repo}@${path ? path : 'main'}`
 }
 
 // prettier-ignore
