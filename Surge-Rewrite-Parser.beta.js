@@ -45,8 +45,10 @@ var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : nu
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
 var keepHeader = istrue(queryObject.keepHeader);
+var jsDelivr = istrue(queryObject.jsDelivr);
 
 var sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '';
+var sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '';
 
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
@@ -1023,7 +1025,7 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":js,"name":croName + "_" + y,"cron":c
 					}
 				};
 				
-				js = isSurgeiOS ? js : `http://script.hub/convert/_start_/${js}/_end_/${scname}?type=mock${mockHeader}${sufkeepHeader}`;
+				js = isSurgeiOS ? js : `http://script.hub/convert/_start_/${js}/_end_/${scname}?type=mock${mockHeader}${sufkeepHeader}${sufjsDelivr}`;
 				
                 if (isSurgeiOS){
                     
