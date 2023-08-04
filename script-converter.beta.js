@@ -332,6 +332,12 @@ $done({
     status = 200
   }
 
+  let response = {
+    status,
+    headers,
+    body,
+  }
+
   if (evJsmodi) {
     eval(evJsmodi)
   }
@@ -340,11 +346,7 @@ $done({
   }
 
   result = {
-    response: {
-      status,
-      headers,
-      body,
-    },
+    response,
   }
 })()
   .catch(async e => {
