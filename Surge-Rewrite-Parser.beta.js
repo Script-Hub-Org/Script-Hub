@@ -42,14 +42,13 @@ var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;
 var nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+") : null;
 var nTilesColor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
-var noCache = istrue(queryObject.nocache) ?? true;
+var noCache = istrue(queryObject.nocache);
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
 var keepHeader = istrue(queryObject.keepHeader);
 
-var sufnoCache = noCache == true ? `&nocache=true` : "";
-var sufcachExp = cachExp != null ? `&cachexp=${cachExp}` : "";
+var sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '';
 
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
@@ -1014,37 +1013,40 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":js,"name":croName + "_" + y,"cron":c
 			case " data=":
 				
 				ptn = x.replace(/\x20{2,}/g," ").split(" data=")[0].replace(/^#|"/g,"");
-				file = x.split(' data="')[1].split('"')[0];
-				fileName = file.substring(file.lastIndexOf('/') + 1);
-				file = isSurgeiOS ? file : encodeURIComponent(file) + sufcachExp + sufnoCache;
-				scname = fileName.split(".")[0];
+				js = x.split(' data="')[1].split('"')[0];
+				scname = js.substring(js.lastIndexOf('/') + 1);
+				
 				x.search(/ header="/) != -1 ? mockHeader = x.split(' header="')[1].split('"')[0] : mockHeader = "";
 				
-				if (mockHeader != "" && keepHeader == true){
-					if (isSurgeiOS){
+				if (mockHeader != ""){
+					if (isSurgeiOS && keepHeader == true){
 						mockHeader = ` header="${mockHeader}"`;
+					}else if (isSurgeiOS && keepHeader == false){
+						mockHeader = "";
 					}else{
-						mockHeader = `header=${mockHeader}&`;
+						mockHeader = '&header=' + encodeURIComponent(mockHeader);
 					}
-				}else{mockHeader = ""};
+				};
+				
+				js = isSurgeiOS ? js : `http://script.hub/convert/_start_/${js}/_end_/${scname}?type=mock${mockHeader}${sufkeepHeader}`;
 				
                 if (isSurgeiOS){
                     
 				body[y - 1]?.match(/^#/) &&  MapLocal.push(body[y - 1]);
-                MapLocal.push(`${noteK}${ptn} data="${file}"${mockHeader}`);
-                }else if (fileName.match(/(img|dict|array|200|blank|tinygif)\.[^.]+$/i)){
+                MapLocal.push(`${noteK}${ptn} data="${js}"${mockHeader}`);
+                }else if (scname.match(/(img|dict|array|200|blank|tinygif)\.[^.]+$/i)){
                 
                 
-                if (fileName.match(/dict\.[^.]+$/i)){
+                if (scname.match(/dict\.[^.]+$/i)){
                     mock2Reject = "-dict";
                     
-                }else if (fileName.match(/array\.[^.]+$/i)){
+                }else if (scname.match(/array\.[^.]+$/i)){
                     mock2Reject = "-array";
                     
-                }else if (fileName.match(/(200|blank)\.[^.]+$/i)){
+                }else if (scname.match(/(200|blank)\.[^.]+$/i)){
                     mock2Reject = "-200";
                     
-                }else if (fileName.match(/(img|tinygif)\.[^.]+$/i)){
+                }else if (scname.match(/(img|tinygif)\.[^.]+$/i)){
                     mock2Reject = "-img";
                 };
                 
@@ -1066,22 +1068,21 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":js,"name":croName + "_" + y,"cron":c
 				
 				}else{
                     
-                if (isLooniOS || isShadowrocket){
-                    
+                if (isLooniOS || isShadowrocket){   
                 body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
                 
                 script.push(
-			`${noteK}http-request ${ptn} script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js, tag=${scname}_${y}, argument=${mockHeader}url=${file}`)
+			`${noteK}http-request ${ptn} script-path=${js}, timeout=60 ,tag=${scname}_${y}`)
                         
                 }else if (isStashiOS){
                     
                 body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 		
 		script.push(
-			`${noteK4}- match: ${ptn}${noteKn6}name: "echo-response"${noteKn6}type: request${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}${mockHeader}url=${file}`)
+			`${noteK4}- match: ${ptn}${noteKn6}name: "${scname}_${y}"${noteKn6}type: request${noteKn6}timeout: 60`)
 				
 				providers.push(
-							`${noteK2}"echo-response":${noteKn4}url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js${noteKn4}interval: 86400`);    
+							`${noteK2}"${scname}_${y}":${noteKn4}url: ${js}${noteKn4}interval: 86400`);    
                 };
 		};
 				break;
