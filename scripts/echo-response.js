@@ -273,7 +273,7 @@ let result = {}
     $.done(result)
   })
 
-// 通知
+// 加 UTF-8
 function utf8ContentType(type) {
   if (shouldFixCharset && /^(text|application)\/.+/i.test(type) && !/;\s*?charset\s*?=\s*?/i.test(type)) {
     let newType = `${type}; charset=UTF-8`

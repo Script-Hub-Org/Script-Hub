@@ -1,4 +1,11 @@
+const TITLE = `Script Hub: 脚本转换`
 const NAME = `script-converter`
+
+const MAX_BODY_LENGTH = 500 * 1024
+const HTTP_TIMEOUT = 20 * 1000
+
+const shouldFixCharset = true
+const shouldFixLoonRedirectBody = true
 
 const $ = new Env(NAME)
 
@@ -30,39 +37,39 @@ let url
   const queryObject = parseQueryString(urlArg)
   console.log('参数:' + JSON.stringify(queryObject))
 
-  const evJsori = queryObject.evalScriptori
-  const evJsmodi = queryObject.evalScriptmodi
-  const evUrlori = queryObject.evalUrlori
-  const evUrlmodi = queryObject.evalUrlmodi
+  const keepHeader = queryObject.keepHeader
+  const setHeader = queryObject.header ?? ''
+  const setContentType = queryObject.contentType ?? ''
+  const evJsori = queryObject.evalScriptori ?? ''
+  const evJsmodi = queryObject.evalScriptmodi ?? ''
+  const evUrlori = queryObject.evalUrlori ?? ''
+  const evUrlmodi = queryObject.evalUrlmodi ?? ''
   const wrap_response = queryObject.wrap_response
   const compatibilityOnly = queryObject.compatibilityOnly
-  const type = queryObject.type
-  const target = queryObject.target
+  const type = queryObject.type ?? ''
+  const target = queryObject.target ?? ''
   const subconverter = queryObject.subconverter
-
   // let cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null
   // let noCache = istrue(queryObject.nocache)
+  // let timeout = istrue(queryObject.timeout)
 
-  // //缓存有效期相关
-  // let currentTime = new Date()
-  // let seconds = Math.floor(currentTime.getTime() / 1000) // 将毫秒转换为秒
-  // let boxjsSetExp = $.getval('Parser_cache_exp') ?? '1'
-  // //设置有效期时间
-  // let expirationTime
-  // if (cachExp != null) {
-  //   expirationTime = cachExp * 1 * 60 * 60
-  // } else {
-  //   expirationTime = boxjsSetExp * 1 * 60 * 60
-  // }
-  // //$.log(expirationTime);
-  // let nCache = [{ url: '', body: '', time: '' }]
-  // let oCache = $.getval('parser_cache')
-  // //检查是否有缓存
-  // if (oCache != '' && oCache != null) {
-  //   oCache = $.toObj(oCache)
-  // } else {
-  //   oCache = null
-  // }
+  let setHeaders = {}
+  if (setHeader) {
+    setHeader.split(/\s*\|\s*/g).forEach(i => {
+      if (/.+:.+/.test(i)) {
+        const kv = i.split(/\s*\:\s*/)
+        if (kv.length === 2) {
+          setHeaders[kv[0]] = kv[1]
+        }
+      }
+    })
+  }
+
+  if (Object.keys(setHeaders).length > 0) {
+    $.log(`指定 headers`, $.toStr(setHeaders))
+  } else if (setContentType) {
+    $.log('指定 Content-Type', setContentType)
+  }
 
   let prefix = `
 // 转换时间: ${new Date().toLocaleString('zh')}
@@ -190,11 +197,14 @@ var _scriptSonverterDone = (val = {}) => {
 }`
 
   let body
+  let status
+  let headers
+  let contentType
+  let shouldCache
 
-  const getBody = async () => {
-    let body
-    if (subconverter) {
-      body = await http(subconverter, {
+  if (subconverter) {
+    body = $.lodash_get(
+      await http(subconverter, {
         params: {
           insert: false,
           append_type: false,
@@ -218,98 +228,121 @@ var _scriptSonverterDone = (val = {}) => {
           evalUrlori: undefined,
           evalUrlmodi: undefined,
         },
-      })
-    } else {
-      if (!compatibilityOnly && type === 'qx-script') {
-        prefix = `${prefix}\n${qxMock}`
-      }
-      url = req || $request.url.replace(/_script-converter-(stash|surge|loon|shadowrocket)\.js$/i, '')
-      body = await http(url)
+      }),
+      'body'
+    )
+  } else {
+    if (!compatibilityOnly && type === 'qx-script') {
+      prefix = `${prefix}\n${qxMock}`
     }
-    return body
+    url = req || $request.url.replace(/_script-converter-(stash|surge|loon|shadowrocket)\.js$/i, '')
+    let res
+    if (keepHeader) {
+      res = await http(url)
+    } else {
+      res = redirect(url)
+    }
+
+    body = $.lodash_get(res, 'body')
+    status = $.lodash_get(res, 'status')
+    headers = $.lodash_get(res, 'headers')
+    contentType = $.lodash_get(res, 'contentType')
+    shouldCache = $.lodash_get(res, 'shouldCache')
   }
-
-  // if (noCache == true) {
-  //   body = await getBody()
-  // } else if (oCache == null) {
-  //   // $.log('一个缓存也没有')
-  //   body = await getBody()
-  //   $.log('body:' + body.length + '个字符')
-  //   nCache[0].url = req
-  //   nCache[0].body = body
-  //   nCache[0].time = seconds
-  //   $.setjson(nCache, 'parser_cache')
-  // } else {
-  //   //删除大于一天的缓存防止缓存越来越大
-  //   oCache = oCache.filter(obj => {
-  //     return seconds - obj.time < 86400
-  //   })
-  //   $.setjson(oCache, 'parser_cache')
-
-  //   if (!oCache.some(obj => obj.url === req)) {
-  //     // $.log('有缓存但是没有这个URL的')
-  //     body = await getBody()
-  //     $.log('body:' + body.length + '个字符')
-  //     nCache[0].url = req
-  //     nCache[0].body = body
-  //     nCache[0].time = seconds
-  //     var mergedCache = oCache.concat(nCache)
-  //     $.setjson(mergedCache, 'parser_cache')
-  //   } else if (oCache.some(obj => obj.url === req)) {
-  //     const objIndex = oCache.findIndex(obj => obj.url === req)
-  //     if (seconds - oCache[objIndex].time > expirationTime) {
-  //       // $.log('有缓存且有url,但是过期了')
-  //       body = await getBody()
-  //       $.log('body:' + body.length + '个字符')
-  //       oCache[objIndex].body = body
-  //       oCache[objIndex].time = seconds
-  //       $.setjson(oCache, 'parser_cache')
-  //     } else {
-  //       // $.log('有缓存且有url且没过期')
-  //       if (oCache[objIndex].body == null || oCache[objIndex].body == '') {
-  //         // $.log('但是body为null')
-  //         body = await getBody()
-  //         $.log('body:' + body.length + '个字符')
-  //         oCache[objIndex].body = body
-  //         oCache[objIndex].time = seconds
-  //         $.setjson(oCache, 'parser_cache')
-  //       } else {
-  //         // $.log('获取到缓存body')
-  //         body = oCache[objIndex].body
-  //       }
-  //     }
-  //   }
-  // }
-
-  body = await getBody()
 
   if (evJsori) {
     eval(evJsori)
   }
   if (evUrlori) {
-    eval(await http(evUrlori))
+    eval($.lodash_get(await http(evUrlori), 'body'))
   }
   if (type === 'qx-script' || compatibilityOnly) {
     body = `${prefix}\n${compatibilityOnly ? body : body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
+  }
+
+  status = status ?? 200
+
+  if (Object.keys(setHeaders).length > 0) {
+    headers = setHeaders
+  } else {
+    headers = {
+      ...headers,
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+    }
+    if (setContentType) {
+      if (headers['Content-Type']) {
+        headers['Content-Type'] = setContentType
+      } else {
+        headers['content-type'] = setContentType
+      }
+    }
+  }
+
+  if (headers['Content-Type']) {
+    headers['Content-Type'] = utf8ContentType(headers['Content-Type'])
+  } else if (headers['content-type']) {
+    headers['content-type'] = utf8ContentType(headers['content-type'])
+  }
+  if (
+    shouldFixLoonRedirectBody &&
+    /^3\d{2}$/.test(status) &&
+    $.isLoon() &&
+    (body == null || body == '' || body.length === 0)
+  ) {
+    body = 'loon'
+  }
+
+  if (type === 'mock') {
+    const scriptBody =
+      typeof body === 'string'
+        ? `
+$done({
+  response: {
+      status: ${status},
+      body: ${JSON.stringify(body)},
+      headers: ${JSON.stringify(headers)},
+    },
+})`
+        : `
+function strToArray(str) {
+  var ret = new Uint8Array(str.length)
+  for (var i = 0; i < str.length; i++) {
+    ret[i] = str.charCodeAt(i)
+  }
+  return ret
+}
+$done({
+  response: {
+      status: ${status},
+      headers: ${JSON.stringify(headers)},
+      body: strToArray(${JSON.stringify(binArrayToStr(body))}),
+    },
+})
+      `
+    headers = {
+      'Content-Type': 'text/plain; charset=UTF-8',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+    }
+    body = scriptBody
+    status = 200
   }
 
   if (evJsmodi) {
     eval(evJsmodi)
   }
   if (evUrlmodi) {
-    eval(await http(evUrlmodi))
+    eval($.lodash_get(await http(evUrlmodi), 'body'))
   }
 
   result = {
     response: {
-      status: 200,
+      status,
+      headers,
       body,
-      headers: {
-        'Content-Type': 'text/javascript; charset=UTF-8',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
-        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-      },
     },
   }
 })()
@@ -317,9 +350,9 @@ var _scriptSonverterDone = (val = {}) => {
     $.logErr(e)
     const msg = `${$.lodash_get(e, 'message') || $.lodash_get(e, 'error') || e}`
     if ($.isShadowrocket() && msg.includes(`未能完成操作`)) {
-      $.log(`脚本转换`, `⚠️`, msg, url)
+      $.log(TITLE, `⚠️`, msg, url)
     } else {
-      await notify(`脚本转换`, `❌`, msg, url)
+      await notify(TITLE, `❌`, msg, url)
     }
     result = {
       response: {
@@ -337,7 +370,30 @@ var _scriptSonverterDone = (val = {}) => {
   .finally(async () => {
     $.done(result)
   })
+function strToArray(str) {
+  var ret = new Uint8Array(str.length)
+  for (var i = 0; i < str.length; i++) {
+    ret[i] = str.charCodeAt(i)
+  }
+  return ret
+}
 
+function binArrayToStr(binArray) {
+  var str = ''
+  for (var i = 0; i < binArray.length; i++) {
+    str += String.fromCharCode(parseInt(binArray[i]))
+  }
+  return str
+}
+// 加 UTF-8
+function utf8ContentType(type) {
+  if (shouldFixCharset && /^(text|application)\/.+/i.test(type) && !/;\s*?charset\s*?=\s*?/i.test(type)) {
+    let newType = `${type}; charset=UTF-8`
+    $.log('增加 UTF-8', newType)
+    return newType
+  }
+  return type
+}
 // 参数 与其他脚本逻辑一致
 function parseQueryString(url) {
   const queryString = url.split('?')[1] // 获取查询字符串部分
@@ -361,27 +417,92 @@ function istrue(str) {
     return false
   }
 }
+function redirect(url) {
+  return {
+    body: '',
+    contentType: '',
+    status: 302,
+    headers: {
+      Location: url,
+    },
+    shouldCache: true,
+  }
+}
 // 请求
 async function http(url, opts = {}) {
   $.log(`🔗 链接`, url)
-  const res = await $.http.get({
-    url,
-    // headers: {
-    //   'Cache-Control': 'no-cache',
-    //   Pragma: 'no-cache',
-    // },
-    ...opts,
-  })
-  // $.log('ℹ️ res', $.toStr(res))
-  const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
-  $.log('ℹ️ res status', status)
-  let body = String($.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody'))
-  // $.log('ℹ️ res body', body)
-  return body
+  let res
+  let body
+  let bodyLength
+  try {
+    res = await Promise.race([
+      $.http.get({
+        timeout: HTTP_TIMEOUT + 1 * 1000,
+        url,
+        // headers: {
+        //   'Cache-Control': 'no-cache',
+        //   Pragma: 'no-cache',
+        // },
+        ...opts,
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), HTTP_TIMEOUT)),
+    ])
+    // $.log('ℹ️ res', res)
+    // $.log('ℹ️ res', $.toStr(res))
+    // $.log('ℹ️ res', $.toStr(res))
+    const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
+    $.log('ℹ️ res status', status)
+
+    const headers = $.lodash_get(res, 'headers')
+    // $.log('ℹ️ res headers', $.toStr(headers))
+    const contentType = $.lodash_get(headers, 'content-type') || $.lodash_get(headers, 'Content-Type')
+
+    body = $.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody')
+    // $.log('ℹ️ res body', body)
+    bodyLength = body?.length
+    $.log('ℹ️ res body length', bodyLength)
+    if (bodyLength > MAX_BODY_LENGTH) {
+      throw new Error('too large')
+    }
+    return { body, contentType, status, headers, shouldCache: typeof body === 'string' }
+  } catch (e) {
+    $.logErr(e)
+    let msg = String($.lodash_get(e, 'message') || e)
+    let info
+    if (msg.includes('timeout')) {
+      info = `请求超时(${round(HTTP_TIMEOUT / 1000)} 秒)`
+    } else if (msg.includes('too large')) {
+      info = `响应体过大(${round(bodyLength / 1024)} KB)`
+    } else {
+      throw new Error(e)
+    }
+    notify(TITLE, `⚠️ ${info} 将启用 302 跳转`, `无法使用自定义 content-type/header\n${url}`, url)
+    return redirect(url)
+  }
 }
 // 通知
 async function notify(title, subt, desc, opts) {
   $.msg(title, subt, desc, opts)
+}
+
+function createRound(methodName) {
+  const func = Math[methodName]
+  return (number, precision) => {
+    precision = precision == null ? 0 : precision >= 0 ? Math.min(precision, 292) : Math.max(precision, -292)
+    if (precision) {
+      // Shift with exponential notation to avoid floating-point issues.
+      // See [MDN](https://mdn.io/round#Examples) for more details.
+      let pair = `${number}e`.split('e')
+      const value = func(`${pair[0]}e${+pair[1] + precision}`)
+
+      pair = `${value}e`.split('e')
+      return +`${pair[0]}e${+pair[1] - precision}`
+    }
+    return func(number)
+  }
+}
+function round(...args) {
+  return createRound('round')(...args)
 }
 
 // prettier-ignore

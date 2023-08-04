@@ -973,7 +973,7 @@ const htmls = `
         </div>
         <div>
           <input type="checkbox" id="del" v-model.lazy="keepHeader" />
-          <label for="keepHeader">保留 <code>Map Local</code>/<code>echo-response</code> 中的 <code>header</code>/<code>Content-Type</code>(将影响性能)</label>
+          <label for="keepHeader">保留 <code>Map Local</code>/<code>echo-response</code> 中的 <code>header</code>/<code>content-type</code>(占用内存多 但响应快)</label>
         </div>
       </details>
 

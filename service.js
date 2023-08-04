@@ -66,8 +66,8 @@ const evalFn = async ({ $request, scriptFilePath }) => {
   return await new Promise(resolve => {
     const $eval_env = {
       resolve: async result => {
-        console.log('ℹ️ 执行结果')
-        console.log(result)
+        // console.log('ℹ️ 执行结果')
+        // console.log(result)
         console.log('ℹ️ 执行完毕')
         resolve(result)
       },
@@ -93,13 +93,15 @@ const reqFn = async ({ ctx, scriptMap, baseUrl }) => {
     url,
   }
   const result = await evalFn({ $request, scriptFilePath })
+  // TODO: Node.js 请求并传递非字符串的 body
   // console.log(`result`, result)
   ctx.response.status = result?.response?.status
   for (const [k, v] of Object.entries(result?.response?.headers)) {
     ctx.set(k, v)
   }
+  let body = result?.response?.body
 
-  ctx.body = result?.response?.body.replace(/https?:\/\/script.hub\//g, `${baseUrl}/`)
+  ctx.body = typeof body === 'string' ? body.replace(/https?:\/\/script.hub\//g, `${baseUrl}/`) : body
 }
 
 const app = new Koa()
