@@ -40,7 +40,7 @@ var delNoteSc = istrue(queryObject.del);
 var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;
 var nCronExp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;
 var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
-var noCache = istrue(queryObject.nocache);
+var noCache = istrue(queryObject.nocache) ?? true;
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
@@ -300,25 +300,6 @@ var name = "";
 var desc = "";
 var icon = "";
 
-//缓存有效期相关
-var currentTime = new Date();
-var seconds = Math.floor(currentTime.getTime() / 1000); // 将毫秒转换为秒
-var boxjsSetExp = $.getval("Parser_cache_exp") ?? "1";
-//设置有效期时间
-var expirationTime
-if (cachExp != null){
-  expirationTime = cachExp * 1 * 60 * 60;
-}else{
-  expirationTime = boxjsSetExp * 1 * 60 * 60;
-};
-//$.log(expirationTime);
-var nCache = [{"url":"","body":"","time":""}];
-var oCache = $.getval("parser_cache");
-//检查是否有缓存
-if (oCache != "" && oCache != null){
-  oCache = $.toObj(oCache);
-}else{oCache = null;};
-
 //修改名字和简介
 if (nName === null){
 	name = rewriteName;
@@ -348,63 +329,13 @@ let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).to
 const pluginIcon = icon;
 //$.log("插件图标：" + pluginIcon);
 
-  let body
+let body = (await $.http.get(req)).body;
 
-  if (noCache == true){
-	body = (await $.http.get(req)).body;
-}else if (oCache == null){
-    //$.log("一个缓存也没有")
-  body = (await $.http.get(req)).body;
-  //$.log('body:' + body.length + '个字符');
-  nCache[0].url = req;
-  nCache[0].body = body;
-  nCache[0].time = seconds;
-  $.setjson(nCache, 'parser_cache');
-  }else{
-    //删除大于一天的缓存防止缓存越来越大
-    oCache = oCache.filter(obj => {
-  return seconds - obj.time < 86400 ;
-});
-$.setjson(oCache, 'parser_cache');
-
- if (!oCache.some(obj => obj.url === req)){
-     //$.log("有缓存但是没有这个URL的")
-  body = (await $.http.get(req)).body;
-  //$.log('body:' + body.length + '个字符');
-  nCache[0].url = req;
-  nCache[0].body = body;
-  nCache[0].time = seconds;
-  var mergedCache = oCache.concat(nCache);
-$.setjson(mergedCache, 'parser_cache');
-  }else if (oCache.some(obj => obj.url === req)){
-    const objIndex = oCache.findIndex(obj => obj.url === req);
-    if (seconds - oCache[objIndex].time > expirationTime){
-      //$.log("有缓存且有url,但是过期了")
-  body = (await $.http.get(req)).body;
-  //$.log('body:' + body.length + '个字符');
-  oCache[objIndex].body = body;
-  oCache[objIndex].time = seconds;
-$.setjson(oCache, 'parser_cache');
-    }else{
-      //$.log("有缓存且有url且没过期")
-    if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
-        //$.log("但是body为null")
-        body = (await $.http.get(req)).body;
-  //$.log('body:' + body.length + '个字符');
-        oCache[objIndex].body = body;
-        oCache[objIndex].time = seconds;        $.setjson(oCache, "parser_cache");
-    }else{
-        //$.log("获取到缓存body")
-        body = oCache[objIndex].body;
-    }
-      };
-  };
-};
 eval(evJsori);
 eval(evUrlori);
 
 if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)){
-	$.log("test")
+
 body = body.match(/(^(?:\n|\r)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\/)/)[1].match(/[^\r\n]+/g);
 }else{
     body = body.match(/[^\r\n]+/g);};
@@ -515,10 +446,6 @@ jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script&wrap
 
 if (compatibilityOnly == true && (jscStatus == true || jsc2Status == true)){
 jsSuf = jsSuf + "&compatibilityOnly=true"
-};
-
-if (jscStatus == true || jsc2Status == true){
-jsSuf = `${jsSuf}${sufnoCache}${sufcachExp}`;
 };
 
 function isJsCon (arr) {
@@ -711,19 +638,19 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 			case " echo-response ":
 			
 				arg = x.split(" echo-response ")[2];
-				arg = isSurgeiOS ? arg : arg + sufcachExp + sufnoCache;
-				
 				echotype = x.replace(/\x20{2,}/g," ").split(" echo-response ")[1];
 				
 				keepHeader == true ? echotype = `type=${echotype}&` : echotype = "";
 				
-			if (/^(https?|ftp|file):\/\/.*/.test(arg)){
+			if (/^(https?|ftp|file).*/.test(arg)){
 				
 				urlInNum = x.replace(/\x20{2,}/g," ").split(" ").indexOf("url");
 				
 				ptn = x.replace(/\x20{2,}/g," ").split(" ")[urlInNum - 1].replace(/^#/,"");
                 
 				scname = arg.substring(arg.lastIndexOf('/') + 1, arg.lastIndexOf('.') );
+				
+				arg = isSurgeiOS ? arg : encodeURIComponent(arg) + sufcachExp + sufnoCache;
 				if (isLooniOS){
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				
