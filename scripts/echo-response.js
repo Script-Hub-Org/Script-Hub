@@ -15,51 +15,136 @@ hostname = %APPEND% restore-access.indream.app
 
 新参数 header=Content-Type: image/png|field2: value2
 */
+
 const NAME = 'echo-response'
 const TITLE = 'echo-response'
 const $ = new Env(NAME)
 
+const shouldFixCharset = true
 const shouldFixLoonRedirectBody = true
 
 let arg
+let url
 if (typeof $argument != 'undefined') {
   let argument = $argument ?? ''
-  try {
-    argument = decodeURIComponent(argument)
-  } catch (e) {}
-  console.log('argument')
-  console.log(argument)
+  // try {
+  //   argument = decodeURIComponent(argument)
+  // } catch (e) {}
+  // const urlMatch = argument.match(/(^|&)(url=(.*?))$/)
+  // url = urlMatch?.[3]
+  // if (url) {
+  //   try {
+  //     url = decodeURIComponent(url)
+  //   } catch (e) {}
+  // }
+  // $.log('url', url)
+  // argument = argument.replace(/(^|&)(url=(.*?))$/, '')
+  $.log('argument', argument)
   arg = Object.fromEntries(argument.split('&').map(item => item.split('=')))
 }
 
 let result = {}
 !(async () => {
   let url = $.lodash_get(arg, 'url') || ''
+  try {
+    url = decodeURIComponent(url)
+  } catch (e) {}
   let type = $.lodash_get(arg, 'type') || ''
   let header = $.lodash_get(arg, 'header') || ''
-  let cachExp = $.lodash_get(arg, 'cachexp') != undefined ? $.lodash_get(arg, 'cachexp') : null
-  let noCache = istrue($.lodash_get(arg, 'nocache'))
+  // let cachExp = $.lodash_get(arg, 'cachexp')
+  // let noCache = istrue($.lodash_get(arg, 'nocache'))
 
-  //缓存有效期相关
-  let currentTime = new Date()
-  let seconds = Math.floor(currentTime.getTime() / 1000) // 将毫秒转换为秒
-  let boxjsSetExp = $.getval('Parser_cache_exp') ?? '1'
-  //设置有效期时间
-  let expirationTime
-  if (cachExp != null) {
-    expirationTime = cachExp * 1 * 60 * 60
-  } else {
-    expirationTime = boxjsSetExp * 1 * 60 * 60
-  }
-  //$.log(expirationTime);
-  let nCache = [{ url: '', res: {}, time: '' }]
-  let oCache = $.getval('parser_cache')
-  //检查是否有缓存
-  if (oCache != '' && oCache != null) {
-    oCache = $.toObj(oCache)
-  } else {
-    oCache = null
-  }
+  // // 缓存对象
+  // const cache = {}
+
+  // // 缓存大小
+  // const maxCacheSize = $.getval('Parser_cache_size') ?? 1 * 1024 * 1024
+
+  // // 全局有效时长，默认为 24 小时
+  // const globalMaxAge = ($.getval('Parser_cache_exp') ?? 24) * 60 * 60 * 1000
+
+  // // 设置缓存
+  // function setCache(key, value, maxAge) {
+  //   // 如果没有指定有效时长，则使用全局有效时长
+  //   if (maxAge == null || maxAge == '' || maxAge.length === 0) {
+  //     maxAge = globalMaxAge
+  //   }
+  //   // 将值转换为JSON字符串
+  //   const stringValue = JSON.stringify(value)
+  //   // 如果超过最大缓存大小，则不缓存
+  //   if (stringValue.length > maxCacheSize) {
+  //     return
+  //   }
+  //   // 如果缓存已存在，则调整缓存位置
+  //   if (cache[key]) {
+  //     delete cache[key]
+  //   }
+  //   // 设置缓存对象的属性
+  //   cache[key] = {
+  //     value: stringValue,
+  //     // 记录缓存的过期时间
+  //     expireTime: Date.now() + maxAge,
+  //   }
+  //   // 检查缓存大小是否超过最大缓存大小
+  //   checkCacheSize()
+  // }
+
+  // // 获取缓存
+  // function getCache(key) {
+  //   // 如果缓存不存在，则返回undefined
+  //   if (!cache[key]) {
+  //     return undefined
+  //   }
+  //   // 判断缓存是否过期
+  //   if (cache[key].expireTime < Date.now()) {
+  //     // 如果过期，则删除缓存
+  //     delete cache[key]
+  //     return undefined
+  //   }
+
+  //   return JSON.parse(cache[key].value)
+  // }
+
+  // // 从对象初始化缓存并清理过期缓存
+  // function initCacheFromObject(obj) {
+  //   // 获取当前时间
+  //   const now = Date.now()
+  //   // 遍历对象并设置缓存
+  //   for (const key in obj) {
+  //     if (obj.hasOwnProperty(key)) {
+  //       // 判断缓存是否过期
+  //       if (cache[key] && cache[key].expireTime < now) {
+  //         // 如果过期，则删除缓存
+  //         delete cache[key]
+  //       } else {
+  //         // 否则设置缓存
+  //         cache[key] = obj[key]
+  //       }
+  //     }
+  //   }
+  // }
+
+  // // 检查缓存大小是否超过最大缓存大小
+  // function checkCacheSize() {
+  //   let cacheSize = 0
+  //   for (const key in cache) {
+  //     if (cache.hasOwnProperty(key)) {
+  //       // 计算缓存大小
+  //       cacheSize += cache[key].value.length
+  //     }
+  //   }
+  //   // 如果缓存大小超过最大缓存大小，则删除最早的缓存
+  //   while (cacheSize > maxCacheSize) {
+  //     const oldestKey = Object.keys(cache)[0]
+  //     cacheSize -= cache[oldestKey].value.length
+  //     delete cache[oldestKey]
+  //   }
+  // }
+
+  // if (!noCache) {
+  //   initCacheFromObject($.getjson('parser_cache_mock') || {})
+  //   $.setjson(cache, 'parser_cache_mock')
+  // }
 
   let newHeaders = {}
   header.split(/\s*\|\s*/g).forEach(i => {
@@ -88,13 +173,13 @@ let result = {}
         const status = $.lodash_get(res, 'status') || $.lodash_get(res, 'statusCode') || 200
         $.log('ℹ️ res status', status)
         const headers = $.lodash_get(res, 'headers')
-        $.log('ℹ️ res headers', headers)
+        // $.log('ℹ️ res headers', $.toStr(headers))
 
-        if (!type) {
-          type = $.lodash_get(headers, 'content-type') || $.lodash_get(headers, 'Content-Type')
+        // if (!type) {
+        const type = $.lodash_get(headers, 'content-type') || $.lodash_get(headers, 'Content-Type')
 
-          $.log('ℹ️ res type', type)
-        }
+        // $.log('ℹ️ res type', type)
+        // }
 
         let body = $.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody')
 
@@ -102,71 +187,24 @@ let result = {}
         return { body, type, status, headers, shouldCache: typeof body === 'string' }
       }
 
-      let req = url
-      let res
+      // let res
+      // if (noCache) {
+      //   res = await getRes()
+      // } else {
+      //   res = getCache(url)
+      //   if (!res) {
+      //     res = await getRes()
+      //     if ($.lodash_get(res, 'shouldCache')) {
+      //       setCache(url, res, cachExp)
+      //       $.setjson(cache, 'parser_cache_mock')
+      //     }
+      //   }
+      // }
 
-      if (noCache == true) {
-        res = await getRes()
-      } else if (oCache == null) {
-        // $.log('一个缓存也没有')
-        res = await getRes()
-        if ($.lodash_get(res, 'shouldCache')) {
-          // $.log('body:' + body.length + '个字符')
-          nCache[0].url = req
-          nCache[0].res = res
-          nCache[0].time = seconds
-          $.setjson(nCache, 'parser_cache')
-        }
-      } else {
-        //删除大于一天的缓存防止缓存越来越大
-        oCache = oCache.filter(obj => {
-          return seconds - obj.time < 86400
-        })
-        $.setjson(oCache, 'parser_cache')
-
-        if (!oCache.some(obj => obj.url === req)) {
-          // $.log('有缓存但是没有这个URL的')
-          res = await getRes()
-          if ($.lodash_get(res, 'shouldCache')) {
-            // $.log('body:' + body.length + '个字符')
-            nCache[0].url = req
-            nCache[0].res = res
-            nCache[0].time = seconds
-            var mergedCache = oCache.concat(nCache)
-            $.setjson(mergedCache, 'parser_cache')
-          }
-        } else if (oCache.some(obj => obj.url === req)) {
-          const objIndex = oCache.findIndex(obj => obj.url === req)
-          if (seconds - oCache[objIndex].time > expirationTime) {
-            // $.log('有缓存且有url,但是过期了')
-            res = await getRes()
-            if ($.lodash_get(res, 'shouldCache')) {
-              // $.log('body:' + body.length + '个字符')
-              oCache[objIndex].res = res
-              oCache[objIndex].time = seconds
-              $.setjson(oCache, 'parser_cache')
-            }
-          } else {
-            // $.log('有缓存且有url且没过期')
-            const cachedBody = $.lodash_get(oCache[objIndex].res, 'body')
-            if (cachedBody == null || cachedBody == '') {
-              // $.log('但是body为null')
-              res = await getRes()
-              if ($.lodash_get(res, 'shouldCache')) {
-                // $.log('body:' + body.length + '个字符')
-                oCache[objIndex].res = res
-                oCache[objIndex].time = seconds
-                $.setjson(oCache, 'parser_cache')
-              }
-            } else {
-              // $.log('获取到缓存body')
-              res = oCache[objIndex].res
-            }
-          }
-        }
-      }
+      let res = await getRes()
 
       const { body, type: cachedType, status, headers } = res
+      // console.log(Object.keys(res))
 
       const newTypeHeaders = {
         ...headers,
@@ -194,7 +232,13 @@ let result = {}
       }
       const respHeaders = Object.keys(newHeaders).length > 0 ? newHeaders : newTypeHeaders
 
-      $.log($.toStr(respHeaders))
+      if (respHeaders['Content-Type']) {
+        respHeaders['Content-Type'] = utf8ContentType(respHeaders['Content-Type'])
+      } else if (respHeaders['content-type']) {
+        respHeaders['content-type'] = utf8ContentType(respHeaders['content-type'])
+      }
+
+      $.log('response', $.toStr(respHeaders))
 
       result = {
         response: {
@@ -230,6 +274,14 @@ let result = {}
   })
 
 // 通知
+function utf8ContentType(type) {
+  if (shouldFixCharset && /^text\/.+/i.test(type) && !/;\s*?charset\s*?=\s*?/i.test(type)) {
+    return `${type}; charset=UTF-8`
+  }
+  return type
+}
+
+// 通知
 async function notify(title, subt, desc, opts) {
   $.msg(title, subt, desc, opts)
 }
@@ -240,6 +292,71 @@ function istrue(str) {
     return true
   } else {
     return false
+  }
+}
+
+class JSONCache {
+  constructor(maxSize, maxAge, initialCache = {}) {
+    this.maxSize = maxSize // 最大字符串大小
+    this.maxAge = maxAge // 缓存过期时间
+    this.cache = initialCache // 初始缓存
+    this.keys = Object.keys(initialCache) // 缓存键的数组，用于实现 LRU 策略
+  }
+
+  set(key, value) {
+    const jsonValue = JSON.stringify(value)
+    if (jsonValue.length > this.maxSize) {
+      // console.warn(`Value for key ${key} is too large for cache.`)
+      return
+    }
+
+    // 如果缓存中已存在该键，则将其移动到最前面
+    const index = this.keys.indexOf(key)
+    if (index > -1) {
+      this.keys.splice(index, 1)
+    }
+    this.keys.unshift(key)
+
+    // 设置新的缓存
+    this.cache[key] = {
+      value,
+      timestamp: Date.now(),
+    }
+
+    // 如果缓存大小超出了限制，则删除最旧的缓存
+    while (JSON.stringify(this.cache).length > this.maxSize) {
+      const oldestKey = this.keys.pop()
+      delete this.cache[oldestKey]
+    }
+  }
+
+  get(key) {
+    const cacheItem = this.cache[key]
+    if (!cacheItem) {
+      return undefined
+    }
+
+    // 如果缓存已过期，则删除该缓存并返回 undefined
+    if (Date.now() - cacheItem.timestamp > this.maxAge) {
+      delete this.cache[key]
+      const index = this.keys.indexOf(key)
+      if (index > -1) {
+        this.keys.splice(index, 1)
+      }
+      return undefined
+    }
+
+    // 如果缓存存在且尚未过期，则返回其值
+    return cacheItem.value
+  }
+
+  clear() {
+    this.cache = {}
+    this.keys = []
+  }
+
+  size() {
+    return JSON.stringify(this.cache).length
   }
 }
 
