@@ -41,8 +41,14 @@ var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : nul
 var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;
 var nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+") : null;
 var nTilesColor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
-var cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null;
-var noCache = istrue(queryObject.nocache);
+var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
+var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
+var compatibilityOnly = istrue(queryObject.compatibilityOnly);
+var keepHeader = istrue(queryObject.keepHeader);
+var jsDelivr = istrue(queryObject.jsDelivr);
+
+var sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '';
+var sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '';
 
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
@@ -289,25 +295,6 @@ var name = "";
 var desc = "";
 var icon = "";
 
-//缓存有效期相关
-var currentTime = new Date();
-var seconds = Math.floor(currentTime.getTime() / 1000); // 将毫秒转换为秒
-var boxjsSetExp = $.getval("Parser_cache_exp") ?? "1";
-//设置有效期时间
-var expirationTime
-if (cachExp != null){
-  expirationTime = cachExp * 1 * 60 * 60;
-}else{
-  expirationTime = boxjsSetExp * 1 * 60 * 60;
-};
-//$.log(expirationTime);
-var nCache = [{"url":"","body":"","time":""}];
-var oCache = $.getval("parser_cache");
-//检查是否有缓存
-if (oCache != "" && oCache != null){
-  oCache = $.toObj(oCache);
-}else{oCache = null;};
-
 //修改名字和简介
 if (nName === null){
 	name = rewriteName;
@@ -338,64 +325,12 @@ let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).to
 const pluginIcon = icon;
 //$.log("插件图标：" + pluginIcon);
 
-  let body
-
-  if (noCache == true){
-	body = (await $.http.get(req)).body;
-}else if (oCache == null){
-    //$.log("一个缓存也没有")
-  body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
-  nCache[0].url = req;
-  nCache[0].body = body;
-  nCache[0].time = seconds;
-  $.setjson(nCache, 'parser_cache');
-  }else{
-    //删除大于一天的缓存防止缓存越来越大
-    oCache = oCache.filter(obj => {
-  return seconds - obj.time < 86400 ;
-});
-$.setjson(oCache, 'parser_cache');
-
- if (!oCache.some(obj => obj.url === req)){
-     //$.log("有缓存但是没有这个URL的")
-  body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
-  nCache[0].url = req;
-  nCache[0].body = body;
-  nCache[0].time = seconds;
-  var mergedCache = oCache.concat(nCache);
-$.setjson(mergedCache, 'parser_cache');
-  }else if (oCache.some(obj => obj.url === req)){
-    const objIndex = oCache.findIndex(obj => obj.url === req);
-    if (seconds - oCache[objIndex].time > expirationTime){
-      //$.log("有缓存且有url,但是过期了")
-  body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
-  oCache[objIndex].body = body;
-  oCache[objIndex].time = seconds;
-$.setjson(oCache, 'parser_cache');
-    }else{
-      //$.log("有缓存且有url且没过期")
-    if (oCache[objIndex].body == null || oCache[objIndex].body == ""){
-        //$.log("但是body为null")
-        body = (await $.http.get(req)).body;
-$.log('body字节数:' + body.length + '字');
-        oCache[objIndex].body = body;
-        oCache[objIndex].time = seconds;        $.setjson(oCache, "parser_cache");
-    }else{
-        //$.log("获取到缓存body")
-        body = oCache[objIndex].body;
-    }
-      };
-  };
-};
+let body = (await $.http.get(req)).body;
 
 eval(evJsori);
 eval(evUrlori);
 
 if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)){
-	$.log("test")
 body = body.match(/(^(?:\n|\r)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\/)/)[1].match(/[^\r\n]+/g);
 }else{
     body = body.match(/[^\r\n]+/g);};
@@ -415,8 +350,10 @@ let providers = [];
 let MITM = "";
 let others = [];       //不支持的内容
 
-let scname = "";       //脚本名
-let js = "";           //脚本链接
+let scname = "";       //脚本重写名
+let oriJs = "";        //原脚本链接
+let js = "";           //转换后的脚本链接
+let jsname = "";       //脚本名
 let arg = "";          //用户传入的argument
 let originalArg = "";  //原始argument
 let sctype = "";       //脚本类型
@@ -425,13 +362,11 @@ let rebody = "";       //是否需要body
 let size = "";         //允许最大body大小
 let proto = "";        //是否开启binary-body-mode
 let hdtype = "";       //HeaderRewrite 类型
+let oricronExp = "";   //原始cron表达式
 let cronExp = "";      //cron表达式
 let croName = "";      //cron任务名
-let cronJs = "";       //cron脚本链接
 let rejectType = "";   //重写reject类型
 let rejectPtn = "";    //重写reject正则
-let file = "";         //Mock的文件链接
-let fileName = "";     //文件名
 let mock2Reject = "";  //Mock转reject类型
 let tilesIcon = "";    //Stash磁贴图标
 let tilesColor = "";   //Stash磁贴颜色
@@ -483,6 +418,40 @@ x = "hostname=" + x;
 if (delNoteSc === true && x.match(/^#/) && x.indexOf("#!") == -1){
 		x = "";
 };
+
+let jscStatus,jsc2Status
+if (jsConverter != null){
+	jscStatus = isJsCon(jsConverter);}
+if (jsConverter2 != null){
+	jsc2Status = isJsCon(jsConverter2);}
+if (jsc2Status == true){jscStatus = false};
+
+let jsPre = "";
+let jsSuf = "";
+let oriType = queryObject.type.split("-")[0];
+let jsTarget = queryObject.target.split("-")[0];
+
+if (jscStatus == true || jsc2Status == true){
+jsPre = "http://script.hub/convert/_start_/";
+};
+if (jscStatus == true){
+jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script`;
+}else if (jsc2Status == true){
+jsSuf = `/_end_/_yuliu_.js?type=${oriType}-script&target=${jsTarget}-script&wrap_response=true`;
+};
+
+if (compatibilityOnly == true && (jscStatus == true || jsc2Status == true)){
+jsSuf = jsSuf + "&compatibilityOnly=true"
+};
+
+function isJsCon (arr) {
+	if (arr != null){
+		for (let i=0; i < arr.length; i++) {
+  const elem = arr[i];
+	if (x.indexOf(elem) != -1){return true};
+	};//循环结束
+  };//if (arr != null)
+}//isJsCon结束
 
 	let type = x.match(
 		/^#!|http-re|\x20header-|type=generic,|script-name=|cronexp=|\x20reject|\x20data=|^hostname|^force-http-engine-hosts|^skip-proxy|^always-real-ip|\x20(302|307|header)$|,REJECT[^,\s]*$|,DIRECT/
@@ -547,8 +516,10 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
                     
 				scname = x.split(/ *=/)[0].replace(/^#/,'');
 				
-				js = x.replace(/\x20/g,"").split("script-path=")[1].split(",")[0];
-                
+				oriJs = x.replace(/\x20/g,"").split("script-path=")[1].split(",")[0];
+				
+				js = toJsc(oriJs);
+				
                 if (x.match(/icon=/)){
                 tilesIcon = x.split("icon=")[1].split("&")[0];};
                 
@@ -590,10 +561,16 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
             };};};
                 
 				body[y - 1]?.match(/^#/) &&  script.push(body[y - 1]);
-                if (arg == ""){
+                if (arg == "" && oriJs == js){
 					script.push(x);
-				}else{
-		script.push(x.replace(originalArg,"") + arg);};
+				}else if (arg != ""){
+		script.push(
+			x.replace(originalArg,"")
+			.replace(oriJs,js) + arg);
+				}else if (arg == ""){
+		script.push(
+			x.replace(oriJs,js));
+				};
                 
             }else if (isStashiOS){
                 
@@ -641,7 +618,9 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				
 				ptn = x.replace(/(\{[0-9]+)\,([0-9]*\})/g,'$1t&zd;$2').replace(/\x20/g,"").split("pattern=")[1].split(",")[0].replace(/"/gi,'');
 				
-				js = x.replace(/\x20/g,"").split("script-path=")[1].split(",")[0];
+				oriJs = x.replace(/\x20/g,"").split("script-path=")[1].split(",")[0];
+				
+				js = toJsc(oriJs);
 
 				proto = x.replace(/\x20/gi,'').match('binary-body-mode=(true|1)') ? ', binary-body-mode=true' : '';
 				
@@ -716,10 +695,16 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
         arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
             };};};
 			
-                if (arg == ""){
+                if (arg == "" && oriJs == js){
 					script.push(x);
-				}else{
-		script.push(x.replace(originalArg,"") + arg);};
+				}else if (arg != ""){
+		script.push(
+			x.replace(originalArg,"")
+			.replace(oriJs,js) + arg);
+				}else if (arg == ""){
+		script.push(
+			x.replace(oriJs,js));
+				};
                 };
 				
 				}else if (x.match(/\x20header-/)){
@@ -746,12 +731,14 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 //Surge4脚本
 				ptn = x.replace(/\x20{2,}/g," ").split(" ")[1].replace(/"/gi,'');
 					
-				js = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
-					
-				sctype = x.match('http-response') ? 'response' : 'request';
+				oriJs = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
 					
 				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
-
+				
+				js = toJsc(oriJs);
+					
+				sctype = x.match('http-response') ? 'response' : 'request';
+				
 				proto = x.replace(/\x20/gi,'').match('binary-body-mode=(true|1)') ? ', binary-body-mode=true' : '';
 				
 				rebody = x.replace(/\x20/gi,'').match('requires-body=(true|1)') ? ', requires-body=true' : '';
@@ -824,10 +811,17 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 	if (x.indexOf(elem) != -1){
         arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
             };};};
-                if (arg == ""){
+			
+                if (arg == "" && oriJs == js){
 					script.push(x);
-				}else{
-		script.push(x.replace(originalArg,"") + arg);};
+				}else if (arg != ""){
+		script.push(
+	x.replace(originalArg,"")
+	.replace(oriJs,js) + arg);
+				}else if (arg == ""){
+		script.push(
+			x.replace(oriJs,js));
+				};
                 };
 
 				}else{others.push(x)};//整个http-re结束
@@ -861,11 +855,13 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 			case "cronexp=":
 
             if (x.match(/cronexp=(.+?),[^,]+?=/)){
-                cronExp = x.match(/cronexp=(.+?),[^,]+?=/)[1].replace(/"/g,'');
+                oricronExp = x.match(/cronexp=(.+?),[^,]+?=/)[1];
             }else{
-                cronExp = x.split("cronexp=")[1].replace(/"/g,'');
+                oricronExp = x.split("cronexp=")[1];
             };
-            
+			
+		cronExp = oricronExp.replace(/"/g,'');
+			
             if (isStashiOS){
 				
 				cronExp = cronExp.replace(/[^\s]+ ([^\s]+ [^\s]+ [^\s]+ [^\s]+ [^\s]+)/,'$1');
@@ -878,27 +874,79 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
         cronExp = nCronExp[i];   
             };};};
             
-				croName = x.split("=")[0].replace(/\x20/g,"").replace(/^#/,'')
+				croName = x.split("=")[0].replace(/\x20/g,"").replace(/^#/,'');
 				
-				cronJs = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
+				oriJs = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
+				
+				js = toJsc(oriJs);
+				
+			if (isLooniOS || isSurgeiOS || isShadowrocket){
+					if (x.match(/,\x20*argument\x20*=.+/)){
+						if (x.match(/,\x20*argument\x20*=\x20*"+.*?,.*?"+/)
+	){
+				originalArg = x.match(/(,\x20*argument\x20*=\x20*"+.*?,.*?"+)/)[1];
+	}else{
+				originalArg = x.match(/(,\x20*argument\x20*=[^,]*),?/)[1];}
+				}else{};
+
+				}else if (isStashiOS){
+					if (x.match(/,\x20*argument\x20*=.+/)){
+						if (x.match(/,\x20*argument\x20*=\x20*"+.*?,.*?"+/)
+	){
+				arg = x.match(/,\x20*argument\x20*=\x20*("+.*?,.*?"+)/)[1];
+				
+				if (arg.match(/^".+"$/)){
+				arg = `${noteKn6}argument: |-${noteKn8}` + arg.replace(/^"(.+)"$/,'$1');};
+	}else{
+				arg = `${noteKn6}argument: |-${noteKn8}` + x.replace(/,\x20*argument\x20*=/gi,",argument=").split(",argument=")[1].split(",")[0];}
+				
+				}else{};
+
+				};
                 
 				if (isLooniOS){
+				arg = originalArg;
+                
+            if (nArgTarget != null){
+	for (let i=0; i < nArgTarget.length; i++) {
+  const elem = nArgTarget[i];
+	if (x.indexOf(elem) != -1){
+        arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
+            };};};
 				
 				script.push(
-						`${noteK}cron "${cronExp}" script-path=${cronJs}, timeout=60, tag=${croName}`);
+						`${noteK}cron "${cronExp}" script-path=${js}, timeout=60, tag=${croName}${arg}`);
                 }else if (isStashiOS){
+                
+            if (nArgTarget != null){
+	for (let i=0; i < nArgTarget.length; i++) {
+  const elem = nArgTarget[i];
+	if (x.indexOf(elem) != -1){
+        arg = `${noteKn6}argument: |-${noteKn8}` + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
+            };};};
 					let noteKstatus = noteKn4.match(/#/) ? 'true' : 'false';
 					
-scriptBox.push({"noteK":noteKstatus,"jsurl":cronJs,"name":croName + "_" + y,"cron":cronExp});	
+scriptBox.push({"noteK":noteKstatus,"jsurl":js,"name":croName + "_" + y,"cron":cronExp,"argument":arg});	
                 }else if(isSurgeiOS || isShadowrocket){
-
-				body[y - 1]?.match(/^#/) &&  script.push(body[y - 1]);
-				if (x.match(/cronexp=(.+?),[^,]+?=/)){
+                
+            if (nArgTarget != null){
+	for (let i=0; i < nArgTarget.length; i++) {
+  const elem = nArgTarget[i];
+	if (x.indexOf(elem) != -1){
+        arg = ', argument="' + nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+") + '"';   
+            };};};
+			
+			if (arg != ""){
 				script.push(
-	x.replace(/(.+cronexp=).+?(,[^,]+?=.*)/,`$1"${cronExp}"$2`).replace(/"{2,}/g,'"'));}else{
-		script.push(
-			x.replace(/(.+cronexp=).*/,`$1"${cronExp}"`).replace(/"{2,}/g,'"')
-				)}
+		x.replace(originalArg,"")
+		.replace(oriJs,js)
+		.replace(oricronExp,'"' + cronExp + '"') + arg);
+			}else if (arg == ""){
+				script.push(
+		x.replace(oriJs,js)
+		.replace(oricronExp,'"' + cronExp + '"')
+		);
+			};
                 };
 				break;
 
@@ -962,26 +1010,40 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":cronJs,"name":croName + "_" + y,"cro
 			case " data=":
 				
 				ptn = x.replace(/\x20{2,}/g," ").split(" data=")[0].replace(/^#|"/g,"");
-				file = x.split(' data="')[1].split('"')[0];
-				fileName = file.substring(file.lastIndexOf('/') + 1);
-				scname = fileName.split(".")[0];
+				js = x.split(' data="')[1].split('"')[0];
+				scname = js.substring(js.lastIndexOf('/') + 1);
+				
+				x.search(/ header="/) != -1 ? mockHeader = x.split(' header="')[1].split('"')[0] : mockHeader = "";
+				
+				if (mockHeader != ""){
+					if (isSurgeiOS && keepHeader == true){
+						mockHeader = ` header="${mockHeader}"`;
+					}else if (isSurgeiOS && keepHeader == false){
+						mockHeader = "";
+					}else{
+						mockHeader = '&header=' + encodeURIComponent(mockHeader);
+					}
+				};
+				
+				js = isSurgeiOS ? js : `http://script.hub/convert/_start_/${js}/_end_/${scname}?type=mock${mockHeader}${sufkeepHeader}${sufjsDelivr}`;
+				
                 if (isSurgeiOS){
                     
 				body[y - 1]?.match(/^#/) &&  MapLocal.push(body[y - 1]);
-                MapLocal.push(`${noteK}${ptn} data="${file}"`);
-                }else if (fileName.match(/(img|dict|array|200|blank|tinygif)\.[^.]+$/i)){
+                MapLocal.push(`${noteK}${ptn} data="${js}"${mockHeader}`);
+                }else if (scname.match(/(img|dict|array|200|blank|tinygif)\.[^.]+$/i)){
                 
                 
-                if (fileName.match(/dict\.[^.]+$/i)){
+                if (scname.match(/dict\.[^.]+$/i)){
                     mock2Reject = "-dict";
                     
-                }else if (fileName.match(/array\.[^.]+$/i)){
+                }else if (scname.match(/array\.[^.]+$/i)){
                     mock2Reject = "-array";
                     
-                }else if (fileName.match(/(200|blank)\.[^.]+$/i)){
+                }else if (scname.match(/(200|blank)\.[^.]+$/i)){
                     mock2Reject = "-200";
                     
-                }else if (fileName.match(/(img|tinygif)\.[^.]+$/i)){
+                }else if (scname.match(/(img|tinygif)\.[^.]+$/i)){
                     mock2Reject = "-img";
                 };
                 
@@ -1003,22 +1065,21 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":cronJs,"name":croName + "_" + y,"cro
 				
 				}else{
                     
-                if (isLooniOS || isShadowrocket){
-                    
+                if (isLooniOS || isShadowrocket){   
                 body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
                 
                 script.push(
-			`${noteK}http-request ${ptn} script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js, tag=${scname}_${y}, argument=type=text/json&url=${file}`)
+			`${noteK}http-request ${ptn} script-path=${js}, timeout=60 ,tag=${scname}_${y}`)
                         
                 }else if (isStashiOS){
                     
                 body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 		
 		script.push(
-			`${noteK4}- match: ${ptn}${noteKn6}name: "echo-response"${noteKn6}type: request${noteKn6}timeout: 30${noteKn6}argument: |-${noteKn8}type=text/json&url=${file}`)
+			`${noteK4}- match: ${ptn}${noteKn6}name: "${scname}_${y}"${noteKn6}type: request${noteKn6}timeout: 60`)
 				
 				providers.push(
-							`${noteK2}"echo-response":${noteKn4}url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js${noteKn4}interval: 86400`);    
+							`${noteK2}"${scname}_${y}":${noteKn4}url: ${js}${noteKn4}interval: 86400`);    
                 };
 		};
 				break;
@@ -1126,9 +1187,18 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":cronJs,"name":croName + "_" + y,"cro
                  rules.push(
                     x.replace(/^#?(.+),(DIRECT$|REJECT)[^,]*$/,`${noteK2}- $1,$2`).replace(/- DEST-PORT/,"- DST-PORT"));   
                 };//整个rule结束
-                
+//开启脚本转换
+function toJsc (js) {
+	if (jscStatus == true || jsc2Status == true){
+				jsname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
+                		
+				return js = jsPre + js + jsSuf.replace(/_yuliu_/,jsname);
+		
+	}else{return js}
+};						             
 		} //switch结束
 	}
+	
 }; //循环结束
 
 if (isLooniOS){
@@ -1225,7 +1295,7 @@ for (let i = 0; i < scriptBox.length; i++) {
 	
 	providers.push(`${noteK2}"` + scriptBox[i].name + '":' + `${noteKn4}url: ` + scriptBox[i].jsurl + `${noteKn4}interval: 86400`);
 	}else{
-		cron.push(`${noteKn4}- name: "` + scriptBox[i].name + `"${noteKn6}cron: "` + scriptBox[i].cron + `"${noteKn6}timeout: 60`);
+		cron.push(`${noteKn4}- name: "` + scriptBox[i].name + `"${noteKn6}cron: "` + scriptBox[i].cron + `"${noteKn6}timeout: 60` + `${noteKn6}` + scriptBox[i].argument);
 		
 		providers.push(`${noteK2}"` + scriptBox[i].name + '":' + `${noteKn4}url: ` + scriptBox[i].jsurl + `${noteKn4}interval: 86400`);
 	}
@@ -1368,7 +1438,6 @@ others !="" && $.msg("不支持的类型已跳过",others,"点击查看原文，
     }
 	$.done(result);
 	})
-	
 
 function istrue(str) {
 	if (str == true || str == 1 || str == "true"|| str == "1"){
