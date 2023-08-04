@@ -1,9 +1,6 @@
 const TITLE = `Script Hub: 脚本转换`
 const NAME = `script-converter`
 
-const MAX_BODY_LENGTH = 500 * 1024
-const HTTP_TIMEOUT = 20 * 1000
-
 const shouldFixCharset = true
 const shouldFixLoonRedirectBody = true
 
@@ -17,6 +14,9 @@ $.isLanceX = () => 'undefined' != typeof $native
 if ($.isEgern() || $.isLanceX()) {
   var $rocket = {}
 }
+
+const MAX_BODY_LENGTH = ($.getval('Parser_body_max') ?? 500) * 1024
+const HTTP_TIMEOUT = ($.getval('Parser_http_timeout') ?? 20) * 1000
 
 let arg
 if (typeof $argument != 'undefined') {
@@ -51,7 +51,6 @@ let url
   const subconverter = queryObject.subconverter
   // let cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null
   // let noCache = istrue(queryObject.nocache)
-  // let timeout = istrue(queryObject.timeout)
 
   let setHeaders = {}
   if (setHeader) {
