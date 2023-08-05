@@ -1,3 +1,4 @@
+const _ = require('lodash')
 const fs = require('fs')
 const path = require('path')
 const Koa = require('koa')
@@ -97,7 +98,9 @@ const reqFn = async ({ ctx, scriptMap, baseUrl }) => {
   // console.log(`result`, result)
   ctx.response.status = result?.response?.status
   for (const [k, v] of Object.entries(result?.response?.headers)) {
+    // if (!/^content-length|content-encoding$/i.test(k)) {
     ctx.set(k, v)
+    // }
   }
   let body = result?.response?.body
 

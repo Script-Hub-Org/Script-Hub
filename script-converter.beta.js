@@ -241,11 +241,11 @@ var _scriptSonverterDone = (val = {}) => {
     }
     url = req || $request.url.replace(/_script-converter-(stash|surge|loon|shadowrocket)\.js$/i, '')
     let res
-    if (keepHeader) {
-      res = await http(url)
-    } else {
+    if (type === 'mock' && !keepHeader) {
       shouldRedirect = true
       res = redirect(url)
+    } else {
+      res = await http(url)
     }
 
     body = $.lodash_get(res, 'body')
@@ -335,6 +335,15 @@ $done({
     body = scriptBody
     status = 200
   }
+
+  try {
+    delete headers['content-length']
+    delete headers['Content-Length']
+    delete headers['content-encoding']
+    delete headers['Content-Encoding']
+  } catch (e) {}
+
+  // console.log(headers)
 
   let response = {
     status,
