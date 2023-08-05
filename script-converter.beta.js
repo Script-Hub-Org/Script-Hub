@@ -300,7 +300,7 @@ var _scriptSonverterDone = (val = {}) => {
   if (
     shouldFixLoonRedirectBody &&
     /^3\d{2}$/.test(status) &&
-    $.isLoon() &&
+    targetApp.startsWith('loon') &&
     (body == null || body == '' || body.length === 0)
   ) {
     body = 'loon'
