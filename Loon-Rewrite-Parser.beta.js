@@ -537,7 +537,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				originalArg = x.match(/(,\x20*argument\x20*=\x20*"+.*?,.*?"+)/)[1];
 	}else{
 				originalArg = x.match(/(,\x20*argument\x20*=[^,]*),?/)[1];}
-				}else{};
+				}else if (x.match(/,\x20*argument\x20*=\x20*(?:$|,)/)){
+					originalArg = x.match(/(,\x20*argument\x20*=\x20*(?:$|,))/)[1];};
 
 				}else if (isStashiOS){
 					if (x.match(/,\x20*argument\x20*=.+/)){
@@ -669,7 +670,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				originalArg = x.match(/(,\x20*argument\x20*=\x20*"+.*?,.*?"+)/)[1];
 	}else{
 				originalArg = x.match(/(,\x20*argument\x20*=[^,]*),?/)[1];}
-				}else{};
+				}else if (x.match(/,\x20*argument\x20*=\x20*(?:$|,)/)){
+					originalArg = x.match(/(,\x20*argument\x20*=\x20*(?:$|,))/)[1];};
 
 				}else if (isStashiOS){
 					if (x.match(/,\x20*argument\x20*=.+/)){
