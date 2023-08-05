@@ -21,10 +21,11 @@ const queryObject = parseQueryString(urlArg);
 //$.log("参数:" + $.toStr(queryObject));
 
 //目标app
-const isSurgeiOS = queryObject.target == "surge-module";
-const isStashiOS = queryObject.target == "stash-stoverride";
-const isLooniOS = queryObject.target == "loon-plugin";
-const isShadowrocket = queryObject.target == "shadowrocket-module";
+const targetApp = queryObject.target;
+const isSurgeiOS = targetApp == "surge-module";
+const isStashiOS = targetApp == "stash-stoverride";
+const isLooniOS = targetApp == "loon-plugin";
+const isShadowrocket = targetApp == "shadowrocket-module";
 
 var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
@@ -431,7 +432,7 @@ if (jsc2Status == true){jscStatus = false};
 let jsPre = "";
 let jsSuf = "";
 let oriType = queryObject.type.split("-")[0];
-let jsTarget = queryObject.target.split("-")[0];
+let jsTarget = targetApp.split("-")[0];
 
 if (jscStatus == true || jsc2Status == true){
 jsPre = "http://script.hub/convert/_start_/";
@@ -646,7 +647,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
                 
 				scname = js.substring(js.lastIndexOf('/') + 1);
 				
-				js = isSurgeiOS ? js : `http://script.hub/convert/_start_/${js}/_end_/${scname}?type=mock${echotype}${sufkeepHeader}${sufjsDelivr}`;
+				js = isSurgeiOS ? js : `http://script.hub/convert/_start_/${js}/_end_/${scname}?type=mock&target-app=${targetApp}${echotype}${sufkeepHeader}${sufjsDelivr}`;
 				if (isLooniOS){
 				body[y - 1]?.match(/^#/) && script.push(body[y - 1]);
 				
@@ -665,7 +666,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				body[y - 1]?.match(/^#/) && script.push("    " + body[y - 1]);
 				
 				script.push(
-					`${noteK4}- match: ${ptn}${noteKn6}name: "${scname}_${y}"${noteKn6}type: request${noteKn6}timeout: 60`)
+					`${noteK4}- match: ${ptn}${noteKn6}name: "${scname}_${y}"${noteKn6}type: request${noteKn6}timeout: 60${noteKn6}binary-mode: true`)
 				
 				providers.push(
 							`${noteK2}"${scname}_${y}":${noteKn4}url: ${js}${noteKn4}interval: 86400`);
