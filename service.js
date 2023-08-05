@@ -94,7 +94,6 @@ const reqFn = async ({ ctx, scriptMap, baseUrl }) => {
     url,
   }
   const result = await evalFn({ $request, scriptFilePath })
-  // TODO: Node.js 请求并传递非字符串的 body
   // console.log(`result`, result)
   ctx.response.status = result?.response?.status
   for (const [k, v] of Object.entries(result?.response?.headers)) {

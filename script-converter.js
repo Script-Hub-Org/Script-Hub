@@ -303,7 +303,8 @@ var _scriptSonverterDone = (val = {}) => {
     const scriptBody =
       typeof body === 'string'
         ? `
-$done({
+let done = $done
+done({
   response: {
       status: ${status},
       body: ${JSON.stringify(body)},
@@ -318,7 +319,8 @@ function strToArray(str) {
   }
   return ret
 }
-$done({
+let done = $done
+done({
   response: {
       status: ${status},
       headers: ${JSON.stringify(headers)},
@@ -343,19 +345,17 @@ $done({
     delete headers['Content-Encoding']
   } catch (e) {}
 
-  // console.log(headers)
-
-  let response = {
-    status,
-    headers,
-    body,
-  }
-
   if (evJsmodi) {
     eval(evJsmodi)
   }
   if (evUrlmodi) {
     eval($.lodash_get(await http(evUrlmodi), 'body'))
+  }
+
+  let response = {
+    status,
+    headers,
+    body,
   }
 
   result = {
@@ -473,8 +473,9 @@ async function http(url, opts = {}) {
     // $.log('ℹ️ res headers', $.toStr(headers))
     const contentType = $.lodash_get(headers, 'content-type') || $.lodash_get(headers, 'Content-Type')
 
-    body = $.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody')
+    body = $.lodash_get(res, 'rawBody') || $.lodash_get(res, 'body')
     // $.log('ℹ️ res body', body)
+    console.log(`ℹ️ req body type`, typeof body)
     bodyLength = body?.length
     $.log('ℹ️ res body length', bodyLength)
     if (bodyLength > MAX_BODY_LENGTH) {
