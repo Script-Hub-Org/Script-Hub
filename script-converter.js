@@ -28,6 +28,7 @@ let result = {}
 let jsDelivr
 let shouldRedirect
 let url
+
 !(async () => {
   if (!$.isRequest()) throw new Error('不是 request')
 
@@ -41,6 +42,10 @@ let url
 
   jsDelivr = queryObject.jsDelivr
 
+  const type = queryObject.type ?? ''
+  const target = queryObject.target ?? ''
+  const targetApp = queryObject['target-app'] ?? ''
+
   const keepHeader = queryObject.keepHeader
   const setHeader = queryObject.header ?? ''
   const setContentType = queryObject.contentType ?? ''
@@ -50,8 +55,6 @@ let url
   const evUrlmodi = queryObject.evalUrlmodi ?? ''
   const wrap_response = queryObject.wrap_response
   const compatibilityOnly = queryObject.compatibilityOnly
-  const type = queryObject.type ?? ''
-  const target = queryObject.target ?? ''
 
   const subconverter = queryObject.subconverter
   // let cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null
@@ -241,9 +244,13 @@ var _scriptSonverterDone = (val = {}) => {
     }
     url = req || $request.url.replace(/_script-converter-(stash|surge|loon|shadowrocket)\.js$/i, '')
     let res
-    if (type === 'mock' && !keepHeader) {
-      shouldRedirect = true
-      res = redirect(url)
+    if (type === 'mock') {
+      if (keepHeader) {
+        res = await http(url, { 'binary-mode': true })
+      } else {
+        shouldRedirect = true
+        res = redirect(url)
+      }
     } else {
       res = await http(url)
     }
@@ -303,15 +310,19 @@ var _scriptSonverterDone = (val = {}) => {
     const scriptBody =
       typeof body === 'string'
         ? `
+// 转换时间: ${new Date().toLocaleString('zh')}
 let done = $done
-done({
+
+let result = {
   response: {
       status: ${status},
       body: ${JSON.stringify(body)},
       headers: ${JSON.stringify(headers)},
     },
-})`
+}
+done(result)`
         : `
+// 转换时间: ${new Date().toLocaleString('zh')}
 function strToArray(str) {
   var ret = new Uint8Array(str.length)
   for (var i = 0; i < str.length; i++) {
@@ -319,14 +330,16 @@ function strToArray(str) {
   }
   return ret
 }
+
 let done = $done
-done({
+let result = {
   response: {
       status: ${status},
       headers: ${JSON.stringify(headers)},
       body: strToArray(${JSON.stringify(binArrayToStr(body))}),
     },
-})
+}
+done(result)
       `
     headers = {
       'Content-Type': 'text/plain; charset=UTF-8',
@@ -361,6 +374,8 @@ done({
   result = {
     response,
   }
+  // $.log(result)
+  // $.log($.toStr(result))
 })()
   .catch(async e => {
     $.logErr(e)
@@ -447,9 +462,16 @@ function redirect(url) {
 // 请求
 async function http(url, opts = {}) {
   $.log(`🔗 链接`, url)
+  let isBinary = $.lodash_get(opts, 'binary-mode')
+  if (isBinary) {
+    $.log(`二进制模式`)
+  }
   let res
   let body
   let bodyLength
+  // if (type === 'mock') {
+  //   $.lodash_set(opts, 'binary-mode', true)
+  // }
   try {
     res = await Promise.race([
       $.http.get({
@@ -473,9 +495,20 @@ async function http(url, opts = {}) {
     // $.log('ℹ️ res headers', $.toStr(headers))
     const contentType = $.lodash_get(headers, 'content-type') || $.lodash_get(headers, 'Content-Type')
 
-    body = $.lodash_get(res, 'rawBody') || $.lodash_get(res, 'body')
+    if (isBinary) {
+      body = $.lodash_get(res, 'rawBody') || $.lodash_get(res, 'body')
+    } else {
+      body = $.lodash_get(res, 'body') || $.lodash_get(res, 'rawBody')
+    }
+
     // $.log('ℹ️ res body', body)
-    console.log(`ℹ️ req body type`, typeof body)
+    // $.log(body)
+    // $.log($.toStr(body))
+    // console.log(body)
+    try {
+      $.log(`ℹ️ req body type`, typeof body)
+      $.log(`ℹ️ req body constructor`, body.constructor)
+    } catch (e) {}
     bodyLength = body?.length
     $.log('ℹ️ res body length', bodyLength)
     if (bodyLength > MAX_BODY_LENGTH) {
