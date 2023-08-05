@@ -343,19 +343,17 @@ $done({
     delete headers['Content-Encoding']
   } catch (e) {}
 
-  // console.log(headers)
-
-  let response = {
-    status,
-    headers,
-    body,
-  }
-
   if (evJsmodi) {
     eval(evJsmodi)
   }
   if (evUrlmodi) {
     eval($.lodash_get(await http(evUrlmodi), 'body'))
+  }
+
+  let response = {
+    status,
+    headers,
+    body,
   }
 
   result = {
