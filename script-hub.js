@@ -819,6 +819,12 @@ textarea::-webkit-resizer {
   font-size: 14px;
   font-weight: bold;
 }
+/* Fix checkbox style */
+.divstyle {
+  display: flex; 
+  align-items: flex-start;
+}
+
 
 </style>
   </head>
@@ -971,7 +977,7 @@ const htmls = `
           <input type="checkbox" id="del" v-model.lazy="del" />
           <label for="del">从转换结果中剔除被注释的重写</label>
         </div>
-        <div>
+        <div class="divstyle">
           <input type="checkbox" id="del" v-model.lazy="keepHeader" />
           <label for="keepHeader">保留 <code>Map Local</code>/<code>echo-response</code> 中的 <code>header</code>/<code>content-type</code>(占用内存多 但响应快)</label>
         </div>
