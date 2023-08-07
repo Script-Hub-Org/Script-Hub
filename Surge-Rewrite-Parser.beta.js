@@ -1184,7 +1184,7 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":js,"name":croName + "_" + y,"cron":c
                     rules.push(x.replace(/,REJECT-NO-DROP$/,",REJECT-DROP").replace(/,REJECT-(200|TINYGIF)/,",REJECT-IMG"));
                     
                 }else if(isShadowrocket){
-                    rules.push(x.replace(/^#?DEST-PORT *,/,`${noteK}DST-PORT,`));}else{rules.push(x);}//Loon Surge 火箭 rule处理完毕
+                    rules.push(x.replace(/^#?DEST-PORT *,/,`${noteK}DST-PORT,`));}else if (isSurgeiOS){rules.push(x.replace(/-(?:200|DICT|ARRAY|VIDEO|IMG)$/i,"-TINYGIF"));}//Loon Surge 火箭 rule处理完毕
                 
                 }else if (isStashiOS){
                     x = x.replace(/" "/g,"");
