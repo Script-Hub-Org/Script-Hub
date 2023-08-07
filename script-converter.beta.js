@@ -191,9 +191,8 @@ var _scriptSonverterDone = (val = {}) => {
     typeof val.body !== 'undefined') || ${wrap_response || $.lodash_get(arg, 'wrap_response') || false}
   ) {
     try {
-      if (val?.status?.startsWith('HTTP/1.1 ')) {
-        val?.status = Number(val.status.replace('HTTP/1.1 ', ''))
-      }
+      let statusCode = parseInt(val?.status?.split(' ').pop(), 10)
+      if (!isNaN(statusCode)) { val.status = statusCode }
     } catch (e) {}
     result = { response: val }
   } else {
