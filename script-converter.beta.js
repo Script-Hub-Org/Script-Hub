@@ -190,6 +190,11 @@ var _scriptSonverterDone = (val = {}) => {
     typeof val.headers !== 'undefined' &&
     typeof val.body !== 'undefined') || ${wrap_response || $.lodash_get(arg, 'wrap_response') || false}
   ) {
+    try {
+      if (val?.status?.startsWith('HTTP/1.1 ')) {
+        val?.status = Number(val.status.replace('HTTP/1.1 ', ''))
+      }
+    } catch (e) {}
     result = { response: val }
   } else {
     result = val
