@@ -191,8 +191,13 @@ var _scriptSonverterDone = (val = {}) => {
     typeof val.body !== 'undefined') || ${wrap_response || $.lodash_get(arg, 'wrap_response') || false}
   ) {
     try {
-      let statusCode = parseInt(val?.status?.split(' ').pop(), 10)
-      if (!isNaN(statusCode)) { val.status = statusCode }
+      for (const part of val?.status?.split(' ')) {
+        const statusCode = parseInt(part, 10)
+        if (!isNaN(statusCode)) {
+          val.status = statusCode
+          break
+        }
+      }
     } catch (e) {}
     result = { response: val }
   } else {
