@@ -735,8 +735,11 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				ptn = x.replace(/\x20{2,}/g," ").split(" ")[1].replace(/"/gi,'');
 					
 				oriJs = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
-					
-				scname = oriJs.substring(oriJs.lastIndexOf('/') + 1, oriJs.lastIndexOf('.') );
+                
+            if (x.search(/, *tag *=/) != -1){
+				scname = x.replace(/\x20/g,"").split("tag=")[1].split(",")[0];
+            }else{
+				scname = oriJs.substring(oriJs.lastIndexOf('/') + 1, oriJs.lastIndexOf('.'));};
 				
 				js = toJsc(oriJs);
 					
