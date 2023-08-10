@@ -518,7 +518,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 					
 				oriJs = x.replace(/\x20/gi,"").split("script-path=")[1].split(",")[0];
 					
-				scname = js.substring(js.lastIndexOf('/') + 1, js.lastIndexOf('.') );
+				scname = oriJs.substring(oriJs.lastIndexOf('/') + 1, oriJs.lastIndexOf('.') );
 				
 				js = toJsc(oriJs);
 				
