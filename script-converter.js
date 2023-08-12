@@ -15,7 +15,7 @@ if ($.isEgern() || $.isLanceX()) {
   var $rocket = {}
 }
 
-const MAX_BODY_LENGTH = ($.getval('Parser_body_max') ?? 500) * 1024
+const MAX_BODY_LENGTH = ($.getval('Parser_body_max') ?? 600) * 1024
 const HTTP_TIMEOUT = ($.getval('Parser_http_timeout') ?? 20) * 1000
 
 let arg
