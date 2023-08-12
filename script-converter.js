@@ -190,6 +190,15 @@ var _scriptSonverterDone = (val = {}) => {
     typeof val.headers !== 'undefined' &&
     typeof val.body !== 'undefined') || ${wrap_response || $.lodash_get(arg, 'wrap_response') || false}
   ) {
+    try {
+      for (const part of val?.status?.split(' ')) {
+        const statusCode = parseInt(part, 10)
+        if (!isNaN(statusCode)) {
+          val.status = statusCode
+          break
+        }
+      }
+    } catch (e) {}
     result = { response: val }
   } else {
     result = val
@@ -300,7 +309,7 @@ var _scriptSonverterDone = (val = {}) => {
   if (
     shouldFixLoonRedirectBody &&
     /^3\d{2}$/.test(status) &&
-    $.isLoon() &&
+    targetApp.startsWith('loon') &&
     (body == null || body == '' || body.length === 0)
   ) {
     body = 'loon'

@@ -1119,7 +1119,7 @@ const htmls = `
 
     </div>
     <footer>
-      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.14.4</a></p>
+      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.14.5</a></p>
     </footer>
     <script>
       const openAllDetails = () => document.querySelectorAll('details').forEach(i => i.setAttribute('open', ""))
