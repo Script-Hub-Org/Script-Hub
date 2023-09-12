@@ -363,7 +363,7 @@ let rewType = "";      //302/307/header重写类型
 let scriptBox = [];    //存放脚本信息待下一步处理
 
 for await (var [y, x] of body.entries()) {
-	x = x.replace(/^ *(#|;|\/\/)/,'#').replace(/, *REJECT/i,',REJECT').replace(/ reject/i,' reject').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/^ *(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip)\x20*=/,'$1=').replace(/ *, *enabled *= *false/,"");
+	x = x.replace(/^ *(#|;|\/\/)/,'#').replace(/, *REJECT/i,',REJECT').replace(/ reject/i,' reject').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/^ *(hostname|force-http-engine-hosts|skip-proxy|real-ip)\x20*=/,'$1=').replace(/^ *always-real-ip *=/,'real-ip=')replace(/ *, *enabled *= *false/,"");
 //去掉注释
 if(Pin0 != null)	{
 	for (let i=0; i < Pin0.length; i++) {
@@ -378,7 +378,7 @@ if(Pin0 != null)	{
 if(Pout0 != null){
 	for (let i=0; i < Pout0.length; i++) {
   const elem = Pout0[i];
-	if (x.indexOf(elem) != -1 && x.search(/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip)=/) == -1){
+	if (x.indexOf(elem) != -1 && x.search(/^(hostname|force-http-engine-hosts|skip-proxy|real-ip)=/) == -1){
 		x = "#" + x;
 	}else{};
 };//循环结束
