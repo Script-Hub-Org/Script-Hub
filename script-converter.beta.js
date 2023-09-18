@@ -112,10 +112,6 @@ if (typeof $response !== 'undefined') {
 `
   const qxMock = `
 // QX 相关
-var window = globalThis
-window.$done = $done
-var global = globalThis
-global.$done = $done
 var setInterval = () => {}
 var clearInterval = () => {}
 var $task = {
@@ -214,7 +210,12 @@ var _scriptSonverterDone = (val = {}) => {
     console.log(result)
   }
   $done(result)
-}`
+}
+var window = globalThis
+window.$done = _scriptSonverterDone
+var global = globalThis
+global.$done = _scriptSonverterDone
+`
 
   let body
   let status
