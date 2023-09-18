@@ -112,6 +112,10 @@ if (typeof $response !== 'undefined') {
 `
   const qxMock = `
 // QX 相关
+var window = globalThis
+window.$done = $done
+var global = globalThis
+global.$done = $done
 var setInterval = () => {}
 var clearInterval = () => {}
 var $task = {
