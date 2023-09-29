@@ -210,7 +210,12 @@ var _scriptSonverterDone = (val = {}) => {
     console.log(result)
   }
   $done(result)
-}`
+}
+var window = globalThis
+window.$done = _scriptSonverterDone
+var global = globalThis
+global.$done = _scriptSonverterDone
+`
 
   let body
   let status
