@@ -200,6 +200,17 @@ var _scriptSonverterDone = (val = {}) => {
         }
       }
     } catch (e) {}
+    if (!val.status) {
+      val.status = 200
+    }
+    if (!val.headers) {
+      val.headers = {
+        'Content-Type': 'text/plain; charset=UTF-8',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+      }
+    }
     result = { response: val }
   } else {
     result = val
