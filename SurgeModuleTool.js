@@ -3,7 +3,7 @@
 // icon-color: blue; icon-glyph: cloud-download-alt;
 
 // prettier-ignore
-let ToolVersion = "2.00";
+let ToolVersion = "2.01";
 
 async function delay(milliseconds) {
   var before = Date.now()
@@ -27,7 +27,7 @@ function convertToValidFileName(str) {
 }
 
 function addLineAfterLastOccurrence(text, addition) {
-  const regex = /^#!.*$/gm
+  const regex = /^#!.+?$/gm
   const matchArray = text.match(regex)
   const lastIndex = matchArray ? matchArray.length - 1 : -1
 
