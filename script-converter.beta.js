@@ -181,6 +181,7 @@ var $notify = (title = '', subt = '', desc = '', opts) => {
   console.log(title, subt, desc, toEnvOpts(opts))
   $notification.post(title, subt, desc, toEnvOpts(opts))
 }
+var _scriptSonverterOriginalDone = $done
 var _scriptSonverterDone = (val = {}) => {
   let result
   if (
@@ -209,7 +210,7 @@ var _scriptSonverterDone = (val = {}) => {
   } catch (e) {
     console.log(result)
   }
-  $done(result)
+  _scriptSonverterOriginalDone(result)
 }
 var window = globalThis
 window.$done = _scriptSonverterDone
