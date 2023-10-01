@@ -741,7 +741,7 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				cronJs = x.replace(/^#/,"")
 				.replace(/\x20{2,}/g," ")
 				.replace(cronExp,"")
-				.split(/ *, */)[0];
+				.split(/ *, */)[0].replace(/ /,"");
 				
             if (nCron != null){
 	for (let i=0; i < nCron.length; i++) {
