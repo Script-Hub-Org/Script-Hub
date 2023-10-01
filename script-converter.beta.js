@@ -272,7 +272,7 @@ global.$done = _scriptSonverterDone
     let res
     if (type === 'mock') {
       if (keepHeader) {
-        res = await http(url, { 'binary-mode': true })
+        res = await http(url, { 'binary-mode': true }, type)
       } else {
         shouldRedirect = true
         res = redirect(url)
@@ -486,7 +486,7 @@ function redirect(url) {
   }
 }
 // 请求
-async function http(url, opts = {}) {
+async function http(url, opts = {}, type) {
   $.log(`🔗 链接`, url)
   let isBinary = $.lodash_get(opts, 'binary-mode')
   if (isBinary) {
@@ -533,7 +533,7 @@ async function http(url, opts = {}) {
     // console.log(body)
     try {
       $.log(`ℹ️ req body type`, typeof body)
-      $.log(`ℹ️ req body constructor`, body.constructor)
+      // $.log(`ℹ️ req body constructor`, body.constructor)
     } catch (e) {}
     bodyLength = body?.length
     $.log('ℹ️ res body length', bodyLength)
@@ -552,9 +552,13 @@ async function http(url, opts = {}) {
     } else {
       throw new Error(e)
     }
-    notify(TITLE, `⚠️ ${info} 将启用 302 跳转`, `无法使用自定义 content-type/header\n${url}`, url)
-    shouldRedirect = true
-    return redirect(url)
+    if (type === 'mock') {
+      notify(TITLE, `⚠️ ${info} 将启用 302 跳转`, `无法使用自定义 content-type/header\n${url}`, url)
+      shouldRedirect = true
+      return redirect(url)
+    } else {
+      throw new Error(info)
+    }
   }
 }
 // 通知
