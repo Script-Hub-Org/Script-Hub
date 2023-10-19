@@ -8,7 +8,7 @@ RUN corepack enable
 WORKDIR /app
 COPY . ./
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile
 
 EXPOSE 9100
 EXPOSE 9101
