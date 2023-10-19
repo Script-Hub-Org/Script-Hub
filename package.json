@@ -19,5 +19,8 @@
     "nodemon": "^3.0.0",
     "tough-cookie": "^4.0.0",
     "vm2": "^3.9.19"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
   }
 }
