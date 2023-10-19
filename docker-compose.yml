@@ -1,0 +1,13 @@
+version: "3"
+services:
+  script-hub:
+    image: "ghcr.io/script-hub-org/script-hub:latest"
+    ports:
+      - "9100:9100"
+      - "9101:9101"
+    environment:
+      # - "PORT=9100"
+      # - "BETA_PORT=9101"
+      # - "HOST=0.0.0.0"
+      # - "BASE_URL=https://xxx.com"
+      # - "BETA_BASE_URL=https:beta.//xxx.com"
