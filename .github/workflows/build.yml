@@ -18,6 +18,10 @@ jobs:
       contents: read
       packages: write
 
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -48,7 +52,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          platforms: ${{matrix.platform}}
           push: true
-          platforms: all
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
