@@ -1329,6 +1329,9 @@ const htmls = `
   },
     computed: {
       result: function () {
+        if (this.src && this.src.startsWith('https://quantumult.app/x/open-app/add-resource')) {
+          return '⚠️⚠️⚠️ 你填入的是 QX 一键导入链接. 请安装 https://t.me/h5683577/211 然后在浏览器中预览资源 分别转换规则集和重写'
+        }
 				const fields = {}
         if (this.jsc_all) {
           fields.jsc = '.'
