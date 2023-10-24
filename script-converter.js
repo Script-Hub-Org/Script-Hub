@@ -401,7 +401,7 @@ done(result)
     response,
   }
   // $.log(result)
-  // $.log($.toStr(result))
+  // $.log($.toStr(headers))
 })()
   .catch(async e => {
     $.logErr(e)
