@@ -865,14 +865,14 @@ scriptBox.push({"jsurl":js,"name":croName + "_" + y,"cron":cronExp,"argument":ar
                     };
 				
 				}else{
-                    
+//规则rule
                     if (isLooniOS){
                     body[y - 1]?.match(/^#/)  && rules.push(body[y - 1]);
 					rules.push(x);
                     
                     }else if (isSurgeiOS || isShadowrocket){
                     if (x.match(/^#?(DOM|USER|URL|IP|GEO)[^,]+,[^,]+$/i) || x.match(/proxy$/i)){
-	x = "";}else{rules.push(x.replace(/, *REJECT/i,",REJECT").replace(/, *no-resolve*/i,",no-resolve"));};
+	x = "";}else{rules.push(x.replace(/, *REJECT(-\w+)?/i,",REJECT").replace(/, *no-resolve.*/i,",no-resolve"));};
                         
                     }else if(isStashiOS){
                         
@@ -900,7 +900,7 @@ scriptBox.push({"jsurl":js,"name":croName + "_" + y,"cron":cronExp,"argument":ar
                         }else if (x.match(/^#?(DOM|USER|URL|IP|GEO)[^,]+,[^,]+$/i) || x.match(/proxy$/i)){ x = "";}else if(type.match(/^#?(USER-AGENT|IP-CIDR|GEOIP|IP-ASN|DOMAIN)/)){
                             body[y - 1]?.match(/^#/)  && rules.push("    " + body[y - 1]);
 					
-					rules.push(x.replace(/\x20/g,"").replace(/.*DOMAIN-SET.+/,"").replace(/,REJECT.+/,",REJECT").replace(/^#?(.+)/,`${noteK2}- $1`))    
+					rules.push(x.replace(/\x20/g,"").replace(/.*DOMAIN-SET.+/,"").replace(/, *REJECT(-\w+)?/,",REJECT").replace(/, *no-resolve.*/i,",no-resolve").replace(/^#?(.+)/,`${noteK2}- $1`))    
                         }else{others.push(x)};
                     }//Stash rules处理完毕
                 }//rules处理完毕
