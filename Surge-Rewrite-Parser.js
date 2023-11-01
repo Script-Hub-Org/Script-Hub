@@ -455,7 +455,7 @@ function isJsCon (arr) {
 }//isJsCon结束
 
 	let type = x.match(
-		/^#!|http-re|\x20header-|type=generic,|script-name=|cronexp=|\x20reject|\x20data=|^hostname|^force-http-engine-hosts|^skip-proxy|^always-real-ip|\x20(302|307|header)$|,REJECT[^,\s]*$|,DIRECT/
+		/^#!|http-re|\x20header-|type=generic,|script-name=|cronexp=|\x20reject|\x20data=|^hostname|^force-http-engine-hosts|^skip-proxy|^always-real-ip|\x20(302|307|header)$|,REJECT|,DIRECT/
 	)?.[0];
 //判断注释
 if (isLooniOS || isSurgeiOS || isShadowrocket){
@@ -1193,7 +1193,7 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":js,"name":croName + "_" + y,"cron":c
                     x = x.replace(/" "/g,"");
                     body[y - 1]?.match(/^#/) && rules.push("    " + body[y - 1]);
                  rules.push(
-                    x.replace(/^#?(.+),(DIRECT$|REJECT)[^,]*$/,`${noteK2}- $1,$2`).replace(/- DEST-PORT/,"- DST-PORT"));   
+                    x.replace(/^#?(.+),(DIRECT$|REJECT.*$)/,`${noteK2}- $1,$2`).replace(/- DEST-PORT/,"- DST-PORT"));   
                 };//整个rule结束
 //开启脚本转换
 function toJsc (js) {
