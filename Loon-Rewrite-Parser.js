@@ -872,7 +872,7 @@ scriptBox.push({"jsurl":js,"name":croName + "_" + y,"cron":cronExp,"argument":ar
                     
                     }else if (isSurgeiOS || isShadowrocket){
                     if (x.match(/^#?(DOM|USER|URL|IP|GEO)[^,]+,[^,]+$/i) || x.match(/proxy$/i)){
-	x = "";}else{rules.push(x.replace(/, *REJECT.*/i,",REJECT"));};
+	x = "";}else{rules.push(x.replace(/, *REJECT/i,",REJECT").replace(/, *no-resolve*/i,",no-resolve"));};
                         
                     }else if(isStashiOS){
                         
