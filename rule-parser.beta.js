@@ -89,12 +89,12 @@ let ruleValue          //规则
 for await (var [y, x] of body.entries()) {
 	x = x.replace(/^payload:/,'').replace(/^ *(#|;|\/\/)/,'#').replace(/ *- /,'').replace(/(^[^#].+)\x20+\/\/.+/,'$1').replace(/(\{[0-9]+)\,([0-9]*\})/g,'$1t&zd;$2').replace(/(^[^U].*(\[|=|{|\\|\/.*\.js).*)/i,"").replace(/'|"/g,"").replace(/^(\.|\*|\+)\.?/,"DOMAIN-SUFFIX,");
 	
-	if (!x.match(/^ *#/) && !x.match(/,/) && !x.match(/ *|\n*/)){
+	if (!x.match(/^ *#/) && !x.match(/,/) && x != "") {
 		if (x.search(/[0-9]\/[0-9]/) != -1){
 			x = "IP-CIDR," + x;
 		}else if (x.search(/::/) != -1){
 			x = "IP-CIDR6," + x;
-		}else{x = "DOMAIN," + x + y;}
+		}else{x = "DOMAIN," + x;}
 	};
 //去掉注释
 if(Rin0 != null)	{
