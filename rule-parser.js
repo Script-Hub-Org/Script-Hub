@@ -92,7 +92,7 @@ for await (var [y, x] of body.entries()) {
 	if (!x.match(/^ *#/) && !x.match(/,/) && x != "") {
 		if (x.search(/[0-9]\/[0-9]/) != -1){
 			x = "IP-CIDR," + x;
-		}else if (x.search(/::/) != -1){
+		}else if (x.search(/([0-9]|[a-z]):([0-9]|[a-z])/) != -1){
 			x = "IP-CIDR6," + x;
 		}else{x = "DOMAIN," + x;}
 	};
