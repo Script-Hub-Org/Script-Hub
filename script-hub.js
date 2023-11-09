@@ -845,7 +845,7 @@ const htmls = `
       <!--font-size: 16px;  style=" position: relative; top: -3px; "-->
       <small style=" position: relative; top: 7px; ">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B" target="_blank">如何选择类型</a></small>
       <div class="flex-container">
-      <div>
+      <div style="white-space: nowrap;">
       
         <code>&nbsp;来源类型: </code>
         <div v-for="item in types">
