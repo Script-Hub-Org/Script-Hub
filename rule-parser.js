@@ -33,6 +33,8 @@ const isSurgetarget = queryObject.target == "surge-rule-set";
 const isStashtarget = queryObject.target == "stash-rule-set";
 const isLoontarget = queryObject.target == "loon-rule-set";
 const isRockettarget = queryObject.target == "shadowrocket-rule-set";
+const isSurgedomainset = queryObject.target == "surge-domain-set";
+const isSurgedomainset2 = queryObject.target == "surge-domain-set2";
 
 if (queryObject.target == 'rule-set'){
 	if (appUa.search(/Surge|LanceX|Egern|Stash|Loon|Shadowrocket/i) != -1){
@@ -56,6 +58,7 @@ if (queryObject.target == 'rule-set'){
 var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var ipNoResolve = istrue(queryObject.nore);
+var sni = queryObject.sni != undefined ? queryObject.sni.split("+") : null;
 
 var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
@@ -80,6 +83,7 @@ eval(evUrlori);
 	
 let others = [];       //不支持的规则
 let ruleSet = [];      //解析过后的规则
+let domainSet = [];    //域名集
 let outRules = [];     //被排除的规则
 
 let noResolve          //ip规则是否开启不解析域名
@@ -118,10 +122,20 @@ if(Rout0 != null){
 
 //ip规则不解析域名
 if(ipNoResolve === true){
-	if (x.match(/^ip6?-c/i) != null){
+	if (x.match(/^ip6?-[ca]/i) != null){
 		x = x.replace(/(.+)/,"$1,no-resolve")
 	}else{};
 }else{};//增加ip规则不解析域名结束
+
+//sni嗅探
+if (sni != null){
+	for (let i=0; i < sni.length; i++) {
+  const elem = sni[i];
+	if (x.indexOf(elem) != -1 && x.search(/^ip6?-[ca]/i) == -1){
+		x = x.replace(/(.+)/,"$1,extended-matching")
+	};
+};//循环结束
+};//启用sni嗅探结束
 
 	x = x.replace(/^#.+/,'').replace(/^host-wildcard/i,'HO-ST-WILDCARD').replace(/^host/i,'DOMAIN').replace(/^dest-port/i,'DST-PORT').replace(/^ip6-cidr/i,'IP-CIDR6')
 	
@@ -129,7 +143,7 @@ if(ipNoResolve === true){
 	
 	if (x.match(/^;#/)){
 		outRules.push(x.replace(/^;#/,"").replace(/^HO-ST/i,'HOST'))
-	}else if (x.match(/^(HO-ST|U|PROTOCOL)/i)){
+	}else if (x.match(/^(HO-ST|U|PROTOCOL|OR|AND|NOT)/i)){
 		
 		others.push(x.replace(/^HO-ST/i,'HOST'))
 
@@ -152,7 +166,7 @@ if(ipNoResolve === true){
 	if (x.match(/^;#/)){
 		
 		outRules.push(x.replace(/^;#/,"").replace(/^HO-ST/i,'HOST'))
-	}else if (x.match(/^(HO-ST|DST-PORT|PROTOCOL|PROCESS-NAME)/i)){
+	}else if (x.match(/^(HO-ST|DST-PORT|PROTOCOL|PROCESS-NAME|OR|AND|NOT)/i)){
 		others.push(x.replace(/^HO-ST/i,'HOST'))
 
 	}else if (x!=""){
@@ -167,7 +181,7 @@ if(ipNoResolve === true){
 			`${ruleType},${ruleValue}${noResolve}`
 			)
 	};
-	}else if (isSurgeiOS || isShadowrocket){
+	}else if (isSurgeiOS || isShadowrocket || isSurgedomainset || isSurgedomainset2){
 		
 		if (x.match(/^;#/)){
 		
@@ -176,9 +190,12 @@ if(ipNoResolve === true){
 		
 		others.push(x.replace(/^HO-ST/i,'HOST'))
 
+	}else if (x.match(/^(OR|AND|NOT)/i)){
+		ruleSet.push(x);
 	}else if (x!=""){
 		
 		noResolve = x.replace(/\x20/g,"").match(/,no-resolve/i) ? ",no-resolve" : '';
+		dSni = x.replace(/\x20/g,"").match(/,extended-matching/i) ? ",extended-matching" : '';
 		
 		ruleType = x.split(/ *, */)[0].toUpperCase().replace(/^PROCESS-PATH/i,"PROCESS-NAME");
         
@@ -189,7 +206,7 @@ if(ipNoResolve === true){
 		ruleValue = x.split(/ *, */)[1];
 		
 		ruleSet.push(
-			`${ruleType},${ruleValue}${noResolve}`)
+			`${ruleType},${ruleValue}${noResolve}${dSni}`)
 	};
 	};
 	
@@ -205,6 +222,20 @@ if (isStashiOS){
 	ruleSet = (ruleSet[0] || '') && `#规则数量:${ruleNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\npayload:\n${ruleSet.join("\n")}`;
 }else if (isSurgeiOS || isShadowrocket || isLooniOS){
 	ruleSet = (ruleSet[0] || '') && `#规则数量:${ruleNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n${ruleSet.join("\n")}`;
+}else if (isSurgedomainset || isSurgedomainset2){
+	domainSet = ruleSet.filter((ruleSet) => ruleSet.search(/^DOMAIN(,|-SUFFIX)/) != -1);
+	
+	ruleSet = ruleSet.filter((ruleSet) => ruleSet.search(/^DOMAIN(,|-SUFFIX)/) == -1);
+	
+ruleNum2 = ruleSet.length;
+domainNum = domainSet.length;
+
+	if (isSurgedomainset){
+		ruleSet = (domainSet[0] || '') && `#总规则数量:${ruleNum}\n#域名规则数量:${domainNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n` + domainSet.join("\n").replace(/^DOMAIN,/mg,"").replace(/^DOMAIN-SUFFIX,/mg,".").replace(/^(.+),?.*/mig,"$1");
+	}else if (isSurgedomainset2){
+		ruleSet = (ruleSet[0] || '') && `#总规则数量:${ruleNum}\n#非域名规则数量:${ruleNum2}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n${ruleSet.join("\n")}`
+	};
+	
 }
 
 body = `${ruleSet}`.replace(/t&zd;/g,',').replace(/ ;#/g," ");
