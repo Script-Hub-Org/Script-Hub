@@ -858,8 +858,8 @@ const htmls = `
       <div>
         <code>&nbsp;目标类型: </code>
         <template v-for="item in targets">
-          <div v-if="type === 'rule-set' ? item.value.endsWith('rule-set') : ( item.value.endsWith('-rule-set') ? false : ( type.endsWith('-script') ? item.value.endsWith('-script') : !item.value.endsWith('-script') ) ) ">
-            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model.lazy="target" :disabled="item.disabled || (type.endsWith('-script') && !item.value.endsWith('-script')) || (type === 'rule-set' && !item.value.endsWith('rule-set')) || (type === 'plain-text' && item.value !== 'plain-text') " />
+          <div v-if="type === 'rule-set' ? (item.value.endsWith('rule-set') || item.value.includes('domain-set')) : ( (item.value.endsWith('-rule-set')||item.value.includes('domain-set')) ? false : ( type.endsWith('-script') ? item.value.endsWith('-script') : !item.value.endsWith('-script') ) ) ">
+            <input type="radio" :id="'target-' + item.value" :value="item.value" v-model.lazy="target" :disabled="item.disabled || (type.endsWith('-script') && !item.value.endsWith('-script')) || (type === 'rule-set' && (!item.value.endsWith('rule-set') && !item.value.includes('domain-set'))) || (type === 'plain-text' && item.value !== 'plain-text') " />
             <label :for="'target-' + item.value" class="radio-label">{{item.label}}</label>
           </div>
         </template>
@@ -885,7 +885,7 @@ const htmls = `
       
     </details>
 
-    <template v-if="!target || !type || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
+    <template v-if="!target || !type || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">什么时候应该启用脚本转换</a></small>
         <details>
           <summary>启用脚本转换</summary>
@@ -949,7 +949,7 @@ const htmls = `
       </div>
       <br/>
 
-      <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>名称 简介</summary>
         <span>名字+简介 ，名字和简介以"+"相连，可缺省名字或简介</span>
         <textarea id="n" v-model.lazy="n" placeholder=""></textarea>
@@ -960,7 +960,7 @@ const htmls = `
         <textarea id="filename" v-model.lazy="filename" :placeholder=" target === 'plain-text' ? '当前为纯文本类型, 此处为包含后缀的完整文件名' : '不包含后缀' "></textarea>
       </details>
 
-      <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>重写相关</summary>
 
         <details>
@@ -987,7 +987,7 @@ const htmls = `
         </div>
       </details>
 
-      <details v-if="!target || target.endsWith('rule-set')">
+      <details v-if="!target || (target.endsWith('rule-set') || target.includes('domain-set'))">
         <summary>规则相关</summary>
         <details>
           <summary>保留规则</summary>
@@ -1005,7 +1005,7 @@ const htmls = `
 
 
 
-      <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改 MITM 主机名</summary>
         <details>
           <summary>添加 MITM 主机名</summary>
@@ -1021,7 +1021,7 @@ const htmls = `
       </details>
       
 
-      <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改定时任务</summary>
         <details>
           <summary>修改定时任务(cron)</summary>
@@ -1036,7 +1036,7 @@ const htmls = `
       </details>
 
 
-      <details v-if="!target || (!target.endsWith('rule-set') && !target.endsWith('-script') && target !== 'plain-text' )">
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改参数</summary>
         <details>
           <summary>修改参数(arg)</summary>
@@ -1074,9 +1074,14 @@ const htmls = `
         </div>
       </details>
 
-      <div v-if="!target || target.endsWith('rule-set') ">
+      <div v-if="!target || (target.endsWith('rule-set') || target.includes('domain-set')) ">
         <input type="checkbox" id="nore" v-model.lazy="nore" />
         <label class="button-over" for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
+        <details>
+          <summary>SNI 扩展匹配(extended-matching)</summary>
+          <span>根据关键词开启 Surge 的 SNI 扩展匹配(extended-matching) 多关键词以"+"分隔</span>
+          <textarea id="sni" v-model.lazy="sni" placeholder=""></textarea>
+        </details>
       </div>
 
       <div v-if="!target || target.endsWith('-script') ">
@@ -1131,7 +1136,7 @@ const htmls = `
     baseUrl: 'http://script.hub/',
     types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'rule-set', label: '规则集'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'plain-text', label: '纯文本'}],
     type: '',
-    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'surge-rule-set', label: '规则集(Surge)', suffix: '.list' }, {value: 'stash-rule-set', label: '规则集(Stash)', suffix: '.list' }, {value: 'loon-rule-set', label: '规则集(Loon)', suffix: '.list' }, {value: 'shadowrocket-rule-set', label: '规则集(Shadowrocket)', suffix: '.list' }, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'plain-text', label: '纯文本'}],
+    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'stash-rule-set', label: '规则集(Stash)', suffix: '.list' }, {value: 'loon-rule-set', label: '规则集(Loon)', suffix: '.list' }, {value: 'shadowrocket-rule-set', label: '规则集(Shadowrocket)', suffix: '.list' }, {value: 'surge-rule-set', label: '规则集(Surge)', suffix: '.list' }, {value: 'surge-domain-set', label: '域名集¹(Surge)', suffix: '.list' }, {value: 'surge-domain-set2', label: '无法转换为域名集¹的剩余规则集(Surge)', suffix: '.list' }, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'plain-text', label: '纯文本'}],
     target: '',
     src: '',
     n: '',
@@ -1161,6 +1166,7 @@ const htmls = `
     evalUrlmodi: '',
     keepHeader: false,
     nore: false,
+    sni: '',
     wrap_response: false,
     jsDelivr: false,
     compatibilityOnly: false,
@@ -1178,7 +1184,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
