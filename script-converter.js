@@ -33,9 +33,11 @@ let url
   if (!$.isRequest()) throw new Error('不是 request')
 
   let req = $request.url.split(/convert\/_start_\//)[1].split(/\/_end_\//)[0]
-  // console.log(req);
+  // console.log(req)
   let urlArg = $request.url.split(/\/_end_\//)[1]
-  // console.log(urlArg);
+  // console.log(urlArg)
+  let filename = urlArg.split('?')[0]
+  // console.log(filename)
 
   const queryObject = parseQueryString(urlArg)
   console.log('参数:' + JSON.stringify(queryObject))
@@ -308,6 +310,13 @@ global.$done = _scriptSonverterDone
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
       'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+    }
+    if (target === 'plain-text' || filename.endsWith('.txt')) {
+      if (headers['Content-Type']) {
+        headers['Content-Type'] = 'text/plain; charset=utf-8'
+      } else {
+        headers['content-type'] = 'text/plain; charset=utf-8'
+      }
     }
     if (setContentType) {
       if (headers['Content-Type']) {
