@@ -1077,7 +1077,7 @@ const htmls = `
       <div v-if="!target || (target.endsWith('rule-set') || target.includes('domain-set')) ">
         <input type="checkbox" id="nore" v-model.lazy="nore" />
         <label class="button-over" for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
-        <details>
+        <details v-if="!target.endsWith('surge-domain-set')">
           <summary>SNI 扩展匹配(extended-matching)</summary>
           <span>根据关键词开启 Surge 的 SNI 扩展匹配(extended-matching) 多关键词以"+"分隔</span>
           <textarea id="sni" v-model.lazy="sni" placeholder=""></textarea>
@@ -1136,7 +1136,7 @@ const htmls = `
     baseUrl: 'http://script.hub/',
     types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'rule-set', label: '规则集'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'plain-text', label: '纯文本'}],
     type: '',
-    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'stash-rule-set', label: '规则集(Stash)', suffix: '.list' }, {value: 'loon-rule-set', label: '规则集(Loon)', suffix: '.list' }, {value: 'shadowrocket-rule-set', label: '规则集(Shadowrocket)', suffix: '.list' }, {value: 'surge-rule-set', label: '规则集(Surge)', suffix: '.list' }, {value: 'surge-domain-set', label: '域名集¹(Surge)', suffix: '.list' }, {value: 'surge-domain-set2', label: '无法转换为域名集¹的剩余规则集(Surge)', suffix: '.list' }, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'plain-text', label: '纯文本'}],
+    targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'stash-rule-set', label: '规则集(Stash)', suffix: '.list' }, {value: 'loon-rule-set', label: '规则集(Loon)', suffix: '.list' }, {value: 'shadowrocket-rule-set', label: '规则集(Shadowrocket)', suffix: '.list' }, {value: 'surge-rule-set', label: '规则集(Surge RULE-SET)', suffix: '.list' }, {value: 'surge-domain-set', label: '域名集¹(Surge DOMAIN-SET)', suffix: '.list' }, {value: 'surge-domain-set2', label: '无法转换为域名集¹DOMAIN 的剩余规则集(Surge RULE-SET)', suffix: '.list' }, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'plain-text', label: '纯文本'}],
     target: '',
     src: '',
     n: '',
