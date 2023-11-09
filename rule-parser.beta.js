@@ -246,7 +246,7 @@ ruleNum2 = ruleSet.length;
 domainNum = domainSet.length;
 
 	if (isStashdomainset){
-		ruleSet = (domainSet[0] || '') && `#总规则数量:${ruleNum}\n#域名规则数量:${domainNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n` + domainSet.join("\n").replace(/  - DOMAIN,/mg,"").replace(/  - DOMAIN-SUFFIX,/mg,".").replace(/^(.+),?.*/mig,"$1");
+		ruleSet = (domainSet[0] || '') && domainSet.join("\n").replace(/  - DOMAIN,/mg,"").replace(/  - DOMAIN-SUFFIX,/mg,".").replace(/^(.+),?.*/mig,"$1");
 	}else if (isStashdomainset2){
 		ruleSet = (ruleSet[0] || '') && `#总规则数量:${ruleNum}\n#非域名规则数量:${ruleNum2}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\npayload:\n${ruleSet.join("\n")}`
 	};
