@@ -41,6 +41,9 @@ var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : nu
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
 
+var ipNoResolve = istrue(queryObject.nore);
+var sni = queryObject.sni != undefined ? queryObject.sni.split("+") : null;
+
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
 const iconReplace = $.getval("替换原始插件图标");
 const iconLibrary1 = $.getval("插件随机图标合集") ?? "Doraemon(100P)";
@@ -407,6 +410,24 @@ x = "hostname=" + x;
 if (delNoteSc === true && x.match(/^#/) && x.indexOf("#!") == -1){
 		x = "";
 };
+
+//sni嗅探
+if (sni != null){
+	for (let i=0; i < sni.length; i++) {
+  const elem = sni[i];
+	if (x.indexOf(elem) != -1 && x.search(/^DOMAIN/i) != -1 && x.search(/, *extended-matching/) == -1){
+		x = x + ",extended-matching";
+	};
+};//循环结束
+};//启用sni嗅探结束
+
+//ip规则不解析域名
+if(ipNoResolve === true){
+	if (x.match(/^ip6?-[ca]/i) != null && x.search(/, *no-resolve/) == -1){
+		x = x + ",no-resolve";
+	}else{};
+}else{};//增加ip规则不解析域名结束
+
 
 let jscStatus,jsc2Status
 if (jsConverter != null){
@@ -867,16 +888,18 @@ scriptBox.push({"jsurl":js,"name":croName + "_" + y,"cron":cronExp,"argument":ar
 				}else{
 //规则rule
                     if (isLooniOS){
+						x = x.replace(/ /g,"");
                     body[y - 1]?.match(/^#/)  && rules.push(body[y - 1]);
-					rules.push(x);
+					rules.push(x.replace(/, *extended-matching/,""));
                     
                     }else if (isSurgeiOS || isShadowrocket){
+						x = x.replace(/ /g,"");
                     if (x.match(/^#?(DOM|USER|URL|IP|GEO)[^,]+,[^,]+$/i) || x.match(/proxy$/i)){
-	x = "";}else{rules.push(x.replace(/, *REJECT(-\w+)?/i,",REJECT").replace(/, *no-resolve.*/i,",no-resolve"));};
+	x = "";}else{rules.push(x.replace(/,REJECT(-\w+)?/i,",REJECT"));};
                         
                     }else if(isStashiOS){
-                        
-                        if (type.match(/URL-REGEX/i) && x.match(/,\x20*REJECT/i)){
+                        x = x.replace(/ /g,"");
+                        if (type.match(/URL-REGEX/i) && x.match(/,REJECT/i)){
                 
                     body[y - 1]?.match(/^#/) && URLRewrite.push("    " + body[y - 1]);
                 x = x.replace(/\x20/,"");
@@ -897,10 +920,10 @@ scriptBox.push({"jsurl":js,"name":croName + "_" + y,"cron":cronExp,"argument":ar
 					x.replace(/.*URL-REGEX,([^\s]+),[^,]+/,
 					`${noteK4}- >-${noteKn6}$1 - reject${Urx2Reject}`)
 				);       
-                        }else if (x.match(/^#?(DOM|USER|URL|IP|GEO)[^,]+,[^,]+$/i) || x.match(/proxy$/i)){ x = "";}else if(type.match(/^#?(USER-AGENT|IP-CIDR|GEOIP|IP-ASN|DOMAIN)/)){
+                        }else if (x.match(/^#?(DOM|USER|URL|IP|GEO)[^,]+,[^,]+$/i) || x.match(/, *proxy/i)){ x = "";}else if(type.match(/^#?(USER-AGENT|IP-CIDR|GEOIP|IP-ASN|DOMAIN)/)){
                             body[y - 1]?.match(/^#/)  && rules.push("    " + body[y - 1]);
 					
-					rules.push(x.replace(/\x20/g,"").replace(/.*DOMAIN-SET.+/,"").replace(/, *REJECT(-\w+)?/,",REJECT").replace(/, *no-resolve.*/i,",no-resolve").replace(/^#?(.+)/,`${noteK2}- $1`))    
+					rules.push(x.replace(/\x20/g,"").replace(/.*DOMAIN-SET,.+/,"").replace(/,REJECT(-\w+)?/,",REJECT").replace(/,extended-matching/,"").replace(/^#?(.+)/,`${noteK2}- $1`))    
                         }else{others.push(x)};
                     }//Stash rules处理完毕
                 }//rules处理完毕
