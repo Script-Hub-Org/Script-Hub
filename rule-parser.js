@@ -35,6 +35,8 @@ const isLoontarget = queryObject.target == "loon-rule-set";
 const isRockettarget = queryObject.target == "shadowrocket-rule-set";
 const isSurgedomainset = queryObject.target == "surge-domain-set";
 const isSurgedomainset2 = queryObject.target == "surge-domain-set2";
+const isStashdomainset = queryObject.target == "stash-domain-set";
+const isStashdomainset2 = queryObject.target == "stash-domain-set2";
 
 if (queryObject.target == 'rule-set'){
 	if (appUa.search(/Surge|LanceX|Egern|Stash|Loon|Shadowrocket/i) != -1){
@@ -139,7 +141,7 @@ if (sni != null){
 
 	x = x.replace(/^#.+/,'').replace(/^host-wildcard/i,'HO-ST-WILDCARD').replace(/^host/i,'DOMAIN').replace(/^dest-port/i,'DST-PORT').replace(/^ip6-cidr/i,'IP-CIDR6')
 	
-	if (isStashiOS){
+	if (isStashiOS || isStashdomainset || isStashdomainset2){
 	
 	if (x.match(/^;#/)){
 		outRules.push(x.replace(/^;#/,"").replace(/^HO-ST/i,'HOST'))
@@ -235,8 +237,20 @@ domainNum = domainSet.length;
 	}else if (isSurgedomainset2){
 		ruleSet = (ruleSet[0] || '') && `#总规则数量:${ruleNum}\n#非域名规则数量:${ruleNum2}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n${ruleSet.join("\n")}`
 	};
+}else if (isStashdomainset || isStashdomainset2){
+	domainSet = ruleSet.filter((ruleSet) => ruleSet.search(/  - DOMAIN(,|-SUFFIX)/) != -1);
 	
-}
+	ruleSet = ruleSet.filter((ruleSet) => ruleSet.search(/  - DOMAIN(,|-SUFFIX)/) == -1);
+	
+ruleNum2 = ruleSet.length;
+domainNum = domainSet.length;
+
+	if (isStashdomainset){
+		ruleSet = (domainSet[0] || '') && domainSet.join("\n").replace(/  - DOMAIN,/mg,"").replace(/  - DOMAIN-SUFFIX,/mg,".").replace(/^(.+),?.*/mig,"$1");
+	}else if (isStashdomainset2){
+		ruleSet = (ruleSet[0] || '') && `#总规则数量:${ruleNum}\n#非域名规则数量:${ruleNum2}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\npayload:\n${ruleSet.join("\n")}`
+	};
+};
 
 body = `${ruleSet}`.replace(/t&zd;/g,',').replace(/ ;#/g," ");
 
