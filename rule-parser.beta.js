@@ -125,7 +125,7 @@ if(Rout0 != null){
 //ip规则不解析域名
 if(ipNoResolve === true){
 	if (x.match(/^ip6?-[ca]/i) != null){
-		x = x.replace(/(.+)/,"$1,no-resolve")
+		x = x + ",no-resolve";
 	}else{};
 }else{};//增加ip规则不解析域名结束
 
@@ -134,7 +134,7 @@ if (sni != null){
 	for (let i=0; i < sni.length; i++) {
   const elem = sni[i];
 	if (x.indexOf(elem) != -1 && x.search(/^ip6?-[ca]/i) == -1){
-		x = x.replace(/(.+)/,"$1,extended-matching")
+		x = x + ",extended-matching";
 	};
 };//循环结束
 };//启用sni嗅探结束
@@ -233,7 +233,7 @@ ruleNum2 = ruleSet.length;
 domainNum = domainSet.length;
 
 	if (isSurgedomainset){
-		ruleSet = (domainSet[0] || '') && `#总规则数量:${ruleNum}\n#域名规则数量:${domainNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n` + domainSet.join("\n").replace(/^DOMAIN,/mg,"").replace(/^DOMAIN-SUFFIX,/mg,".").replace(/^(.+),?.*/mig,"$1");
+		ruleSet = (domainSet[0] || '') && `#总规则数量:${ruleNum}\n#域名规则数量:${domainNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n` + domainSet.join("\n").replace(/^DOMAIN,/mg,"").replace(/^DOMAIN-SUFFIX,/mg,".").replace(/^([^,]*),?.*/mig,"$1");
 	}else if (isSurgedomainset2){
 		ruleSet = (ruleSet[0] || '') && `#总规则数量:${ruleNum}\n#非域名规则数量:${ruleNum2}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n${ruleSet.join("\n")}`
 	};
@@ -246,7 +246,7 @@ ruleNum2 = ruleSet.length;
 domainNum = domainSet.length;
 
 	if (isStashdomainset){
-		ruleSet = (domainSet[0] || '') && domainSet.join("\n").replace(/  - DOMAIN,/mg,"").replace(/  - DOMAIN-SUFFIX,/mg,".").replace(/^(.+),?.*/mig,"$1");
+		ruleSet = (domainSet[0] || '') && domainSet.join("\n").replace(/  - DOMAIN,/mg,"").replace(/  - DOMAIN-SUFFIX,/mg,".").replace(/^([^,]*),?.*/mig,"$1");
 	}else if (isStashdomainset2){
 		ruleSet = (ruleSet[0] || '') && `#总规则数量:${ruleNum}\n#非域名规则数量:${ruleNum2}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\npayload:\n${ruleSet.join("\n")}`
 	};
