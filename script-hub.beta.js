@@ -1077,12 +1077,13 @@ const htmls = `
       <div v-if="!target || (target.endsWith('rule-set') || target.includes('domain-set')) ">
         <input type="checkbox" id="nore" v-model.lazy="nore" />
         <label class="button-over" for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
-        <details>
-          <summary>SNI 扩展匹配(extended-matching)</summary>
-          <span>根据关键词开启 Surge 的 SNI 扩展匹配(extended-matching) 多关键词以"+"分隔</span>
-          <textarea id="sni" v-model.lazy="sni" placeholder=""></textarea>
-        </details>
       </div>
+
+      <details v-if="!target || target.startsWith('surge') ">
+        <summary>SNI 扩展匹配(extended-matching)</summary>
+        <span>根据关键词开启 Surge 的 SNI 扩展匹配(extended-matching) 多关键词以"+"分隔</span>
+        <textarea id="sni" v-model.lazy="sni" placeholder=""></textarea>
+      </details>
 
       <div v-if="!target || target.endsWith('-script') ">
         <input type="checkbox" id="wrap_response" v-model.lazy="wrap_response" />
