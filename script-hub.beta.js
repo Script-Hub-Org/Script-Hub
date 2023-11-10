@@ -1074,7 +1074,7 @@ const htmls = `
         </div>
       </details>
 
-      <div v-if="!target || (target.endsWith('rule-set') || target.includes('domain-set')) ">
+      <div>
         <input type="checkbox" id="nore" v-model.lazy="nore" />
         <label class="button-over" for="nore">IP 规则开启不解析域名(即 no-resolve)</label>
       </div>
