@@ -48,6 +48,9 @@ var compatibilityOnly = istrue(queryObject.compatibilityOnly);
 var keepHeader = istrue(queryObject.keepHeader);
 var jsDelivr = istrue(queryObject.jsDelivr);
 
+var ipNoResolve = istrue(queryObject.nore);
+var sni = queryObject.sni != undefined ? queryObject.sni.split("+") : null;
+
 var sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '';
 var sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '';
 
@@ -419,6 +422,23 @@ x = "hostname=" + x;
 if (delNoteSc === true && x.match(/^#/) && x.indexOf("#!") == -1){
 		x = "";
 };
+
+//sni嗅探
+if (sni != null){
+	for (let i=0; i < sni.length; i++) {
+  const elem = sni[i];
+	if (x.indexOf(elem) != -1 && x.search(/^DOMAIN/i) != -1 && x.search(/, *extended-matching/) == -1){
+		x = x + ",extended-matching";
+	};
+};//循环结束
+};//启用sni嗅探结束
+
+//ip规则不解析域名
+if(ipNoResolve === true){
+	if (x.match(/^ip6?-[ca]/i) != null && x.search(/, *no-resolve/) == -1){
+		x = x + ",no-resolve";
+	}else{};
+}else{};//增加ip规则不解析域名结束
 
 let jscStatus,jsc2Status
 if (jsConverter != null){
@@ -1184,16 +1204,16 @@ scriptBox.push({"noteK":noteKstatus,"jsurl":js,"name":croName + "_" + y,"cron":c
                     x = x.replace(/" "/g,"");
 				body[y - 1]?.match(/^#/) &&  rules.push(body[y - 1]);
                 if (isLooniOS){
-                    rules.push(x.replace(/,REJECT-NO-DROP$/,",REJECT-DROP").replace(/,REJECT-(200|TINYGIF)/,",REJECT-IMG"));
+                    rules.push(x.replace(/,REJECT-NO-DROP/,",REJECT-DROP").replace(/,REJECT-(200|TINYGIF)/,",REJECT-IMG").replace(/, *extended-matching/,""));
                     
                 }else if(isShadowrocket){
-                    rules.push(x.replace(/^#?DEST-PORT *,/,`${noteK}DST-PORT,`));}else if (isSurgeiOS){rules.push(x.replace(/-(?:200|DICT|ARRAY|VIDEO|IMG)$/i,"-TINYGIF"));}//Loon Surge 火箭 rule处理完毕
+                    rules.push(x.replace(/^#?DEST-PORT,/,`${noteK}DST-PORT,`).replace(/,extended-matching/,""));}else if (isSurgeiOS){rules.push(x.replace(/-(?:200|DICT|ARRAY|VIDEO|IMG)/i,"-TINYGIF"));}//Loon Surge 火箭 rule处理完毕
                 
                 }else if (isStashiOS){
                     x = x.replace(/" "/g,"");
                     body[y - 1]?.match(/^#/) && rules.push("    " + body[y - 1]);
                  rules.push(
-                    x.replace(/^#?(.+),(DIRECT$|REJECT.*$)/,`${noteK2}- $1,$2`).replace(/- DEST-PORT/,"- DST-PORT"));   
+                    x.replace(/^#?(.+),(DIRECT.*|REJECT.*)/,`${noteK2}- $1,$2`).replace(/- DEST-PORT/,"- DST-PORT").replace(/,extended-matching/,""));   
                 };//整个rule结束
 //开启脚本转换
 function toJsc (js) {
