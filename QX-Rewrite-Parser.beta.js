@@ -45,6 +45,7 @@ var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") :
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
 var keepHeader = istrue(queryObject.keepHeader);
 var jsDelivr = istrue(queryObject.jsDelivr);
+var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : null;
 
 var sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '';
 var sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '';
@@ -329,7 +330,10 @@ let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).to
 const pluginIcon = icon;
 //$.log("插件图标：" + pluginIcon);
 
-let body = (await $.http.get(req)).body;
+if (req == 'http://local.text'){
+	body = localText;
+}else{
+	body = (await $.http.get(req)).body + localText;};
 
 eval(evJsori);
 eval(evUrlori);
@@ -741,7 +745,8 @@ if (isLooniOS || isSurgeiOS || isShadowrocket){
 				cronJs = x.replace(/^#/,"")
 				.replace(/\x20{2,}/g," ")
 				.replace(cronExp,"")
-				.split(/ *, */)[0].replace(/ /,"");
+				.split(/ *, */)[0]
+				.replace(/^ */,"");
 				
             if (nCron != null){
 	for (let i=0; i < nCron.length; i++) {
