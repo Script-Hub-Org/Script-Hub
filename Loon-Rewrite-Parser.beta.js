@@ -40,6 +40,7 @@ var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
+var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : null;
 
 var ipNoResolve = istrue(queryObject.nore);
 var sni = queryObject.sni != undefined ? queryObject.sni.split("+") : null;
@@ -317,7 +318,10 @@ let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).to
 const pluginIcon = icon;
 //$.log("插件图标：" + pluginIcon);
 
-let body = (await $.http.get(req)).body;
+if (req == 'http://local.text'){
+	body = localText;
+}else{
+	body = (await $.http.get(req)).body + localText;};
 
 eval(evJsori);
 eval(evUrlori);
