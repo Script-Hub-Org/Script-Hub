@@ -40,7 +40,7 @@ var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
-var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : null;
+var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : "";
 
 var ipNoResolve = istrue(queryObject.nore);
 var sni = queryObject.sni != undefined ? queryObject.sni.split("+") : null;
