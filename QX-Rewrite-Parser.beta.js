@@ -45,7 +45,7 @@ var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") :
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);
 var keepHeader = istrue(queryObject.keepHeader);
 var jsDelivr = istrue(queryObject.jsDelivr);
-var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : null;
+var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : "";
 
 var sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '';
 var sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '';
