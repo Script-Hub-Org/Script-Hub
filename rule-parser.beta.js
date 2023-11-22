@@ -61,7 +61,7 @@ var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var ipNoResolve = istrue(queryObject.nore);
 var sni = queryObject.sni != undefined ? queryObject.sni.split("+") : null;
-var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : null;
+var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : "";
 
 var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
