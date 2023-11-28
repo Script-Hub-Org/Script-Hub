@@ -979,6 +979,10 @@ const htmls = `
           <textarea id="x" v-model.lazy="x" placeholder=""></textarea>
         </details>
         <div>
+          <input type="checkbox" id="synMitm" v-model.lazy="synMitm" />
+          <label for="synMitm">将 MitM 主机名同步至 <code>force-http-engine-hosts</code></label>
+        </div>
+        <div>
           <input type="checkbox" id="del" v-model.lazy="del" />
           <label for="del">从转换结果中剔除被注释的重写</label>
         </div>
@@ -1128,6 +1132,11 @@ const htmls = `
         </details>
       </details>
 
+      <div>
+        <input type="checkbox" id="noNtf" v-model.lazy="noNtf" />
+        <label class="button-over" for="noNtf">关闭通知</label>
+      </div>
+
 
     </div>
     <footer>
@@ -1175,6 +1184,8 @@ const htmls = `
     evalUrlmodi: '',
     keepHeader: false,
     nore: false,
+    synMitm: false,
+    noNtf: false,
     sni: '',
     wrap_response: false,
     jsDelivr: false,
@@ -1193,7 +1204,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
