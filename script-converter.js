@@ -44,6 +44,7 @@ let url
 
   jsDelivr = queryObject.jsDelivr
 
+  const localtext = queryObject.localtext ?? ''
   const type = queryObject.type ?? ''
   const target = queryObject.target ?? ''
   const targetApp = queryObject['target-app'] ?? ''
@@ -255,7 +256,7 @@ global.$done = _scriptSonverterDone
           'surge.doh': true,
           'clash.doh': true,
           new_name: true,
-          url: req,
+          url: localtext || req,
           ...queryObject,
           type: undefined,
           evalScriptori: undefined,
@@ -272,15 +273,25 @@ global.$done = _scriptSonverterDone
     }
     url = req || $request.url.replace(/_script-converter-(stash|surge|loon|shadowrocket)\.js$/i, '')
     let res
-    if (type === 'mock') {
-      if (keepHeader) {
-        res = await http(url, { 'binary-mode': true }, type)
-      } else {
-        shouldRedirect = true
-        res = redirect(url)
+    if (localtext) {
+      res = {
+        body: localtext,
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain; charset=UTF-8',
+        },
       }
     } else {
-      res = await http(url)
+      if (type === 'mock') {
+        if (keepHeader) {
+          res = await http(url, { 'binary-mode': true }, type)
+        } else {
+          shouldRedirect = true
+          res = redirect(url)
+        }
+      } else {
+        res = await http(url)
+      }
     }
 
     body = $.lodash_get(res, 'body')

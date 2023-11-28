@@ -839,8 +839,13 @@ const htmls = `
       <p>重写 & 规则集转换 <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki" target="_blank">查看文档</a></small></p>
 
       <div style=" margin-top: 30px;">
-         <code style=" position: relative; top: -4px; ">来源链接: </code> 
-        <textarea id="src" v-model.lazy="src" placeholder="请填写来源 URL 链接"></textarea>
+      <!--<code>输入类型:</code> -->
+        <span v-for="item in inputTypes">
+            <input type="radio" :id="'input-type-' + item.value" :value="item.value" v-model.lazy="inputType" :disabled="item.disabled"/>
+            <label :for="'input-type-' + item.value" class="radio-label">{{item.label}}</label>
+        </span>
+        <textarea v-if=" inputType === 'local-text' " style=" position: relative; top: 4px; " id="localtext" v-model.lazy="localtext" placeholder="请填写本地文件内容"></textarea>
+        <textarea v-else style=" position: relative; top: 4px; " id="src" v-model.lazy="src" placeholder="请填写来源 URL 链接"></textarea>
       </div>
       <!--font-size: 16px;  style=" position: relative; top: -3px; "-->
       <small style=" position: relative; top: 7px; ">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B" target="_blank">如何选择类型</a></small>
@@ -1135,11 +1140,14 @@ const htmls = `
   const init = {
     // baseUrl: location.protocol + '//script.hub/',
     baseUrl: 'http://script.hub/',
+    inputTypes: [{value: 'remote-url', label: '来源链接'}, {value: 'local-text', label: '本地文本内容'}],
     types: [{value: 'qx-rewrite', label: 'QX 重写'}, {value: 'surge-module', label: 'Surge 模块'}, {value: 'loon-plugin', label: 'Loon 插件'}, {value: 'rule-set', label: '规则集'}, {value: 'qx-script', label: 'QX 专属脚本'}, {value: 'plain-text', label: '纯文本'}],
     type: '',
+    inputType: '',
     targets: [{value: 'surge-module', label: 'Surge 模块', suffix: '.sgmodule'}, {value: 'stash-stoverride', label: 'Stash 覆写', suffix: '.stoverride'}, {value: 'shadowrocket-module', label: 'Shadowrocket 模块', suffix: '.sgmodule'}, {value: 'loon-plugin', label: 'Loon 插件', suffix: '.plugin'}, {value: 'loon-rule-set', label: '规则集(Loon)', suffix: '.list' }, {value: 'shadowrocket-rule-set', label: '规则集(Shadowrocket)', suffix: '.list' }, {value: 'surge-rule-set', label: '规则集(Surge)', suffix: '.list' }, {value: 'surge-domain-set', label: '域名集¹(Surge)', suffix: '.list' }, {value: 'surge-domain-set2', label: '无法转换为域名集¹的剩余规则集(Surge)', suffix: '.list' }, {value: 'stash-rule-set', label: '规则集(Stash)', suffix: '.list' }, {value: 'stash-domain-set', label: '域名集²(Stash)', suffix: '.list' }, {value: 'stash-domain-set2', label: '无法转换为域名集²的剩余规则集(Stash)', suffix: '.list' }, {value: 'surge-script', label: 'Surge 脚本(兼容)', suffix: '.js'}, {value: 'plain-text', label: '纯文本'}],
     target: '',
     src: '',
+    localtext: '',
     n: '',
     filename: '',
     y: '',
@@ -1185,7 +1193,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
@@ -1234,6 +1242,12 @@ const htmls = `
         }
       }
     }
+  }
+
+  if (init.localtext) {
+    init.inputType = 'local-text'
+  } else {
+    init.inputType = 'remote-url'
   }
 
   console.log("init", init)
@@ -1356,11 +1370,19 @@ const htmls = `
 
         const type = this.types.find(i => i.value === this.type)
         const target = this.targets.find(i => i.value === this.target)
-        if (this.src && target && type) {
+        let src = this.src
+        if (this.inputType === 'local-text') {
+          if (this.localtext) {
+            src = 'http://local.text'
+          } else {
+            return ''
+          }
+        }
+        if (src && target && type) {
           const suffix = target.suffix || ''
           const pathType = (this.target.endsWith('-script') || this.target === 'plain-text') ? 'convert' : 'file'
         
-          const plainUrl = this.src.split('?')[0]
+          const plainUrl = src.split('?')[0]
           const plainUrlFilename = plainUrl.substring(plainUrl.lastIndexOf('/') + 1)
 
           let filename = this.filename || (this.target === 'plain-text' ? plainUrlFilename : plainUrlFilename.split('.')[0])
@@ -1368,9 +1390,9 @@ const htmls = `
             filename = 'untitled-' + Date.now()
           }
 
-          return this.baseUrl + pathType + '/_start_/' + this.src + '/_end_/' + encodeURIComponent(filename) + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
+          return this.baseUrl + pathType + '/_start_/' + src + '/_end_/' + encodeURIComponent(filename) + suffix + '?' + Object.keys(fields).map(i => i + '=' + encodeURIComponent(fields[i])).join('&')
 
-          // let url = new URL(this.baseUrl + pathType + '/_start_/' + this.src + '/_end_/' + encodeURIComponent(filename) + suffix)
+          // let url = new URL(this.baseUrl + pathType + '/_start_/' + src + '/_end_/' + encodeURIComponent(filename) + suffix)
           
           // Object.keys(fields).map(i => {
           //  url.searchParams.append(i, fields[i])
