@@ -1,7 +1,7 @@
 /***************************
 支持将 QX重写 Surge模块 Loon插件 解析至Surge Shadowrocket Loon Stash 
 
-远程重写支持 换行输入多链接 可以 重写 模块 插件 混合传入
+远程重写支持多链接输入，链接间用😂连接 可以 重写 模块 插件 混合传入
 
 说明
 原脚本作者@小白脸 脚本修改@chengkongyiban
@@ -18,8 +18,9 @@ const $ = new Env(`Script Hub: 重写转换`)
 
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-var reqArr = req.match("%0A") ? req.split("%0A") : [req];
+var reqArr = req.match("%F0%9F%98%82") ? req.split("%F0%9F%98%82") : [req];
 	//$.log("原始链接：" + req);
+$.log(req)
 
 var urlArg = url.split(/\/_end_\//)[1];
 
@@ -707,7 +708,8 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		size = jsBox[i].size ? noteKn6+"max-size: "+jsBox[i].size : "";
 		cronexp = jsBox[i].cronexp;
 		timeout = jsBox[i].timeout ? noteKn6+"timeout: "+jsBox[i].timeout : "";
-		jsarg = jsBox[i].jsarg ? noteKn6+"argument: |-"+noteKn8+jsBox[i].jsarg : "";
+		jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : "";
+		jsarg = jsarg && jstype == "generic" ? noteKn4+"argument: |-"+noteKn6+jsarg : jsarg && jstype != "generic" ? noteKn6+"argument: |-"+noteKn8+jsarg : "";
 		tilesicon = jsBox[i].tilesicon ? jsBox[i].tilesicon : "";
 		tilescolor = jsBox[i].tilescolor ? jsBox[i].tilescolor : "";
 		
