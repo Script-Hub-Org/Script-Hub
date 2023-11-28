@@ -20,7 +20,6 @@ const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
 var reqArr = req.match("%F0%9F%98%82") ? req.split("%F0%9F%98%82") : [req];
 	//$.log("原始链接：" + req);
-$.log(req)
 
 var urlArg = url.split(/\/_end_\//)[1];
 
@@ -323,17 +322,17 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 		jsfrom = "surge";
 		jsUrl = toJsc(jsUrl,jscStatus,jsc2Status,jsfrom);
 		jsType = /[=,] *type *= */.test(x) ? getJsInfo(x, /[=,] *type *=/) : x.split(/ +/)[0].replace(/^#/,"");
-		eventName = getJsInfo(x, /[=,] *event-name *= */);
-		size = getJsInfo(x, /[=,] *max-size *= */);
-		proto = getJsInfo(x, /[=,] *binary-body-mode *= */);
+		eventName = getJsInfo(x, /[=, ] *event-name *= */);
+		size = getJsInfo(x, /[=, ] *max-size *= */);
+		proto = getJsInfo(x, /[=, ] *binary-body-mode *= */);
 		jsPtn = /[=,] *pattern *= */.test(x) ? getJsInfo(x, /[=,] *pattern *= */).replace(/"/g,'') : x.split(/ +/)[1];
-		jsArg = getJsInfo(x, /[=,] *argument *= */);
-		reBody = getJsInfo(x, /[=,] *requires-body *= */);
-		wakeSys = getJsInfo(x, /[=,] *wake-system *= */);
-		cronExp = getJsInfo(x, /[=,] *cronexpr? *= */);
-		ability = getJsInfo(x, /[=,] *ability *= */);
-		updataTime = getJsInfo(x, /[=,] *script-update-interval *= */);
-		timeOut = getJsInfo(x, /[=,] *timeout *= */);
+		jsArg = getJsInfo(x, /[=, ] *argument *= */);
+		reBody = getJsInfo(x, /[=, ] *requires-body *= */);
+		wakeSys = getJsInfo(x, /[=, ] *wake-system *= */);
+		cronExp = getJsInfo(x, /[=, ] *cronexpr? *= */);
+		ability = getJsInfo(x, /[=, ] *ability *= */);
+		updataTime = getJsInfo(x, /[=, ] *script-update-interval *= */);
+		timeOut = getJsInfo(x, /[=, ] *timeout *= */);
 		tilesIcon = (jsType=="generic"&&/icon=/.test(x)) ? x.split("icon=")[1].split("&")[0] : "";
 		tilesColor = (jsType=="generic"&&/icon=/.test(x)) ? x.split("icon-color=")[1].split("&")[0] : "";
 		if (nTilesTarget != null){
