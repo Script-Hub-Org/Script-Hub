@@ -1,5 +1,5 @@
 /***************************
-支持将 QX重写 Surge模块 Loon插件 解析至Surge Shadowrocket Loon Stash 
+支持将 QX重写 Surge模块 Loon插件 解析至Surge Shadowrocket Loon Stash
 
 远程重写支持多链接输入，链接间用😂连接 可以 重写 模块 插件 混合传入
 
@@ -253,8 +253,10 @@ if (/^#!.+?= *$/.test(x)){
 	
 } else if (isLooniOS&&/^#!(?:select|input) *= *.+/.test(x)){
 	getModInfo(x,modInputBox);
-}else if (/^#![nda].+?=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)){getModInfo(x,modInfoBox);
+}else if (reqArr.length>1&&/^#!(?:name|desc|date) *=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)){getModInfo(x,modInfoBox);
 	
+}else if (reqArr.length==1&&/^#!(?:name|desc|date|system) *=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)) {
+	getModInfo(x,modInfoBox);
 }else if (isLooniOS && /^#!.+?=.+/.test(x)){
 	getModInfo(x,modInfoBox);
 };
@@ -934,7 +936,7 @@ function getModInfo (x,box) {
 };
 
 //reject
-async function rw_reject (x,mark) {
+function rw_reject (x,mark) {
 	noteK = /^#/.test(x) ? "#" :"";
 	rwPtn = x.replace(/^#/,"").split(" ")[0];
 	rwType = x.match(/reject(-\w+)?$/i)[0].toLowerCase();
@@ -943,7 +945,7 @@ rwBox.push({mark,"noteK":noteK,"rwptn":rwPtn,"rwvalue":"-","rwtype":rwType});
 };
 
 //重定向
-async function rw_redirect (x,mark) {
+function rw_redirect (x,mark) {
 	noteK = /^#/.test(x) ? "#" :"";
 	x = x.replace(/ {2,}/g," ");
 	redirect_type = x.match(/ 302| 307| header$/)[0].replace(" ","");
