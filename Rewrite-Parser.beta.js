@@ -988,9 +988,9 @@ function getQxReInfo (x,y,mark) {
 	reptn = x.split(/ *url *re/)[0].replace(/^#/,'');
 	jsname = /body/.test(hdorbd) ? 'replaceBody_'+jsInNum : 'replaceHeader_'+jsInNum;
 	jsurl = /header/.test(hdorbd) ? 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-header.js' : 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-body.js';
-	rearg1 = x.split(breakpoint)[1].trim();
-	rearg2 = x.split(breakpoint)[2].trim();
-	jsarg = '"'+rearg1+'->'+rearg2+'"';
+	rearg1 = x.split(breakpoint)[1].trim().replace(/^"(.+)"$/,"$1");
+	rearg2 = x.split(breakpoint)[2].trim().replace(/^"(.+)"$/,"$1");
+	jsarg = rearg1+'->'+rearg2;
 	rebody = /body/.test(hdorbd) ? 'true' : '';
 	size = /body/.test(hdorbd) ? '3145728' : '';
 	jsBox.push({mark,"noteK":noteK,"jsname":jsname,"jstype":jstype,"jsptn":reptn,"jsurl":jsurl,"rebody":rebody,"size":size,"timeout":"30","jsarg":jsarg})
