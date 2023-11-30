@@ -1,5 +1,6 @@
 name: "Script Hub: 重写 & 规则集转换"
 desc: "https://script.hub"
+author: "@小白脸 @xream @keywos @ckyb"
 
 http:
   force-http-engine:
@@ -16,48 +17,27 @@ http:
       type: request
       timeout: 30
 
-    - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite
-      name: "Script Hub: QX转换Stash"
+    - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|loon-plugin|all-module)
+      name: "Script Hub: 重写转换"
       type: request
       timeout: 30
-      require-body: false
-
-    - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=loon-plugin
-      name: "Script Hub: Loon转换Stash"
-      type: request
-      timeout: 30
-      require-body: false
-
-    - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=surge-module
-      name: "Script Hub: Surge转换Stash"
-      type: request
-      timeout: 30
-      require-body: false
 
     - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set
       name: "Script Hub: 规则集转换"
       type: request
       timeout: 30
-      require-body: false
 
     - match: ^https?:\/\/script\.hub\/convert\/
       name: "Script Hub: 脚本转换"
       type: request
       timeout: 30
-      require-body: false
 
 script-providers:
   "Script Hub: 前端":
     url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js
     interval: 86400
-  "Script Hub: QX转换Stash":
-    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/QX-Rewrite-Parser.js
-    interval: 86400
-  "Script Hub: Loon转换Stash":
-    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Loon-Rewrite-Parser.js
-    interval: 86400
-  "Script Hub: Surge转换Stash":
-    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Surge-Rewrite-Parser.js
+  "Script Hub: 重写转换":
+    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Rewrite-Parser.js
     interval: 86400
   "Script Hub: 规则集转换":
     url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.js
