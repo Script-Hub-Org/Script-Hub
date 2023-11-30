@@ -112,7 +112,7 @@ desc: "${desc}"`;
 
 //信息中转站
 let bodyBox = [];      //存储待转换的内容
-let otherRule = [];    //不支持的规则
+let otherRule = [];    //不支持的规则&脚本
 let inBox = [];        //被释放的重写或规则
 let outBox = [];       //被排除的重写或规则
 let modInfoBox = [];   //模块简介等信息
@@ -582,7 +582,6 @@ rules.push(mark+ruletype+","+rulevalue+","+rulepolicy)
 			}else{otherRule.push(ruletype+rulevalue+rulepolicy)};
 		
 	};//for rule输出结束
-noNtf == false && otherRule.length != 0 && $.msg('Script Hub: 重写转换','不支持的规则',`${otherRule}`)
 
 //reject redirect 输出
 switch (targetApp){
@@ -654,12 +653,13 @@ switch (targetApp){
 		noteK = jsBox[i].noteK ? "#" : "";
 		mark = jsBox[i].mark ? jsBox[i].mark+"\n" : "";	
 		jstype = jsBox[i].jstype;
-		jsptn = /generic|event/.test(jstype) ? "" : jsBox[i].jsptn;
+		jsptn = /generic|event|dns|rule|network-changed/.test(jstype) ? "" : jsBox[i].jsptn;
 		jsptn = isLooniOS && jsptn ? " " + jsptn : jsptn;
 		if (/,/.test(jsptn) && isSurgeiOS) jsptn = '"'+jsptn+'"';
 		if ((isSurgeiOS||isShadowrocket)&&jsptn!="") jsptn = ', pattern='+jsptn;
 		jsname = jsBox[i].jsname;
-		eventname = jsBox[i].eventname ? ', event-name='+jsBox[i].eventname : "";
+		eventname = jsBox[i].eventname ? ', event-name='+jsBox[i].eventname :', event-name=network-changed';
+		jstype = isLooniOS && /event/.test(jstype) ? 'network-changed' : !isLooniOS && /network-changed/.test(jstype) ? 'event' : jstype;
 		jsurl = jsBox[i].jsurl;
 		rebody = jsBox[i].rebody ? ", requires-body="+jsBox[i].rebody : "";
 		proto = jsBox[i].proto ? ", binary-body-mode="+jsBox[i].proto : "";
@@ -672,12 +672,25 @@ switch (targetApp){
 		jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : "";
 		if (jsarg != "" && /,/.test(jsarg)) jsarg = ', argument="'+jsarg+'"';
 		if (jsarg != "" && !/,/.test(jsarg)) jsarg = ', argument='+jsarg;
-		if (!/event|cron/.test(jstype) && isLooniOS) script.push(mark+noteK+jstype+jsptn+" script-path="+jsurl+rebody+proto+timeout+", tag="+jsname+jsarg);
-		if (!/event|cron/.test(jstype) && (isSurgeiOS || isShadowrocket)) script.push(mark+noteK+jsname+" = type="+jstype+jsptn+", script-path="+jsurl+rebody+proto+size+ability+updatatime+timeout+jsarg)
-		if (jstype == "event" && (isSurgeiOS || isShadowrocket)) script.push(mark+noteK+jsname+" = type="+jstype+eventname+", script-path="+jsurl+ability+updatatime+timeout+jsarg)
-		if (jstype =="cron" && (isSurgeiOS || isShadowrocket)) script.push(mark+noteK+jsname+' = type='+jstype+', cronexp="'+cronexp+'"'+', script-path='+jsurl+updatatime+timeout+wakesys+jsarg);
-		if (jstype =="cron" && isLooniOS) script.push(mark+noteK+jstype+' "'+cronexp+'"'+" script-path="+jsurl+timeout+', tag='+jsname+jsarg)
-		if (isSurgeiOS && jstype == "generic") Panel.push(jsname+" = script-name="+jsname+", update-interval=3600")
+		
+		if (/generic/.test(jstype) && isShadowrocket){
+			otherRule.push(noteK+jsname+" = type="+jstype+jsptn+", script-path="+jsurl+rebody+proto+size+ability+updatatime+timeout+jsarg);
+		}else if (/request|response|network-changed|generic/.test(jstype) && isLooniOS) {
+			script.push(mark+noteK+jstype+jsptn+" script-path="+jsurl+rebody+proto+timeout+", tag="+jsname+jsarg);
+		}else if (/request|response|generic/.test(jstype) && (isSurgeiOS || isShadowrocket)){
+			script.push(mark+noteK+jsname+" = type="+jstype+jsptn+", script-path="+jsurl+rebody+proto+size+ability+updatatime+timeout+jsarg);
+		}else if (jstype == "event" && (isSurgeiOS || isShadowrocket)){
+			 script.push(mark+noteK+jsname+" = type="+jstype+eventname+", script-path="+jsurl+ability+updatatime+timeout+jsarg);
+		}else if (jstype =="cron" && (isSurgeiOS || isShadowrocket)){
+			 script.push(mark+noteK+jsname+' = type='+jstype+', cronexp="'+cronexp+'"'+', script-path='+jsurl+updatatime+timeout+wakesys+jsarg);
+		}else if (jstype =="cron" && isLooniOS){
+			script.push(mark+noteK+jstype+' "'+cronexp+'"'+" script-path="+jsurl+timeout+', tag='+jsname+jsarg);
+		}else{
+			otherRule.push(noteK+jsname+" = type="+jstype+jsptn+", script-path="+jsurl+rebody+proto+size+ability+updatatime+timeout+jsarg)};
+			
+		if (isSurgeiOS && jstype == "generic"){
+			 Panel.push(jsname+" = script-name="+jsname+", update-interval=3600")
+		};
 	};//for
 	break;
 	
@@ -714,14 +727,21 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		tilesicon = jsBox[i].tilesicon ? jsBox[i].tilesicon : "";
 		tilescolor = jsBox[i].tilescolor ? jsBox[i].tilescolor : "";
 		
-		if (jstype!="cron"&&jstype!="generic") script.push(mark+noteKn4+'- match: '+jsptn+noteKn6+'name: "'+jsname+'"'+noteKn6+'type: '+jstype+rebody+size+proto+timeout+jsarg)
-		providers.push(`${noteK2}"`+jsname+'":'+`${noteKn4}url: `+jsurl+`${noteKn4}interval: 86400`)
-		if (jstype=="cron") cron.push(mark+`${noteKn4}- name: "` + jsname + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg);
-		providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
-		if (jstype=="generic") tiles.push(
+		if (/request|response/.test(jstype)){
+			script.push(mark+noteKn4+'- match: '+jsptn+noteKn6+'name: "'+jsname+'"'+noteKn6+'type: '+jstype+rebody+size+proto+timeout+jsarg);
+		providers.push(`${noteK2}"`+jsname+'":'+`${noteKn4}url: `+jsurl+`${noteKn4}interval: 86400`);
+		};
+		if (jstype=="cron"){
+			cron.push(mark+`${noteKn4}- name: "` + jsname + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg);
+		providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`);
+		};
+		if (jstype=="generic") {
+			tiles.push(
 					mark+`${noteK2}- name: "${jsname}"${noteKn4}interval: 3600${noteKn4}title: "${jsname}"${noteKn4}icon: "${tilesicon}"${noteKn4}backgroundColor: "${tilescolor}"${noteKn4}timeout: 30${jsarg}`);
 			providers.push(
 					`${noteK2}"${jsname}":${noteKn4}url: ${jsurl}${noteKn4}interval: 86400`);
+		};
+			/event|rule|dns/i.test(jstype) && otherRule.push(noteK+jsname+" = type="+jstype+", script-path="+jsurl);
 };//for循环
 break;
 };//script输出结束
@@ -901,10 +921,10 @@ ${providers}
 
 };//输出内容结束
 
-	
-
 eval(evJsmodi);
 eval(evUrlmodi);
+
+noNtf == false && otherRule.length != 0 && $.msg('Script Hub: 重写转换','不支持的规则',`${otherRule}`)
 
 $.done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
 
