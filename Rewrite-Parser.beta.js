@@ -271,7 +271,7 @@ if (/^skip-proxy *=.+/.test(x)) getHn(x,skipBox);
 if (/^(?:alway-)?real-ip *=.+/.test(x)) getHn(x,realBox);
 
 //reject 解析
-	if (/^#?[^DIURP].+reject(?:-\w+)?$/i.test(x)) {
+	if (/^#?(?!DOMAIN.*? *,|IP-CIDR6? *,|IP-ASN *,|OR *,|AND *,|NOT *,|USER-AGENT *,|URL-REGEX *,|RULE-SET *,|DE?ST-PORT *,|PROTOCOL *,).+reject(?:-\w+)?$/i.test(x)) {
 		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
 		rw_reject(x,mark);
 	};
