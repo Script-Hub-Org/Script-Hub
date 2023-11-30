@@ -29,6 +29,7 @@ const queryObject = parseQueryString(urlArg);
 
 //目标app
 const targetApp = queryObject.target;
+const app = targetApp.split("-")[0];
 const isSurgeiOS = targetApp == "surge-module";
 const isStashiOS = targetApp == "stash-stoverride";
 const isLooniOS = targetApp == "loon-plugin";
@@ -42,6 +43,12 @@ var evUrlmodi = queryObject.evalUrlmodi;
 var noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false;//默认开启通知
 var localsetNtf = $.getdata("ScriptHub通知");
 noNtf = localsetNtf == "开启通知" ? false : localsetNtf == "关闭通知" ? true : noNtf ;
+
+var openInBoxHtml = istrue(queryObject.openInBoxHtml);
+var openOutBoxHtml = istrue(queryObject.openOutBoxHtml);
+var openOtherRuleHtml = istrue(queryObject.openOtherRuleHtml);
+
+noNtf = openInBoxHtml ||openOutBoxHtml||openOtherRuleHtml ? true : noNtf;
 
 var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;//名字简介
 var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;//保留
@@ -182,7 +189,7 @@ for await (var [y, x] of body.entries()) {
 if (Pin0 != null) {
 	for (let i=0; i < Pin0.length; i++) {
   const elem = Pin0[i];
-	if (x.indexOf(elem) != -1){
+	if (x.indexOf(elem) != -1&&/^#/.test(x)){
 		x = x.replace(/^#/,"")
 		inBox.push(x);
 	};
@@ -193,7 +200,7 @@ if (Pin0 != null) {
 if (Pout0 != null){
 	for (let i=0; i < Pout0.length; i++) {
   const elem = Pout0[i];
-	if (x.indexOf(elem) != -1 && x.search(/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip) *=/) == -1){
+	if (x.indexOf(elem) != -1 && x.search(/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip) *=/) == -1&&!/^#/.test(x)){
 		x = "#" + x;
 		outBox.push(x);
 	};
@@ -311,7 +318,7 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 	rulePandV = x.replace(/^#/,'').replace(ruletype,'').replace(rulenore,'').replace(rulesni,'').replace(/^,/,'');
 	rulepolicy = rulePandV.substring(rulePandV.lastIndexOf(',') + 1);
 	rulevalue = rulePandV.replace(rulepolicy,'').replace(/,$/,'').replace(/"/g,'');
-	ruleBox.push({mark,noteK,ruletype,rulevalue,rulepolicy,rulenore,rulesni})
+	ruleBox.push({mark,noteK,ruletype,rulevalue,rulepolicy,rulenore,rulesni,"ori":x})
 	};
 };//rule解析
 
@@ -357,7 +364,7 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 	if (x.indexOf(elem) != -1){
         cronExp = nCronExp[i];   
             };};};
-			jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"ability":ability,"updatatime":updataTime,"timeout":timeOut,"jsarg":jsArg,"cronexp":cronExp,"wakesys":wakeSys,"tilesicon":tilesIcon,"tilescolor":tilesColor,"eventname":eventName})
+			jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"ability":ability,"updatatime":updataTime,"timeout":timeOut,"jsarg":jsArg,"cronexp":cronExp,"wakesys":wakeSys,"tilesicon":tilesIcon,"tilescolor":tilesColor,"eventname":eventName,"ori":x})
 
 };//脚本解析结束
 
@@ -384,7 +391,7 @@ if (/ url +script-/.test(x)){
 	if (x.indexOf(elem) != -1){
         jsArg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
-	jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"updatatime":"0","timeout":"60","jsarg":jsArg})
+	jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"updatatime":"0","timeout":"60","jsarg":jsArg,"ori":x})
 };//qx脚本解析结束
 
 //qx cron脚本解析
@@ -415,7 +422,7 @@ if (/[^ ]+ [^u ]+ [^ ]+ [^ ]+ [^ ]+ ([^ ]+ )?(https?|ftp|file):\/\//.test(x)){
 	if (x.indexOf(elem) != -1){
         jsArg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
-	jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":"cron","cronexp":cronExp,"jsurl":jsUrl,"wakesys":"1","updatatime":"0","timeout":"60","jsarg":jsArg})
+	jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":"cron","cronexp":cronExp,"jsurl":jsUrl,"wakesys":"1","updatatime":"0","timeout":"60","jsarg":jsArg,"ori":x})
 
 };//qx cron 脚本解析结束
 
@@ -476,8 +483,11 @@ if (/url +echo-response | data *= *"/.test(x)){
       return curr;
     }, []);//去重结束
 
-inBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','已根据关键词保留以下内容',`${inBox}`);
-outBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','已根据关键词排除以下内容',`${outBox}`);
+inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join("\n\n")}`;
+outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join("\n")}`;
+
+inBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击通知查看详情',`${inBox}`,{url:url+'&openInBoxHtml=true'});
+outBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击通知查看详情',`${outBox}`,{url:url+'&openOutBoxHtml=true'});
 
 //mitm删除主机名
 if (hnDel != null && hnBox.length != 0) hnBox=hnBox.filter(function(item) {
@@ -556,9 +566,9 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		}else if (/(?:and|or|not|domain-set|rule-set)/i.test(ruletype) && isShadowrocket) {
 			rules.push(mark+rulevalue)
 		}else if (rulepolicy==""){
-			otherRule.push(ruletype+","+rulevalue)
+			otherRule.push(ruleBox[i].ori)
 		} else if(/proxy/i.test(rulepolicy)&&(isSurgeiOS||isStashiOS)){
-otherRule.push(ruletype+","+rulevalue+","+rulepolicy)
+otherRule.push(ruleBox[i].ori)
 		} else if (/proxy/i.test(rulepolicy)&&(isLooniOS||isShadowrocket)) {
 rules.push(mark+ruletype+","+rulevalue+","+rulepolicy)
 		}else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|user-agent|url-regex)/i.test(ruletype)&&!isStashiOS){
@@ -579,7 +589,7 @@ rules.push(mark+ruletype+","+rulevalue+","+rulepolicy)
                 };
 				
 				URLRewrite.push(mark+noteK4+'- >-'+noteKn6+rulevalue+' - reject'+Urx2Reject)
-			}else{otherRule.push(ruletype+rulevalue+rulepolicy)};
+			}else{otherRule.push(ruleBox[i].ori)};
 		
 	};//for rule输出结束
 
@@ -639,7 +649,8 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 	break;
 	
 	case "shadowrocket-module":
-
+	
+rwhdBox = (rwhdBox[0] || '') && `${rwhdBox.join("\n")}`;
 	rwhdBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','❌小火箭不支持HeaderRewrite',`${rwhdBox}`);
 	break;
 };//headerRewrite输出结束
@@ -674,7 +685,7 @@ switch (targetApp){
 		if (jsarg != "" && !/,/.test(jsarg)) jsarg = ', argument='+jsarg;
 		
 		if (/generic/.test(jstype) && isShadowrocket){
-			otherRule.push(noteK+jsname+" = type="+jstype+jsptn+", script-path="+jsurl+rebody+proto+size+ability+updatatime+timeout+jsarg);
+			otherRule.push(jsBox[i].ori);
 		}else if (/request|response|network-changed|generic/.test(jstype) && isLooniOS) {
 			script.push(mark+noteK+jstype+jsptn+" script-path="+jsurl+rebody+proto+timeout+", tag="+jsname+jsarg);
 		}else if (/request|response|generic/.test(jstype) && (isSurgeiOS || isShadowrocket)){
@@ -686,7 +697,7 @@ switch (targetApp){
 		}else if (jstype =="cron" && isLooniOS){
 			script.push(mark+noteK+jstype+' "'+cronexp+'"'+" script-path="+jsurl+timeout+', tag='+jsname+jsarg);
 		}else{
-			otherRule.push(noteK+jsname+" = type="+jstype+jsptn+", script-path="+jsurl+rebody+proto+size+ability+updatatime+timeout+jsarg)};
+			otherRule.push(jsBox[i].ori)};
 			
 		if (isSurgeiOS && jstype == "generic"){
 			 Panel.push(jsname+" = script-name="+jsname+", update-interval=3600")
@@ -741,7 +752,7 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 			providers.push(
 					`${noteK2}"${jsname}":${noteKn4}url: ${jsurl}${noteKn4}interval: 86400`);
 		};
-			/event|rule|dns/i.test(jstype) && otherRule.push(noteK+jsname+" = type="+jstype+", script-path="+jsurl);
+			/event|rule|dns/i.test(jstype) && otherRule.push(jsBox[i].ori);
 };//for循环
 break;
 };//script输出结束
@@ -923,10 +934,24 @@ ${providers}
 
 eval(evJsmodi);
 eval(evUrlmodi);
+		
+otherRule = (otherRule[0] || '') && `${app}不支持以下内容:\n${otherRule.join("\n")}`;
 
-noNtf == false && otherRule.length != 0 && $.msg('Script Hub: 重写转换','不支持的规则',`${otherRule}`)
+noNtf == false && otherRule.length != 0 && $.msg('Script Hub: 重写转换',`点击通知查看详情`,`${otherRule}`,{url:url+'&openOtherRuleHtml=true'});
 
+if (openInBoxHtml||openOutBoxHtml||openOtherRuleHtml){
+	$.done({
+  response: {
+    status: 200,
+    body: inBox+'\n\n'+outBox+'\n\n'+otherRule,
+    headers: {'Content-Type': 'text/plain; charset=utf-8'},
+  },
+})
+}else{
+	
 $.done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
+};
+
 
 })()
 .catch((e) => {
