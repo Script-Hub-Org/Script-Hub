@@ -561,9 +561,9 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 			rulepolicy = "REJECT";
 		};
 
-		if (/(?:and|or|not|protocol|domain-set|rule-set)/i.test(ruletype) && isSurgeiOS) {
+		if (/^(?:and|or|not|protocol|domain-set|rule-set)$/i.test(ruletype) && isSurgeiOS) {
 			rules.push(mark+rulevalue)
-		}else if (/(?:and|or|not|domain-set|rule-set)/i.test(ruletype) && isShadowrocket) {
+		}else if (/^(?:and|or|not|domain-set|rule-set)$/i.test(ruletype) && isShadowrocket) {
 			rules.push(mark+rulevalue)
 		}else if (rulepolicy==""){
 			otherRule.push(ruleBox[i].ori)
