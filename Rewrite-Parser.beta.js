@@ -56,7 +56,7 @@ var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;//排�
 var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/ *, */) : null;//加
 var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/ *, */) : null;//减
 var synMitm = istrue(queryObject.synMitm);//将force与mitm同步
-var delNoteSc = queryObject.del ? istrue(queryObject.del) : true;
+var delNoteSc = istrue(queryObject.del);
 var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;//替换cron目标
 var nCronExp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;//新cronexp
 var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : null;//arg目标
