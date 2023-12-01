@@ -1161,7 +1161,7 @@ const htmls = `
     filename: '',
     y: '',
     x: '',
-    del: false,
+    del: true,
     hnadd: '',
     hndel: '',
     jsc: '',
