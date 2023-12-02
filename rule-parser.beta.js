@@ -3,7 +3,7 @@
    适用app: Surge Shadowrocket Stash Loon
 ***************************/
 
-const $ = new Env("rule-parser");
+const $ = new Env("Script Hub: 规则集转换");
 
 //目标app
 const isEgern = 'object' == typeof egern;
@@ -38,6 +38,10 @@ const isSurgedomainset2 = queryObject.target == "surge-domain-set2";
 const isStashdomainset = queryObject.target == "stash-domain-set";
 const isStashdomainset2 = queryObject.target == "stash-domain-set2";
 
+var noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false;//默认开启通知
+var localsetNtf = $.getdata("ScriptHub通知");
+noNtf = localsetNtf == "开启通知" ? false : localsetNtf == "关闭通知" ? true : noNtf ;
+
 if (queryObject.target == 'rule-set'){
 	if (appUa.search(/Surge|LanceX|Egern|Stash|Loon|Shadowrocket/i) != -1){
 	isSurgeiOS = appUa.search(/Surge|LanceX|Egern/i) != -1;
@@ -61,7 +65,6 @@ var Rin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;
 var Rout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;
 var ipNoResolve = istrue(queryObject.nore);
 var sni = queryObject.sni != undefined ? queryObject.sni.split("+") : null;
-var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : "";
 
 var evJsori = queryObject.evalScriptori;
 var evJsmodi = queryObject.evalScriptmodi;
@@ -77,10 +80,7 @@ if (evUrlmodi){
 evUrlmodi = (await $.http.get(evUrlmodi)).body;
 };
 
-if (req == 'http://local.text'){
-	body = localText;
-}else{
-	body = (await $.http.get(req)).body + localText;};
+let body = (await $.http.get(req)).body;
   
 eval(evJsori);
 eval(evUrlori);
@@ -265,7 +265,7 @@ eval(evUrlmodi);
 
 })()
 .catch((e) => {
-		$.msg(`Script Hub: 规则集转换`,`${resFileName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
+		noNtf == false && $.msg(`Script Hub: 规则集转换`,`${resFileName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
 		result = {
       response: {
         status: 500,
