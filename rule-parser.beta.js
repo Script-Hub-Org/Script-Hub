@@ -14,6 +14,7 @@ if (isLanceX || isEgern){
 
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
+var reqArr = req.match("%F0%9F%98%82") ? req.split("%F0%9F%98%82") : [req];
 	//$.log("原始链接：" + req);
 var urlArg = url.split(/\/_end_\//)[1];
 
@@ -38,9 +39,13 @@ const isSurgedomainset2 = queryObject.target == "surge-domain-set2";
 const isStashdomainset = queryObject.target == "stash-domain-set";
 const isStashdomainset2 = queryObject.target == "stash-domain-set2";
 
+var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : "";//纯文本输入
+
 var noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false;//默认开启通知
 var localsetNtf = $.getdata("ScriptHub通知");
 noNtf = localsetNtf == "开启通知" ? false : localsetNtf == "关闭通知" ? true : noNtf ;
+
+let bodyBox = [];
 
 if (queryObject.target == 'rule-set'){
 	if (appUa.search(/Surge|LanceX|Egern|Stash|Loon|Shadowrocket/i) != -1){
@@ -80,7 +85,23 @@ if (evUrlmodi){
 evUrlmodi = (await $.http.get(evUrlmodi)).body;
 };
 
-let body = (await $.http.get(req)).body;
+//let body = (await $.http.get(req)).body;
+
+if (req == 'http://local.text'){
+	body = localText;
+}else{
+	for (let i=0; i<reqArr.length; i++){
+		body = (await $.http.get(reqArr[i])).body;
+		if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)){
+
+body = body.match(/^(?:\n|\r)*\/\*([\s\S]*?)(?:\r|\n)\s*\*+\//)[1];
+		bodyBox.push(body);
+
+		}else{bodyBox.push(body)}
+		
+	};//for
+	body = bodyBox.join("\n\n")+localText;
+};
   
 eval(evJsori);
 eval(evUrlori);
