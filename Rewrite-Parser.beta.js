@@ -340,7 +340,7 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 		wakeSys = getJsInfo(x, /[=, ] *wake-system *= */);
 		cronExp = getJsInfo(x, /[=, ] *cronexpr? *= */);
 		ability = getJsInfo(x, /[=, ] *ability *= */);
-		updataTime = getJsInfo(x, /[=, ] *script-update-interval *= */);
+		updateTime = getJsInfo(x, /[=, ] *script-update-interval *= */);
 		timeOut = getJsInfo(x, /[=, ] *timeout *= */);
 		tilesIcon = (jsType=="generic"&&/icon=/.test(x)) ? x.split("icon=")[1].split("&")[0] : "";
 		tilesColor = (jsType=="generic"&&/icon=/.test(x)) ? x.split("icon-color=")[1].split("&")[0] : "";
@@ -364,7 +364,7 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 	if (x.indexOf(elem) != -1){
         cronExp = nCronExp[i];   
             };};};
-			jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"ability":ability,"updatatime":updataTime,"timeout":timeOut,"jsarg":jsArg,"cronexp":cronExp,"wakesys":wakeSys,"tilesicon":tilesIcon,"tilescolor":tilesColor,"eventname":eventName,"ori":x})
+			jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"ability":ability,"updatetime":updateTime,"timeout":timeOut,"jsarg":jsArg,"cronexp":cronExp,"wakesys":wakeSys,"tilesicon":tilesIcon,"tilescolor":tilesColor,"eventname":eventName,"ori":x})
 
 };//脚本解析结束
 
@@ -391,7 +391,7 @@ if (/ url +script-/.test(x)){
 	if (x.indexOf(elem) != -1){
         jsArg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
-	jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"updatatime":"0","timeout":"60","jsarg":jsArg,"ori":x})
+	jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"updatetime":"0","timeout":"60","jsarg":jsArg,"ori":x})
 };//qx脚本解析结束
 
 //qx cron脚本解析
@@ -422,7 +422,7 @@ if (/[^ ]+ [^u ]+ [^ ]+ [^ ]+ [^ ]+ ([^ ]+ )?(https?|ftp|file):\/\//.test(x)){
 	if (x.indexOf(elem) != -1){
         jsArg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
-	jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":"cron","cronexp":cronExp,"jsurl":jsUrl,"wakesys":"1","updatatime":"0","timeout":"60","jsarg":jsArg,"ori":x})
+	jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":"cron","cronexp":cronExp,"jsurl":jsUrl,"wakesys":"1","updatetime":"0","timeout":"60","jsarg":jsArg,"ori":x})
 
 };//qx cron 脚本解析结束
 
@@ -676,7 +676,7 @@ switch (targetApp){
 		proto = jsBox[i].proto ? ", binary-body-mode="+jsBox[i].proto : "";
 		size = jsBox[i].size ? ", max-size="+jsBox[i].size : "";
 		ability = jsBox[i].ability ? ", ability="+jsBox[i].ability : "";
-		updatatime = jsBox[i].updatatime ? ", script-updata-interval="+jsBox[i].updatatime : "";
+		updatetime = jsBox[i].updatetime ? ", script-update-interval="+jsBox[i].updatetime : "";
 		cronexp = jsBox[i].cronexp;
 		wakesys = jsBox[i].wakesys ? ", wake-system="+jsBox[i].wakesys : "";
 		timeout = jsBox[i].timeout ? ", timeout="+jsBox[i].timeout : "";
@@ -689,11 +689,11 @@ switch (targetApp){
 		}else if (/request|response|network-changed|generic/.test(jstype) && isLooniOS) {
 			script.push(mark+noteK+jstype+jsptn+" script-path="+jsurl+rebody+proto+timeout+", tag="+jsname+jsarg);
 		}else if (/request|response|generic/.test(jstype) && (isSurgeiOS || isShadowrocket)){
-			script.push(mark+noteK+jsname+" = type="+jstype+jsptn+", script-path="+jsurl+rebody+proto+size+ability+updatatime+timeout+jsarg);
+			script.push(mark+noteK+jsname+" = type="+jstype+jsptn+", script-path="+jsurl+rebody+proto+size+ability+updatetime+timeout+jsarg);
 		}else if (jstype == "event" && (isSurgeiOS || isShadowrocket)){
-			 script.push(mark+noteK+jsname+" = type="+jstype+eventname+", script-path="+jsurl+ability+updatatime+timeout+jsarg);
+			 script.push(mark+noteK+jsname+" = type="+jstype+eventname+", script-path="+jsurl+ability+updatetime+timeout+jsarg);
 		}else if (jstype =="cron" && (isSurgeiOS || isShadowrocket)){
-			 script.push(mark+noteK+jsname+' = type='+jstype+', cronexp="'+cronexp+'"'+', script-path='+jsurl+updatatime+timeout+wakesys+jsarg);
+			 script.push(mark+noteK+jsname+' = type='+jstype+', cronexp="'+cronexp+'"'+', script-path='+jsurl+updatetime+timeout+wakesys+jsarg);
 		}else if (jstype =="cron" && isLooniOS){
 			script.push(mark+noteK+jstype+' "'+cronexp+'"'+" script-path="+jsurl+timeout+', tag='+jsname+jsarg);
 		}else{
