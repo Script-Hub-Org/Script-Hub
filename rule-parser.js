@@ -3,7 +3,7 @@
    适用app: Surge Shadowrocket Stash Loon
 ***************************/
 
-const $ = new Env("rule-parser");
+const $ = new Env("Script Hub: 规则集转换");
 
 //目标app
 const isEgern = 'object' == typeof egern;
@@ -37,6 +37,10 @@ const isSurgedomainset = queryObject.target == "surge-domain-set";
 const isSurgedomainset2 = queryObject.target == "surge-domain-set2";
 const isStashdomainset = queryObject.target == "stash-domain-set";
 const isStashdomainset2 = queryObject.target == "stash-domain-set2";
+
+var noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false;//默认开启通知
+var localsetNtf = $.getdata("ScriptHub通知");
+noNtf = localsetNtf == "开启通知" ? false : localsetNtf == "关闭通知" ? true : noNtf ;
 
 if (queryObject.target == 'rule-set'){
 	if (appUa.search(/Surge|LanceX|Egern|Stash|Loon|Shadowrocket/i) != -1){
@@ -261,7 +265,7 @@ eval(evUrlmodi);
 
 })()
 .catch((e) => {
-		$.msg(`Script Hub: 规则集转换`,`${resFileName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
+		noNtf == false && $.msg(`Script Hub: 规则集转换`,`${resFileName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
 		result = {
       response: {
         status: 500,
