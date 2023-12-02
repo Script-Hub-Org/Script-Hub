@@ -955,7 +955,7 @@ $.done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/pla
 
 })()
 .catch((e) => {
-		$.msg(`Script Hub: 重写转换`,`${notifyName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
+	noNtf == false && $.msg(`Script Hub: 重写转换`,`${notifyName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
 		result = {
       response: {
         status: 500,
