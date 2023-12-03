@@ -13,17 +13,13 @@ const BETA_BASE_URL = process.env.BETA_BASE_URL || `http://127.0.0.1:${BETA_PORT
 
 const scriptMap = {
   './script-hub.js': /^https?:\/\/script\.hub\/($|edit\/|reload)/,
-  './QX-Rewrite-Parser.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite/,
-  './Loon-Rewrite-Parser.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=loon-plugin/,
-  './Surge-Rewrite-Parser.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=surge-module/,
+  './Rewrite-Parser.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=(qx-rewrite|loon-plugin|surge-module|all-module)/,
   './rule-parser.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set/,
   './script-converter.js': /^https?:\/\/script\.hub\/convert\//,
 }
 const scriptMapBeta = {
   './script-hub.beta.js': /^https?:\/\/script\.hub\/($|edit\/|reload)/,
-  './QX-Rewrite-Parser.beta.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=qx-rewrite/,
-  './Loon-Rewrite-Parser.beta.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=loon-plugin/,
-  './Surge-Rewrite-Parser.beta.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=surge-module/,
+  './Rewrite-Parser.beta.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=(qx-rewrite|loon-plugin|surge-module|all-module)/,
   './rule-parser.beta.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set/,
   './script-converter.beta.js': /^https?:\/\/script\.hub\/convert\//,
 }
