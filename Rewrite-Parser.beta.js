@@ -275,7 +275,7 @@ if (/^force-http-engine-hosts *=.+/.test(x)) getHn(x,fheBox);
 
 if (/^skip-proxy *=.+/.test(x)) getHn(x,skipBox);
 
-if (/^(?:alway-)?real-ip *=.+/.test(x)) getHn(x,realBox);
+if (/^(?:always-)?real-ip *=.+/.test(x)) getHn(x,realBox);
 
 //reject 解析
 	if (/^#?(?!DOMAIN.*? *,|IP-CIDR6? *,|IP-ASN *,|OR *,|AND *,|NOT *,|USER-AGENT *,|URL-REGEX *,|RULE-SET *,|DE?ST-PORT *,|PROTOCOL *,).+reject(?:-\w+)?$/i.test(x)) {
@@ -451,13 +451,12 @@ if (/url +echo-response | data *= *"/.test(x)){
 	
 	ruleBox = [...new Set(ruleBox)];
 	
-	if (reqArr.length>1){
+	
 		modInfoBox = modInfoBox.reduce((curr, next) => {
       /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
       obj[next.a] ? '' : obj[next.a] = curr.push(next);
       return curr;
     }, []);
-	};
 	
     modInputBox = modInputBox.reduce((curr, next) => {
       /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
@@ -836,16 +835,16 @@ switch (targetApp){
 	if (isLooniOS) {
 		MITM = hnBox != "" ? "[MITM]\n\nhostname = "+hnBox : "";
 		fheBox != "" && General.push('force-http-engine-hosts = '+fheBox);
-		skipBox != "" && General.push('force-http-engine-hosts = '+fheBox);
-		realBox != "" && General.push('force-http-engine-hosts = '+fheBox);
+		skipBox != "" && General.push('skip-proxy = '+skipBox);
+		realBox != "" && General.push('real-ip = '+realBox);
     General = (General[0] || '') && `[General]\n\n${General.join("\n\n")}`;
 	};
 	
 	if (isSurgeiOS||isShadowrocket) {
 		MITM = hnBox != "" ? "[MITM]\n\nhostname = %APPEND% "+hnBox : "";
 		fheBox != "" && General.push('force-http-engine-hosts = %APPEND% '+fheBox);
-		skipBox != "" && General.push('force-http-engine-hosts = %APPEND% '+fheBox);
-		realBox != "" && General.push('force-http-engine-hosts = %APPEND% '+fheBox);
+		skipBox != "" && General.push('skip-proxy = %APPEND% '+skipBox);
+		realBox != "" && General.push('always-real-ip = %APPEND% '+realBox);
     General = (General[0] || '') && `[General]\n\n${General.join("\n\n")}`;
 	};
 	
