@@ -343,7 +343,7 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 		updateTime = getJsInfo(x, /[=, ] *script-update-interval *= */);
 		timeOut = getJsInfo(x, /[=, ] *timeout *= */);
 		tilesIcon = (jsType=="generic"&&/icon=/.test(x)) ? x.split("icon=")[1].split("&")[0] : "";
-		tilesColor = (jsType=="generic"&&/icon=/.test(x)) ? x.split("icon-color=")[1].split("&")[0] : "";
+		tilesColor = (jsType=="generic"&&/icon-color=/.test(x)) ? x.split("icon-color=")[1].split("&")[0] : "";
 		if (nTilesTarget != null){
 	for (let i=0; i < nTilesTarget.length; i++) {
   const elem = nTilesTarget[i];
@@ -403,7 +403,7 @@ if (/[^ ]+ [^u ]+ [^ ]+ [^ ]+ [^ ]+ ([^ ]+ )?(https?|ftp|file):\/\//.test(x)){
 				.replace(/\x20{2,}/g," ")
 				.replace(cronExp,"")
 				.split(/ *, */)[0]
-				.replace(/^ */,"");
+				.trim();
 	jsName = jsUrl.substring(jsUrl.lastIndexOf('/') + 1, jsUrl.lastIndexOf('.') );
 	jsfrom = "qx";
 	jsUrl = toJsc(jsUrl,jscStatus,jsc2Status,jsfrom);
