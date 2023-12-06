@@ -63,6 +63,7 @@ var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : nul
 var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;//arg参数
 var nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+") : null;
 var nTilesColor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
+var nPolicy = queryObject.policy != undefined ? queryObject.policy : null;
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;//脚本转换1
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;//脚本转换2
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);//兼容转换
@@ -124,6 +125,7 @@ let inBox = [];        //被释放的重写或规则
 let outBox = [];       //被排除的重写或规则
 let modInfoBox = [];   //模块简介等信息
 let modInputBox = [];  //loon插件的可交互按钮
+let hostBox = [];      //host
 let ruleBox = [];      //规则
 let rwBox = [];        //重写
 let rwhdBox = [];      //HeaderRewrite
@@ -139,7 +141,8 @@ let modInfo = [];      //模块简介
 let httpFrame = [];    //Stash的http:父框架
 let tiles = [];        //磁贴覆写
 let General = [];      
-let Panel = [];        
+let Panel = [];
+let host = [];        
 let rules = [];
 let URLRewrite = [];
 let HeaderRewrite = [];
@@ -150,7 +153,7 @@ let providers = [];
 
 hnBox = hnAdd != null ? hnAdd : [];
 
-const jsRegx = /[=,] *(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|tag|type|img-url|debug|event-name) *=/;
+const jsRegx = /[=,] *(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|tag|type|img-url|debug|event-name|desc) *=/;
 
 //查询js binarymode相关
 let binaryInfo = $.getval("Parser_binary_info");
@@ -306,21 +309,30 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
 	x = x.replace(/ /g,"");
 	noteK = /^#/.test(x) ? "#" : "";
-	if (/^#?(and|or|not|protocol|domain-set|rule-set),/i.test(x)){
-	ruletype = x.split(/ *, */)[0].replace(/^#/,"");
-	rulevalue = x;
-	ruleBox.push({mark,ruletype,rulevalue})
-	
-	}else{
 	ruletype = x.split(/ *, */)[0].replace(/^#/,"");
 	rulenore = /,no-resolve/.test(x) ? ",no-resolve" : "";
 	rulesni = /,extended-matching/.test(x) ? ",extended-matching" : "";
 	rulePandV = x.replace(/^#/,'').replace(ruletype,'').replace(rulenore,'').replace(rulesni,'').replace(/^,/,'');
 	rulepolicy = rulePandV.substring(rulePandV.lastIndexOf(',') + 1);
+	rulepolicy = /\)|\}/.test(rulepolicy) ? "" : rulepolicy;
 	rulevalue = rulePandV.replace(rulepolicy,'').replace(/,$/,'').replace(/"/g,'');
-	ruleBox.push({mark,noteK,ruletype,rulevalue,rulepolicy,rulenore,rulesni,"ori":x})
-	};
-};//rule解析
+	
+	if (nPolicy!=null&&!/direct|reject/.test(rulepolicy)&&!isLooniOS){
+		rulepolicy = nPolicy;
+		modistatus = "yes";
+	}else{modistatus = "no";}
+	ruleBox.push({mark,noteK,ruletype,rulevalue,rulepolicy,rulenore,rulesni,"ori":x,modistatus})
+
+};//rule解析结束
+
+//host解析
+if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *: *)?[^ ,]+$/g.test(x)) {
+		noteK = /^#/.test(x) ? "#" : "";
+		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+		hostdomain = x.split(/ *= */)[0];
+		hostvalue = x.split(/ *= */)[1];
+		hostBox.push({mark,noteK,hostdomain,hostvalue,"ori":x})
+};
 
 //脚本 解析
 	if (/script-path *=.+/.test(x)){
@@ -464,9 +476,9 @@ if (/url +echo-response | data *= *"/.test(x)){
       return curr;
     }, []);
 	
-    jsBox = jsBox.reduce((curr, next) => {
+    hostBox = hostBox.reduce((curr, next) => {
       /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
-      obj[next.jstype + next.jsptn + next.jsurl] ? '' : obj[next.jstype + next.jsptn + next.jsurl] = curr.push(next);
+      obj[next.hostdomain] ? '' : obj[next.hostdomain] = curr.push(next);
       return curr;
     }, []);
 	
@@ -476,12 +488,18 @@ if (/url +echo-response | data *= *"/.test(x)){
       return curr;
     }, []);
 	
+    jsBox = jsBox.reduce((curr, next) => {
+      /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
+      obj[next.jstype + next.jsptn + next.jsurl] ? '' : obj[next.jstype + next.jsptn + next.jsurl] = curr.push(next);
+      return curr;
+    }, []);
+	
     mockBox = mockBox.reduce((curr, next) => {
       /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
       obj[next.mockptn] ? '' : obj[next.mockptn] = curr.push(next);
       return curr;
     }, []);//去重结束
-
+$.log($.toStr(ruleBox))
 inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join("\n\n")}`;
 outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join("\n")}`;
 
@@ -536,14 +554,14 @@ switch (targetApp){
 		if (noteK != "#" && isStashiOS){
 noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";noteK2 = "  ";
 	}else{noteKn8 = "\n#        ";noteKn6 = "\n#      ";noteKn4 = "\n#    ";noteK4 = "#    ";noteK2 = "#  ";};
-		ruletype = ruleBox[i].ruletype;
+		ruletype = ruleBox[i].ruletype.toUpperCase();
 		rulevalue = ruleBox[i].rulevalue ? ruleBox[i].rulevalue : "";
 		rulepolicy = ruleBox[i].rulepolicy ? ruleBox[i].rulepolicy : "";
-		rulepolicy = rulepolicy.toUpperCase();
-		ruletype = ruletype.toUpperCase();
+		rulepolicy = /direct|reject/i.test(rulepolicy) ? rulepolicy.toUpperCase() : rulepolicy;
 		rulenore = ruleBox[i].rulenore ? ruleBox[i].rulenore : "";
 		rulesni = ruleBox[i].rulesni ? ruleBox[i].rulesni : "";
 		rulesni = isLooniOS ||isStashiOS ? "" : rulesni;
+		modistatus = ruleBox[i].modistatus;
 		if (/de?st-port/i.test(ruletype)){
 			ruletype = isSurgeiOS ? "DEST-PORT" : "DST-PORT";
 		};
@@ -560,16 +578,14 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 			rulepolicy = "REJECT";
 		};
 
-		if (/^(?:and|or|not|protocol|domain-set|rule-set)$/i.test(ruletype) && isSurgeiOS) {
-			rules.push(mark+rulevalue)
-		}else if (/^(?:and|or|not|domain-set|rule-set)$/i.test(ruletype) && isShadowrocket) {
-			rules.push(mark+rulevalue)
-		}else if (rulepolicy==""){
+		if (rulevalue=="" || rulepolicy==""){
 			otherRule.push(ruleBox[i].ori)
-		} else if(/proxy/i.test(rulepolicy)&&(isSurgeiOS||isStashiOS)){
+		} else if(/proxy/i.test(rulepolicy)&&modistatus=="no"&&(isSurgeiOS||isStashiOS||isShadowrocket)){
 otherRule.push(ruleBox[i].ori)
-		} else if (/proxy/i.test(rulepolicy)&&(isLooniOS||isShadowrocket)) {
-rules.push(mark+ruletype+","+rulevalue+","+rulepolicy)
+		} else if (/^(?:and|or|not|protocol|domain-set|rule-set)$/i.test(ruletype) && isSurgeiOS) {
+			rules.push(mark+noteK+ruletype+","+rulevalue+","+rulepolicy+rulenore+rulesni)
+		}else if (/^(?:and|or|not|domain-set|rule-set)$/i.test(ruletype) && isShadowrocket) {
+			rules.push(mark+noteK+ruletype+","+rulevalue+","+rulepolicy+rulenore+rulesni)
 		}else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|user-agent|url-regex)/i.test(ruletype)&&!isStashiOS){
 			rulevalue = /,/.test(rulevalue) ? '"'+rulevalue+'"' : rulevalue;
 			rules.push(mark+noteK+ruletype+','+rulevalue+','+rulepolicy+rulenore+rulesni)
@@ -654,6 +670,21 @@ rwhdBox = (rwhdBox[0] || '') && `${rwhdBox.join("\n")}`;
 	break;
 };//headerRewrite输出结束
 
+//host输出
+	for (let i=0;i<hostBox.length;i++){
+		noteK = hostBox[i].noteK ? "#" : "";
+		mark = hostBox[i].mark ? hostBox[i].mark+"\n" : "";
+		hostdomain = hostBox[i].hostdomain;
+		hostvalue = hostBox[i].hostvalue;
+		if (isStashiOS) {
+			otherRule.push(hostBox[i].ori)
+		}else if (isLooniOS && /script *: */.test(hostvalue)){
+			otherRule.push(hostBox[i].ori)
+		}else{
+	host.push(mark+noteK+hostdomain+' = '+hostvalue)
+		};
+	};//for
+
 //script输出
 switch (targetApp){
 	case "surge-module":
@@ -695,6 +726,8 @@ switch (targetApp){
 			 script.push(mark+noteK+jsname+' = type='+jstype+', cronexp="'+cronexp+'"'+', script-path='+jsurl+updatetime+timeout+wakesys+jsarg);
 		}else if (jstype =="cron" && isLooniOS){
 			script.push(mark+noteK+jstype+' "'+cronexp+'"'+" script-path="+jsurl+timeout+', tag='+jsname+jsarg);
+		}else if(/dns|rule/.test(jstype)&&(isSurgeiOS||isShadowrocket)){
+			script.push(mark+noteK+jsname+" = type="+jstype+", script-path="+jsurl+updatetime+timeout+jsarg)
 		}else{
 			otherRule.push(jsBox[i].ori)};
 			
@@ -832,6 +865,8 @@ switch (targetApp){
 	
 	MapLocal = (MapLocal[0] || '') && `[Map Local]\n\n${MapLocal.join("\n\n")}`;
 	
+    host = (host[0] || '') && `[Host]\n\n${host.join("\n")}`;
+	
     script = (script[0] || '') && `[Script]\n\n${script.join("\n\n")}`;
 	
 	if (isLooniOS) {
@@ -859,13 +894,15 @@ ${MITM}
 
 ${rules}
 
-${Panel}
-
 ${URLRewrite}
 
 ${HeaderRewrite}
 
 ${MapLocal}
+
+${Panel}
+
+${host}
 
 ${script}
 
