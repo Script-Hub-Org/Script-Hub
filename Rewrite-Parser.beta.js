@@ -150,7 +150,7 @@ let providers = [];
 
 hnBox = hnAdd != null ? hnAdd : [];
 
-const jsRegx = /[=,] *script-path *=|[=,] *pattern *=|[=,] *timeout *=|[=,] *argument *=|[=,] *script-update-interval *=|[=,] *requires-body *=|[=,] *max-size *=|[=,] *ability *=|[=,] *binary-body-mode *=|[=,] *cronexpr? *=|[=,] *wake-system *=|[=,] *enable *=|[=,] *tag *=|[=,] *type *=|[=,] *img-url *=|[=,] *debug *=|[=,] *event-name *=/;
+const jsRegx = /[=,] *(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|tag|type|img-url|debug|event-name) *=/;
 
 //查询js binarymode相关
 let binaryInfo = $.getval("Parser_binary_info");
@@ -364,7 +364,7 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 	if (x.indexOf(elem) != -1){
         cronExp = nCronExp[i];   
             };};};
-			jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"ability":ability,"updatetime":updateTime,"timeout":timeOut,"jsarg":jsArg,"cronexp":cronExp,"wakesys":wakeSys,"tilesicon":tilesIcon,"tilescolor":tilesColor,"eventname":eventName,"ori":x})
+			jsBox.push({mark,"noteK":noteK,"jsname":jsName,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"ability":ability,"updatetime":updateTime,"timeout":timeOut,"jsarg":jsArg,"cronexp":cronExp,"wakesys":wakeSys,"tilesicon":tilesIcon,"tilescolor":tilesColor,"eventname":eventName,"ori":x,"num":y})
 
 };//脚本解析结束
 
@@ -383,7 +383,7 @@ if (/ url +script-/.test(x)){
 		jsUrl = toJsc(jsUrl,jscStatus,jsc2Status,jsfrom);
 	reBody = x.match(/ script[^ ]*(-body|-analyze)/) ? 'true' : '';
 	size = x.match(/ script[^ ]*(-body|-analyze)/) ? '-1' : '';
-	proto = await isBinaryMode(jsUrl);
+	proto = await isBinaryMode(jsUrl,jsName);
 			
 		if (nArgTarget != null){
 	for (let i=0; i < nArgTarget.length; i++) {
@@ -391,11 +391,11 @@ if (/ url +script-/.test(x)){
 	if (x.indexOf(elem) != -1){
         jsArg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
-	jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"updatetime":"0","timeout":"60","jsarg":jsArg,"ori":x})
+	jsBox.push({mark,"noteK":noteK,"jsname":jsName,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"timeout":"60","jsarg":jsArg,"ori":x,"num":y})
 };//qx脚本解析结束
 
 //qx cron脚本解析
-if (/[^ ]+ [^u ]+ [^ ]+ [^ ]+ [^ ]+ ([^ ]+ )?(https?|ftp|file):\/\//.test(x)){
+if (/[^ ]+ +[^u ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+ +)?(https?|ftp|file):\/\//.test(x)){
 	mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
 	noteK = /^#/.test(x) ? "#" : "";
 	cronExp = x.replace(/ {2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/^#/,'');
@@ -422,14 +422,14 @@ if (/[^ ]+ [^u ]+ [^ ]+ [^ ]+ [^ ]+ ([^ ]+ )?(https?|ftp|file):\/\//.test(x)){
 	if (x.indexOf(elem) != -1){
         jsArg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
-	jsBox.push({mark,"noteK":noteK,"jsname":jsName+`_${y}`,"jstype":"cron","cronexp":cronExp,"jsurl":jsUrl,"wakesys":"1","updatetime":"0","timeout":"60","jsarg":jsArg,"ori":x})
+	jsBox.push({mark,"noteK":noteK,"jsname":jsName,"jstype":"cron","cronexp":cronExp,"jsurl":jsUrl,"wakesys":"1","timeout":"60","jsarg":jsArg,"ori":x,"num":y})
 
 };//qx cron 脚本解析结束
 
 //mock 解析
 if (/url +echo-response | data *= *"/.test(x)){
 		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
-		getMockInfo(x,mark);
+		getMockInfo(x,mark,y);
 };
 
 };//for await循环结束
@@ -671,8 +671,8 @@ switch (targetApp){
 		eventname = jsBox[i].eventname ? ', event-name='+jsBox[i].eventname :', event-name=network-changed';
 		jstype = isLooniOS && /event/.test(jstype) ? 'network-changed' : !isLooniOS && /network-changed/.test(jstype) ? 'event' : jstype;
 		jsurl = jsBox[i].jsurl;
-		rebody = jsBox[i].rebody ? ", requires-body="+jsBox[i].rebody : "";
-		proto = jsBox[i].proto ? ", binary-body-mode="+jsBox[i].proto : "";
+		rebody = jsBox[i].rebody ? ", requires-body="+istrue(jsBox[i].rebody) : "";
+		proto = jsBox[i].proto ? ", binary-body-mode="+istrue(jsBox[i].proto) : "";
 		size = jsBox[i].size ? ", max-size="+jsBox[i].size : "";
 		ability = jsBox[i].ability ? ", ability="+jsBox[i].ability : "";
 		updatetime = jsBox[i].updatetime ? ", script-update-interval="+jsBox[i].updatetime : "";
@@ -710,6 +710,7 @@ let urlMap = {};
 
 for (let i = 0; i < jsBox.length; i++) {
   let url = jsBox[i].jsurl;
+  jsBox[i].jsname = jsBox[i].jsname + '_' + jsBox[i].num;
 
   if (urlMap[url]) {
     jsBox[i].jsname = urlMap[url];
@@ -783,6 +784,7 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		mockheader = mockBox[i].mockheader ? mockBox[i].mockheader : "";
 		mfile = mockurl.substring(mockurl.lastIndexOf('/') + 1);
 		mfName = mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.') );
+		mocknum = mockBox[i].mocknum;
 		if (/dict/i.test(mfName)) m2rType="-dict"
 		else if (/array/i.test(mfName)) m2rType="-array"
 		else if (/200|blank/i.test(mfName)) m2rType="-200"
@@ -797,12 +799,12 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		mockurl = m2rType == null ? `http://script.hub/convert/_start_/${mockurl}/_end_/${mfile}?type=mock&target-app=${targetApp}${mockheader}${sufkeepHeader}${sufjsDelivr}` : "";
 		
 		if (isStashiOS && m2rType==null) {
-		script.push(mark+`${noteK4}- match: ${mockptn}${noteKn6}name: "${mfName}_${y}"${noteKn6}type: request${noteKn6}timeout: 60${noteKn6}binary-mode: true`)
+		script.push(mark+`${noteK4}- match: ${mockptn}${noteKn6}name: "${mfName}_${mocknum}"${noteKn6}type: request${noteKn6}timeout: 60${noteKn6}binary-mode: true`)
 		
-		providers.push(`${noteK2}"${mfName}_${y}":${noteKn4}url: ${mockurl}${noteKn4}interval: 86400`)};
+		providers.push(`${noteK2}"${mfName}_${mocknum}":${noteKn4}url: ${mockurl}${noteKn4}interval: 86400`)};
 		
 		if ((isLooniOS || isShadowrocket)&&m2rType==null){
-		script.push(mark+`${noteK}http-request ${mockptn} script-path=${mockurl}, timeout=60, tag=${mfName}_${y}`)
+		script.push(mark+`${noteK}http-request ${mockptn} script-path=${mockurl}, timeout=60, tag=${mfName}`)
 		};
 		
 	};//for
@@ -1023,21 +1025,20 @@ function getJsInfo (x, regx) {
 };
 
 function getQxReInfo (x,y,mark) {
-	jsInNum = y;
 	noteK = /^#/.test(x) ? '#' : '';
 	retype = / url *request-/i.test(x) ? 'request' : 'response';
 	jstype = 'http-'+retype;
 	hdorbd = / url *re[^ ]+?-header /i.test(x) ? 'header' : 'body';
 	breakpoint = retype+'-'+hdorbd;
 	reptn = x.split(/ *url *re/)[0].replace(/^#/,'');
-	jsname = /body/.test(hdorbd) ? 'replaceBody_'+jsInNum : 'replaceHeader_'+jsInNum;
+	jsname = /body/.test(hdorbd) ? 'replaceBody' : 'replaceHeader';
 	jsurl = /header/.test(hdorbd) ? 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-header.js' : 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-body.js';
 	rearg1 = x.split(breakpoint)[1].trim().replace(/^"(.+)"$/,"$1");
 	rearg2 = x.split(breakpoint)[2].trim().replace(/^"(.+)"$/,"$1");
 	jsarg = rearg1+'->'+rearg2;
 	rebody = /body/.test(hdorbd) ? 'true' : '';
 	size = /body/.test(hdorbd) ? '3145728' : '';
-	jsBox.push({mark,"noteK":noteK,"jsname":jsname,"jstype":jstype,"jsptn":reptn,"jsurl":jsurl,"rebody":rebody,"size":size,"timeout":"30","jsarg":jsarg})
+	jsBox.push({mark,"noteK":noteK,"jsname":jsname,"jstype":jstype,"jsptn":reptn,"jsurl":jsurl,"rebody":rebody,"size":size,"timeout":"30","jsarg":jsarg,"num":y})
 };
 
 function getHn (x,arr) {
@@ -1054,11 +1055,11 @@ function pieceHn (arr){
 };
 
 //查binary
-async function isBinaryMode(url) {
+async function isBinaryMode(url,name) {
 
-if (url.search(/proto/i) != -1) {
+if (/proto/i.test(name)) {
 	return "true"
-  } else if (url.search(/(tieba|youtube|bili|spotify)/i) != -1){
+  } else if (/(?:tieba|youtube|bili|spotify)/i.test(name)){
 		if (binaryInfo != "" && binaryInfo.some(item=>item.url===url)){
 			for (let i = 0; i < binaryInfo.length; i++) {
   if (binaryInfo[i].url === url) {
@@ -1069,14 +1070,14 @@ if (url.search(/proto/i) != -1) {
 }
 		} else {
 			const res = (await $.http.get(url)).body;
-	if (res == undefined){
+	if (res == undefined || res == null){
 		//$.log("Script Hub: 重写转换");
 		return "";
 	}else if (res.includes(".bodyBytes")){
 		binaryInfo.push({"url":url,"binarymode":"true"});
 		$.setjson(binaryInfo, "Parser_binary_info")
 		return "true";
-	}else{binaryInfo.push({"url":url,"binarymode":"false"});
+	}else{binaryInfo.push({"url":url,"binarymode":""});
 		$.setjson(binaryInfo, "Parser_binary_info")
 		return "";}     }//没有信息或者没有url的信息
 		
@@ -1084,7 +1085,7 @@ if (url.search(/proto/i) != -1) {
 };//查binary
 
 //获取mock参数
-function getMockInfo (x,mark) {
+function getMockInfo (x,mark,y) {
 	noteK = /^#/.test(x) ? "#" : "";
 	if (/url +echo-response /.test(x)){
 		x = x.replace(/ {2,}/g," ");
@@ -1098,7 +1099,7 @@ function getMockInfo (x,mark) {
 		mockUrl = x.split(' data="')[1].split('"')[0];
 		/ header="/.test(x) ? mockHeader = x.split(' header="')[1].split('"')[0] : mockHeader = "";
 		}
-mockBox.push({mark,"noteK":noteK,"mockptn":mockPtn,"mockurl":mockUrl,"mockheader":mockHeader});
+mockBox.push({mark,"noteK":noteK,"mockptn":mockPtn,"mockurl":mockUrl,"mockheader":mockHeader,"mocknum":y});
 };//获取Mock参数
 
 function istrue(str) {
