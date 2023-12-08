@@ -326,7 +326,7 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 };//rule解析结束
 
 //host解析
-if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *: *)?[^ ,]+$/g.test(x)) {
+if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *: *)?[ 0-9a-z:/,.]+$/g.test(x)) {
 		noteK = /^#/.test(x) ? "#" : "";
 		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
 		hostdomain = x.split(/ *= */)[0];
@@ -334,7 +334,7 @@ if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *:
 		hostBox.push({mark,noteK,hostdomain,hostvalue,"ori":x})
 };
 
-//脚本 解析
+//脚本解析
 	if (/script-path *=.+/.test(x)){
 		x = x.replace(/#!PROFILE-VERSION-REQUIRED *10 */i,'');
 		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
@@ -351,7 +351,7 @@ if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *:
 		jsArg = getJsInfo(x, /[=, ] *argument *= */);
 		reBody = getJsInfo(x, /[=, ] *requires-body *= */);
 		wakeSys = getJsInfo(x, /[=, ] *wake-system *= */);
-		cronExp = getJsInfo(x, /[=, ] *cronexpr? *= */);
+		cronExp = /cronexpr? *= */.test(x) ? getJsInfo(x, /[=, ] *cronexpr? *= */) : /cron *"/.test(x) ? x.split('"')[1] : '';
 		ability = getJsInfo(x, /[=, ] *ability *= */);
 		updateTime = getJsInfo(x, /[=, ] *script-update-interval *= */);
 		timeOut = getJsInfo(x, /[=, ] *timeout *= */);
@@ -408,7 +408,7 @@ if (/ url +script-/.test(x)){
 };//qx脚本解析结束
 
 //qx cron脚本解析
-if (/[^ ]+ +[^u ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+ +)?(https?|ftp|file):\/\//.test(x)){
+if (/^[^ ]+ +[^u ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+ +)?(https?|ftp|file):\/\//.test(x)){
 	mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
 	noteK = /^#/.test(x) ? "#" : "";
 	cronExp = x.replace(/ {2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/^#/,'');
@@ -500,6 +500,8 @@ if (/url +echo-response | data *= *"/.test(x)){
       obj[next.mockptn] ? '' : obj[next.mockptn] = curr.push(next);
       return curr;
     }, []);//去重结束
+
+//=$.log($.toStr(jsBox))
 	
 inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join("\n\n")}`;
 outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join("\n")}`;
@@ -686,7 +688,7 @@ rwhdBox = (rwhdBox[0] || '') && `${rwhdBox.join("\n")}`;
 		};
 	};//for
 
-//script输出
+//脚本输出
 switch (targetApp){
 	case "surge-module":
 	case "shadowrocket-module":
@@ -733,7 +735,7 @@ switch (targetApp){
 			otherRule.push(jsBox[i].ori)};
 			
 		if (isSurgeiOS && jstype == "generic"){
-			 Panel.push(jsname+" = script-name="+jsname+", update-interval=3600")
+			 Panel.push(noteK+jsname+" = script-name="+jsname+", update-interval=3600")
 		};
 	};//for
 	break;
@@ -789,7 +791,7 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 			/event|rule|dns/i.test(jstype) && otherRule.push(jsBox[i].ori);
 };//for循环
 break;
-};//script输出结束
+};//脚本输出结束
 
 //Mock输出
 switch (targetApp){
