@@ -25,10 +25,10 @@ DOMAIN,scripthub.vercel.app,PROXY
 
 [Script]
 
-http-request ^https?:\/\/script\.hub\/($|edit\/|reload) script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.beta.js, timeout=30, tag=Script Hub: 前端
+http-request ^https?:\/\/script\.hub\/($|edit\/|reload) script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.beta.js, timeout=300, tag=Script Hub: 前端
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|loon-plugin|all-module) script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Rewrite-Parser.beta.js, timeout=30, tag=Script Hub: 重写转换
+http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|loon-plugin|all-module) script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/Rewrite-Parser.beta.js, timeout=300, tag=Script Hub: 重写转换
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.beta.js, timeout=30, tag=Script Hub: 规则集转换
+http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set script-path=https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.beta.js, timeout=300, tag=Script Hub: 规则集转换
 
-http-request ^https?:\/\/script\.hub\/convert\/ script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.beta.js, timeout=30, tag=Script Hub: 脚本转换
+http-request ^https?:\/\/script\.hub\/convert\/ script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.beta.js, timeout=300, tag=Script Hub: 脚本转换

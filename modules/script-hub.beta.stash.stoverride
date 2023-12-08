@@ -15,22 +15,22 @@ http:
     - match: ^https?:\/\/script\.hub\/($|edit\/|reload)
       name: "Script Hub: 前端"
       type: request
-      timeout: 30
+      timeout: 300
 
     - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|loon-plugin|all-module)
       name: "Script Hub: 重写转换"
       type: request
-      timeout: 30
+      timeout: 300
 
     - match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set
       name: "Script Hub: 规则集转换"
       type: request
-      timeout: 30
+      timeout: 300
 
     - match: ^https?:\/\/script\.hub\/convert\/
       name: "Script Hub: 脚本转换"
       type: request
-      timeout: 30
+      timeout: 300
 
 script-providers:
   "Script Hub: 前端":
