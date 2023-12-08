@@ -336,6 +336,7 @@ if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *:
 
 //脚本 解析
 	if (/script-path *=.+/.test(x)){
+		x = x.replace(/#!PROFILE-VERSION-REQUIRED *10 */i,'');
 		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
 		noteK = /^#/.test(x) ? "#" : "";
 		jsUrl = getJsInfo(x, /script-path *= */);
@@ -499,7 +500,7 @@ if (/url +echo-response | data *= *"/.test(x)){
       obj[next.mockptn] ? '' : obj[next.mockptn] = curr.push(next);
       return curr;
     }, []);//去重结束
-$.log($.toStr(ruleBox))
+	
 inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join("\n\n")}`;
 outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join("\n")}`;
 
