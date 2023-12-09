@@ -610,13 +610,14 @@ otherRule.push(ruleBox[i].ori)
 		
 	};//for rule输出结束
 
-//reject redirect 输出
+//reject redirect输出
 switch (targetApp){
 	case "loon-plugin":
 	case "shadowrocket-module":
 	for (let i=0;i<rwBox.length;i++){
 		noteK = rwBox[i].noteK ? "#" : "";
-		mark = rwBox[i].mark ? rwBox[i].mark+"\n" : "";	URLRewrite.push(mark+noteK+rwBox[i].rwptn+" "+rwBox[i].rwvalue+" "+rwBox[i].rwtype.replace(/-video|-tinygif/,"-img"))
+		mark = rwBox[i].mark ? rwBox[i].mark+"\n" : "";
+		rwtype = isShadowrocket && /-video/.test(rwBox[i].rwtype) ? 'reject-img' : isLooniOS && /-tinygif/.test(rwBox[i].rwtype) ? 'reject-img' : rwtype;	URLRewrite.push(mark+noteK+rwBox[i].rwptn+" "+rwBox[i].rwvalue+" "+rwtype)
 	};
 	break;
 	
