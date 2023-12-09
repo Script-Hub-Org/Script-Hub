@@ -58,11 +58,11 @@ var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/ *, */) : 
 var synMitm = istrue(queryObject.synMitm);//将force与mitm同步
 var delNoteSc = istrue(queryObject.del);
 var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;//替换cron目标
-var nCronExp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;//新cronexp
+var ncronexp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;//新cronexp
 var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : null;//arg目标
 var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;//arg参数
 var nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+") : null;
-var nTilesColor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
+var ntilescolor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
 var nPolicy = queryObject.policy != undefined ? queryObject.policy : null;
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;//脚本转换1
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;//脚本转换2
@@ -186,7 +186,7 @@ eval(evUrlori);
 for await (var [y, x] of body.entries()) {
 
 //简单处理方便后续操作
-	x = x.replace(/^ *(#|;|\/\/) */,'#').replace(/ *.+?url-and-header */,' url ').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/#!PROFILE-VERSION-REQUIRED/i,'');
+	x = x.replace(/^ *(#|;|\/\/) */,'#').replace(/ +.+url-and-header +/,' url ').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/#!PROFILE-VERSION-REQUIRED/i,'');
 	
 //去掉注释
 if (Pin0 != null) {
@@ -317,7 +317,7 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 	rulepolicy = /\)|\}/.test(rulepolicy) ? "" : rulepolicy;
 	rulevalue = rulePandV.replace(rulepolicy,'').replace(/,$/,'').replace(/"/g,'');
 	
-	if (nPolicy!=null&&!/direct|reject/.test(rulepolicy)&&!isLooniOS){
+	if (nPolicy!=null&&!/direct|reject/.test(rulepolicy)){
 		rulepolicy = nPolicy;
 		modistatus = "yes";
 	}else{modistatus = "no";}
@@ -336,48 +336,47 @@ if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *:
 
 //脚本解析
 	if (/script-path *=.+/.test(x)){
-		x = x.replace(/#!PROFILE-VERSION-REQUIRED *10 */i,'');
 		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
 		noteK = /^#/.test(x) ? "#" : "";
-		jsUrl = getJsInfo(x, /script-path *= */);
-		jsName = /[=,] *type *= */.test(x) ? x.split(/ *=/)[0].replace(/^#/,"") : /, *tag *= */.test(x) ? getJsInfo(x, /, *tag *= */) : jsUrl.substring(jsUrl.lastIndexOf('/') + 1, jsUrl.lastIndexOf('.') );
+		jsurl = getJsInfo(x, /script-path *= */);
+		jsname = /[=,] *type *= */.test(x) ? x.split(/ *=/)[0].replace(/^#/,"") : /, *tag *= */.test(x) ? getJsInfo(x, /, *tag *= */) : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
 		jsfrom = "surge";
-		jsUrl = toJsc(jsUrl,jscStatus,jsc2Status,jsfrom);
-		jsType = /[=,] *type *= */.test(x) ? getJsInfo(x, /[=,] *type *=/) : x.split(/ +/)[0].replace(/^#/,"");
-		eventName = getJsInfo(x, /[=, ] *event-name *= */);
+		jsurl = toJsc(jsurl,jscStatus,jsc2Status,jsfrom);
+		jstype = /[=,] *type *= */.test(x) ? getJsInfo(x, /[=,] *type *=/) : x.split(/ +/)[0].replace(/^#/,"");
+		eventname = getJsInfo(x, /[=, ] *event-name *= */);
 		size = getJsInfo(x, /[=, ] *max-size *= */);
 		proto = getJsInfo(x, /[=, ] *binary-body-mode *= */);
-		jsPtn = /[=,] *pattern *= */.test(x) ? getJsInfo(x, /[=,] *pattern *= */).replace(/"/g,'') : x.split(/ +/)[1];
-		jsArg = getJsInfo(x, /[=, ] *argument *= */);
-		reBody = getJsInfo(x, /[=, ] *requires-body *= */);
-		wakeSys = getJsInfo(x, /[=, ] *wake-system *= */);
-		cronExp = /cronexpr? *= */.test(x) ? getJsInfo(x, /[=, ] *cronexpr? *= */) : /cron *"/.test(x) ? x.split('"')[1] : '';
+		jsptn = /[=,] *pattern *= */.test(x) ? getJsInfo(x, /[=,] *pattern *= */).replace(/"/g,'') : x.split(/ +/)[1];
+		jsarg = getJsInfo(x, /[=, ] *argument *= */);
+		rebody = getJsInfo(x, /[=, ] *requires-body *= */);
+		wakesys = getJsInfo(x, /[=, ] *wake-system *= */);
+		cronexp = /cronexpr? *= */.test(x) ? getJsInfo(x, /[=, ] *cronexpr? *= */) : /cron *"/.test(x) ? x.split('"')[1] : '';
 		ability = getJsInfo(x, /[=, ] *ability *= */);
-		updateTime = getJsInfo(x, /[=, ] *script-update-interval *= */);
-		timeOut = getJsInfo(x, /[=, ] *timeout *= */);
-		tilesIcon = (jsType=="generic"&&/icon=/.test(x)) ? x.split("icon=")[1].split("&")[0] : "";
-		tilesColor = (jsType=="generic"&&/icon-color=/.test(x)) ? x.split("icon-color=")[1].split("&")[0] : "";
+		updatetime = getJsInfo(x, /[=, ] *script-update-interval *= */);
+		timeout = getJsInfo(x, /[=, ] *timeout *= */);
+		tilesicon = (jstype=="generic"&&/icon=/.test(x)) ? x.split("icon=")[1].split("&")[0] : "";
+		tilescolor = (jstype=="generic"&&/icon-color=/.test(x)) ? x.split("icon-color=")[1].split("&")[0] : "";
 		if (nTilesTarget != null){
 	for (let i=0; i < nTilesTarget.length; i++) {
   const elem = nTilesTarget[i];
 	if (x.indexOf(elem) != -1){
-        tilesColor = nTilesColor[i].replace(/@/g,"#");   
+        tilescolor = ntilescolor[i].replace(/@/g,"#");   
             };};};
 			
 		if (nArgTarget != null){
 	for (let i=0; i < nArgTarget.length; i++) {
   const elem = nArgTarget[i];
 	if (x.indexOf(elem) != -1){
-        jsArg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
+        jsarg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
 			
 			if (nCron != null){
 	for (let i=0; i < nCron.length; i++) {
   const elem = nCron[i];
 	if (x.indexOf(elem) != -1){
-        cronExp = nCronExp[i];   
+        cronexp = ncronexp[i];   
             };};};
-			jsBox.push({mark,"noteK":noteK,"jsname":jsName,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"ability":ability,"updatetime":updateTime,"timeout":timeOut,"jsarg":jsArg,"cronexp":cronExp,"wakesys":wakeSys,"tilesicon":tilesIcon,"tilescolor":tilesColor,"eventname":eventName,"ori":x,"num":y})
+			jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,proto,size,ability,updatetime,timeout,jsarg,cronexp,wakesys,tilesicon,tilescolor,eventname,"ori":x,"num":y})
 
 };//脚本解析结束
 
@@ -386,56 +385,56 @@ if (/ url +script-/.test(x)){
 	x = x.replace(/ {2,}/g," ");
 	mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
 	noteK = /^#/.test(x) ? "#" : "";
-	jsType = x.match(' url script-response') ? 'http-response' : 'http-request';
+	jstype = x.match(' url script-response') ? 'http-response' : 'http-request';
 	urlInNum = x.split(" ").indexOf("url");
-	jsPtn = x.split(" ")[urlInNum - 1].replace(/^#/,"");
-	jsUrl = x.split(" ")[urlInNum + 2];
+	jsptn = x.split(" ")[urlInNum - 1].replace(/^#/,"");
+	jsurl = x.split(" ")[urlInNum + 2];
 	jsfrom = "qx";
-	jsName = jsUrl.substring(jsUrl.lastIndexOf('/') + 1, jsUrl.lastIndexOf('.') );
-	jsArg = "";
-		jsUrl = toJsc(jsUrl,jscStatus,jsc2Status,jsfrom);
-	reBody = x.match(/ script[^ ]*(-body|-analyze)/) ? 'true' : '';
+	jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
+	jsarg = "";
+		jsurl = toJsc(jsurl,jscStatus,jsc2Status,jsfrom);
+	rebody = x.match(/ script[^ ]*(-body|-analyze)/) ? 'true' : '';
 	size = x.match(/ script[^ ]*(-body|-analyze)/) ? '-1' : '';
-	proto = await isBinaryMode(jsUrl,jsName);
+	proto = await isBinaryMode(jsurl,jsname);
 			
 		if (nArgTarget != null){
 	for (let i=0; i < nArgTarget.length; i++) {
   const elem = nArgTarget[i];
 	if (x.indexOf(elem) != -1){
-        jsArg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
+        jsarg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
-	jsBox.push({mark,"noteK":noteK,"jsname":jsName,"jstype":jsType,"jsptn":jsPtn,"jsurl":jsUrl,"rebody":reBody,"proto":proto,"size":size,"timeout":"60","jsarg":jsArg,"ori":x,"num":y})
+	jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,proto,size,"timeout":"60",jsarg,"ori":x,"num":y})
 };//qx脚本解析结束
 
 //qx cron脚本解析
 if (/^[^ ]+ +[^u ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+ +)?(https?|ftp|file):\/\//.test(x)){
 	mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
 	noteK = /^#/.test(x) ? "#" : "";
-	cronExp = x.replace(/ {2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/^#/,'');
-	jsUrl = x.replace(/^#/,"")
+	cronexp = x.replace(/ {2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/^#/,'');
+	jsurl = x.replace(/^#/,"")
 				.replace(/\x20{2,}/g," ")
-				.replace(cronExp,"")
+				.replace(cronexp,"")
 				.split(/ *, */)[0]
 				.trim();
-	jsName = jsUrl.substring(jsUrl.lastIndexOf('/') + 1, jsUrl.lastIndexOf('.') );
+	jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
 	jsfrom = "qx";
-	jsUrl = toJsc(jsUrl,jscStatus,jsc2Status,jsfrom);
-	jsArg = "";
+	jsurl = toJsc(jsurl,jscStatus,jsc2Status,jsfrom);
+	jsarg = "";
 		
 		if (nCron != null){
 	for (let i=0; i < nCron.length; i++) {
   const elem = nCron[i];
 	if (x.indexOf(elem) != -1){
-        cronExp = nCronExp[i];   
+        cronexp = ncronexp[i];   
             };};};
 			
 			if (nArgTarget != null){
 	for (let i=0; i < nArgTarget.length; i++) {
   const elem = nArgTarget[i];
 	if (x.indexOf(elem) != -1){
-        jsArg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
+        jsarg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
-	jsBox.push({mark,"noteK":noteK,"jsname":jsName,"jstype":"cron","cronexp":cronExp,"jsurl":jsUrl,"wakesys":"1","timeout":"60","jsarg":jsArg,"ori":x,"num":y})
+	jsBox.push({mark,noteK,jsname,"jstype":"cron",cronexp,jsurl,"wakesys":"1","timeout":"60",jsarg,"ori":x,"num":y})
 
 };//qx cron 脚本解析结束
 
@@ -1024,10 +1023,10 @@ function getModInfo (x,box) {
 //reject
 function rw_reject (x,mark) {
 	noteK = /^#/.test(x) ? "#" :"";
-	rwPtn = x.replace(/^#/,"").split(" ")[0];
-	rwType = x.match(/reject(-\w+)?$/i)[0].toLowerCase();
+	rwptn = x.replace(/^#/,"").split(" ")[0];
+	rwtype = x.match(/reject(-\w+)?$/i)[0].toLowerCase();
 	
-rwBox.push({mark,"noteK":noteK,"rwptn":rwPtn,"rwvalue":"-","rwtype":rwType});
+rwBox.push({mark,noteK,rwptn,"rwvalue":"-",rwtype});
 };
 
 //重定向
@@ -1038,23 +1037,23 @@ function rw_redirect (x,mark) {
 	xArr = x.split(" ");
 	rw_typeInNum = xArr.indexOf(redirect_type);
 	if (rw_typeInNum == "2" && xArr.length == 3) {
-		rwPtn = xArr[0].replace(/^#/,"");
-		rwValue = xArr[1];
-		rwType = xArr[2];
+		rwptn = xArr[0].replace(/^#/,"");
+		rwvalue = xArr[1];
+		rwtype = xArr[2];
 	};
 	
 	if (rw_typeInNum == "1" && xArr.length == 3) {
-		rwPtn = xArr[0].replace(/^#/,"");
-		rwValue = xArr[2];
-		rwType = xArr[1];
+		rwptn = xArr[0].replace(/^#/,"");
+		rwvalue = xArr[2];
+		rwtype = xArr[1];
 	};
 	
 	if (rw_typeInNum == "2" && xArr.length == 4) {
-		rwPtn = xArr[0].replace(/^#/,"");
-		rwValue = xArr[3];
-		rwType = xArr[2];
+		rwptn = xArr[0].replace(/^#/,"");
+		rwvalue = xArr[3];
+		rwtype = xArr[2];
 	};
-rwBox.push({mark,"noteK":noteK,"rwptn":rwPtn,"rwvalue":rwValue,"rwtype":rwType});
+rwBox.push({mark,noteK,rwptn,rwvalue,rwtype});
 };
 
 //script
@@ -1078,7 +1077,7 @@ function getQxReInfo (x,y,mark) {
 	jsarg = rearg1+'->'+rearg2;
 	rebody = /body/.test(hdorbd) ? 'true' : '';
 	size = /body/.test(hdorbd) ? '3145728' : '';
-	jsBox.push({mark,"noteK":noteK,"jsname":jsname,"jstype":jstype,"jsptn":reptn,"jsurl":jsurl,"rebody":rebody,"size":size,"timeout":"30","jsarg":jsarg,"num":y})
+	jsBox.push({mark,noteK,jsname,jstype,reptn,jsurl,rebody,size,"timeout":"30",jsarg,"num":y})
 };
 
 function getHn (x,arr) {
@@ -1114,10 +1113,10 @@ if (/proto/i.test(name)) {
 		//$.log("Script Hub: 重写转换");
 		return "";
 	}else if (res.includes(".bodyBytes")){
-		binaryInfo.push({"url":url,"binarymode":"true"});
+		binaryInfo.push({url,"binarymode":"true"});
 		$.setjson(binaryInfo, "Parser_binary_info")
 		return "true";
-	}else{binaryInfo.push({"url":url,"binarymode":""});
+	}else{binaryInfo.push({url,"binarymode":""});
 		$.setjson(binaryInfo, "Parser_binary_info")
 		return "";}     }//没有信息或者没有url的信息
 		
@@ -1129,17 +1128,17 @@ function getMockInfo (x,mark,y) {
 	noteK = /^#/.test(x) ? "#" : "";
 	if (/url +echo-response /.test(x)){
 		x = x.replace(/ {2,}/g," ");
-		mockPtn = x.split(" url ")[0];
-		mockUrl = x.split(" echo-response ")[2];
-		mockHeader = '&contentType=' + encodeURIComponent(x.split(" echo-response ")[1]);
+		mockptn = x.split(" url ")[0];
+		mockurl = x.split(" echo-response ")[2];
+		mockheader = '&contentType=' + encodeURIComponent(x.split(" echo-response ")[1]);
 	};
 		
 	if (/ data *= *"/.test(x)){
-		mockPtn = x.replace(/ {2,}/g," ").split(" data=")[0].replace(/^#|"/g,"");
-		mockUrl = x.split(' data="')[1].split('"')[0];
-		/ header="/.test(x) ? mockHeader = x.split(' header="')[1].split('"')[0] : mockHeader = "";
+		mockptn = x.replace(/ {2,}/g," ").split(" data=")[0].replace(/^#|"/g,"");
+		mockurl = x.split(' data="')[1].split('"')[0];
+		/ header="/.test(x) ? mockheader = x.split(' header="')[1].split('"')[0] : mockheader = "";
 		}
-mockBox.push({mark,"noteK":noteK,"mockptn":mockPtn,"mockurl":mockUrl,"mockheader":mockHeader,"mocknum":y});
+mockBox.push({mark,noteK,mockptn,mockurl,mockheader,"mocknum":y});
 };//获取Mock参数
 
 function istrue(str) {
