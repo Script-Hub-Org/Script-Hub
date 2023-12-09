@@ -186,7 +186,7 @@ eval(evUrlori);
 for await (var [y, x] of body.entries()) {
 
 //简单处理方便后续操作
-	x = x.replace(/^ *(#|;|\/\/) */,'#').replace(/ +.+url-and-header +/,' url ').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/#!PROFILE-VERSION-REQUIRED/i,'');
+	x = x.replace(/^ *(#|;|\/\/) */,'#').replace(/ +[^ ]+ +url-and-header +/,' url ').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/#!PROFILE-VERSION-REQUIRED/i,'');
 	
 //去掉注释
 if (Pin0 != null) {
