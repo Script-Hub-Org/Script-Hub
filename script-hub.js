@@ -897,7 +897,7 @@ const htmls = `
           <small> &#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">脚本转换 1 和 2 怎么选</a></small>
           <details>
             <summary>启用脚本转换 1</summary>
-            <span>根据关键词为脚本启用脚本转换(多关键词以"+"分隔，主要用途 将使用了QX独有api的脚本转换为通用脚本，谨慎开启，大部分脚本本身就通用，无差别启用，只会徒增功耗)</span>
+            <span>根据关键词为脚本启用脚本转换(多关键词以 <code>+</code> 分隔，主要用途 将使用了QX独有api的脚本转换为通用脚本，谨慎开启，大部分脚本本身就通用，无差别启用，只会徒增功耗)</span>
             <textarea id="jsc" v-model.lazy="jsc" placeholder=""></textarea>
             <div>
               <input type="checkbox" id="jsc_all" v-model.lazy="jsc_all" />
@@ -911,7 +911,7 @@ const htmls = `
 
           <details>
             <summary>启用脚本转换 2</summary>
-            <span>根据关键词为脚本启用脚本转换(与 <code>启用脚本转换 1</code> 的区别: 总是会在$done(body)里包一个response)</span>
+            <span>根据关键词为脚本启用脚本转换(与 <code>启用脚本转换 1</code> 的区别: 总是会在 <code>$done</code><code>(body)</code> 里包一个response)</span>
             <textarea id="jsc2" v-model.lazy="jsc2" placeholder=""></textarea>
             <div>
               <input type="checkbox" id="jsc2_all" v-model.lazy="jsc2_all" />
@@ -956,7 +956,7 @@ const htmls = `
 
       <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>名称 简介</summary>
-        <span>名字+简介 ，名字和简介以"+"相连，可缺省名字或简介</span>
+        <span>名字+简介 ，名字和简介以 <code>+</code> 相连，可缺省名字或简介</span>
         <textarea id="n" v-model.lazy="n" placeholder=""></textarea>
       </details>
       
@@ -970,12 +970,12 @@ const htmls = `
 
         <details>
           <summary>保留重写</summary>
-          <span>根据关键词保留重写(即去掉注释符#) 多关键词以"+"分隔</span>
+          <span>根据关键词保留重写(即去掉注释符#) 多关键词以 <code>+</code> 分隔</span>
           <textarea id="y" v-model.lazy="y" placeholder=""></textarea>
         </details>
         <details>
           <summary>排除重写</summary>
-          <span>根据关键词排除重写(即添加注释符#) 多关键词以"+"分隔</span>
+          <span>根据关键词排除重写(即添加注释符#) 多关键词以 <code>+</code> 分隔</span>
           <textarea id="x" v-model.lazy="x" placeholder=""></textarea>
         </details>
         <div>
@@ -1000,12 +1000,12 @@ const htmls = `
         <summary>规则相关</summary>
         <details>
           <summary>保留规则</summary>
-          <span>根据关键词保留规则(即去掉注释符#) 多关键词以"+"分隔</span>
+          <span>根据关键词保留规则(即去掉注释符#) 多关键词以 <code>+</code> 分隔</span>
           <textarea id="y" v-model.lazy="y" placeholder=""></textarea>
         </details>
         <details>
           <summary>排除规则</summary>
-          <span>根据关键词排除规则(即添加注释符#) 多关键词以"+"分隔</span>
+          <span>根据关键词排除规则(即添加注释符#) 多关键词以 <code>+</code> 分隔</span>
           <textarea id="x" v-model.lazy="x" placeholder=""></textarea>
         </details>
       </details>
@@ -1015,17 +1015,19 @@ const htmls = `
 
 
       <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
-        <summary>修改 MITM 主机名</summary>
+        <summary>修改 MitM 主机名</summary>
         <details>
-          <summary>添加 MITM 主机名</summary>
-          <span>添加 MITM 主机名 多主机名以","分隔</span>
+          <summary>添加 MitM 主机名</summary>
+          <span>添加 MitM 主机名 多主机名以 <code>,</code> 分隔</span>
           <textarea id="hnadd" v-model.lazy="hnadd" placeholder=""></textarea>
         </details>
 
         <details>
-          <summary>删除 MITM 主机名</summary>
-          <span>从已有MITM主机名中删除主机名 多主机名以","分隔(需要传入完整主机名)</span>
+          <summary>删除 MitM 主机名</summary>
+          <span>1. 从已有 MitM 主机名中删除主机名 多主机名以 <code>,</code> 分隔(需要传入完整主机名)</span>
           <textarea id="hndel" v-model.lazy="hndel" placeholder=""></textarea>
+          <span>2. 使用 <code>正则表达式</code> 从已有 MitM 主机名中删除主机名</span>
+          <textarea id="hnregdel" v-model.lazy="hnregdel" placeholder=""></textarea>
         </details>
       </details>
       
@@ -1034,7 +1036,7 @@ const htmls = `
         <summary>修改定时任务</summary>
         <details>
           <summary>修改定时任务(cron)</summary>
-          <span>根据关键词锁定cron脚本配合参数cronexp= 修改定时任务的cron表达式 多关键词用"+"分隔，cron=传入了几项，cronexp=也必须对应传入几项。 cron表达式中空格可用"."或"%20"替代</span>
+          <span>根据关键词锁定cron脚本配合参数cronexp= 修改定时任务的cron表达式 多关键词用 <code>+</code> 分隔，cron=传入了几项，cronexp=也必须对应传入几项。 cron表达式中空格可用"."或"%20"替代</span>
           <textarea id="cron" v-model.lazy="cron" placeholder=""></textarea>
         </details>
         <details>
@@ -1049,7 +1051,7 @@ const htmls = `
         <summary>修改参数</summary>
         <details>
           <summary>修改参数(arg)</summary>
-          <span>arg= 根据关键词锁定脚本配合参数argv= 修改argument=的值 多关键词用"+"分隔，arg=传入了几项，argv=也必须对应传入几项。 argument中 "+"必须用"t;add;"替代。</span>
+          <span>arg= 根据关键词锁定脚本配合参数argv= 修改argument=的值 多关键词用 <code>+</code> 分隔，arg=传入了几项，argv=也必须对应传入几项。 argument中  <code>+</code> 必须用"t;add;"替代。</span>
           <textarea id="arg" v-model.lazy="arg" placeholder=""></textarea>
         </details>
         <details>
@@ -1090,13 +1092,13 @@ const htmls = `
 
       <details v-if="!target || target.startsWith('surge') ">
         <summary>SNI 扩展匹配(extended-matching)</summary>
-        <span>根据关键词开启 Surge 的 SNI 扩展匹配(extended-matching) 多关键词以"+"分隔</span>
+        <span>根据关键词开启 Surge 的 SNI 扩展匹配(extended-matching) 多关键词以 <code>+</code> 分隔</span>
         <textarea id="sni" v-model.lazy="sni" placeholder=""></textarea>
       </details>
 
       <div v-if="!target || target.endsWith('-script') ">
         <input type="checkbox" id="wrap_response" v-model.lazy="wrap_response" />
-        <label class="button-over" for="wrap_response">总是会在 $done(body) 里包一个 response</label>
+        <label class="button-over" for="wrap_response">总是会在 <code>$done</code><code>(body)</code> 里包一个 response</label>
       </div>
 
       <div v-if="!target || target.endsWith('-script') ">
@@ -1164,6 +1166,7 @@ const htmls = `
     del: true,
     hnadd: '',
     hndel: '',
+    hnregdel: '',
     jsc: '',
     jsc_all: '',
     jsc2: '',
@@ -1204,7 +1207,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
