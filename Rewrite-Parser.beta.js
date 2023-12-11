@@ -55,6 +55,7 @@ var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;//保留
 var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;//排除
 var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/ *, */) : null;//加
 var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/ *, */) : null;//减
+var hnRegDel = queryObject.hnregdel != undefined ? new RegExp(queryObject.hnregdel) : null;//正则删除hostname
 var synMitm = istrue(queryObject.synMitm);//将force与mitm同步
 var delNoteSc = istrue(queryObject.del);
 var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;//替换cron目标
@@ -513,6 +514,19 @@ outBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击
 if (hnDel != null && hnBox.length != 0) hnBox=hnBox.filter(function(item) {
     return hnDel.indexOf(item) == -1
 });
+
+//mitm正则删除主机名
+if (hnRegDel != null) {
+	
+	hndelBox=hnBox.filter(function(item) {
+    return hnRegDel.test(item)
+});
+	hnBox=hnBox.filter(function(item) {
+    return !hnRegDel.test(item)
+});
+};
+hndelBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','已根据正则剔除主机名',`${hndelBox}`);
+
 	hnBox = pieceHn(hnBox);
 	fheBox = pieceHn(fheBox);
 	skipBox = pieceHn(skipBox);
