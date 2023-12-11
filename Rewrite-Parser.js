@@ -347,6 +347,7 @@ if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *:
 		size = getJsInfo(x, /[=, ] *max-size *= */);
 		proto = getJsInfo(x, /[=, ] *binary-body-mode *= */);
 		jsptn = /[=,] *pattern *= */.test(x) ? getJsInfo(x, /[=,] *pattern *= */).replace(/"/g,'') : x.split(/ +/)[1];
+		jsptn = /cron|event|network-changed|generic|dns|rule/i.test(jstype) ? "" : jsptn;
 		jsarg = getJsInfo(x, /[=, ] *argument *= */);
 		rebody = getJsInfo(x, /[=, ] *requires-body *= */);
 		wakesys = getJsInfo(x, /[=, ] *wake-system *= */);
@@ -434,7 +435,7 @@ if (/^[^ ]+ +[^u ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+ +)?(https?|ftp|file):\/\//.test
 	if (x.indexOf(elem) != -1){
         jsarg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
             };};};
-	jsBox.push({mark,noteK,jsname,"jstype":"cron",cronexp,jsurl,"wakesys":"1","timeout":"60",jsarg,"ori":x,"num":y})
+	jsBox.push({mark,noteK,jsname,"jstype":"cron","jsptn":"",cronexp,jsurl,"wakesys":"1","timeout":"60",jsarg,"ori":x,"num":y})
 
 };//qx cron 脚本解析结束
 
@@ -500,7 +501,7 @@ if (/url +echo-response | data *= *"/.test(x)){
       return curr;
     }, []);//去重结束
 
-//=$.log($.toStr(jsBox))
+//$.log($.toStr(jsBox))
 	
 inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join("\n\n")}`;
 outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join("\n")}`;
