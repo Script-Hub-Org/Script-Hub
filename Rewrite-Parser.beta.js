@@ -136,6 +136,7 @@ let hnBox = [];        //MITM主机名
 let fheBox = [];       //force-http-engine
 let skipBox = [];      //skip-ip
 let realBox = [];      //real-ip
+let hndelBox = [];     //正则剔除的主机名
 
 //待输出
 let modInfo = [];      //模块简介
