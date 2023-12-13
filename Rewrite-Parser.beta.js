@@ -138,6 +138,11 @@ let skipBox = [];      //skip-ip
 let realBox = [];      //real-ip
 let hndelBox = [];     //正则剔除的主机名
 
+let hnaddMethod = "%APPEND%";
+let fheaddMethod = "%APPEND%";
+let skipaddMethod = "%APPEND%";
+let realaddMethod = "%APPEND%";
+
 //待输出
 let modInfo = [];      //模块简介
 let httpFrame = [];    //Stash的http:父框架
@@ -274,13 +279,13 @@ if (/^#!.+?= *$/.test(x)){
 };
 
 //hostname
-if (/^hostname *=.+/.test(x)) getHn(x,hnBox);
+if (/^hostname *=.+/.test(x)) hnaddMethod=getHn(x,hnBox,hnaddMethod);
 
-if (/^force-http-engine-hosts *=.+/.test(x)) getHn(x,fheBox);
+if (/^force-http-engine-hosts *=.+/.test(x)) fheaddMethod=getHn(x,fheBox,fheaddMethod);
 
-if (/^skip-proxy *=.+/.test(x)) getHn(x,skipBox);
+if (/^skip-proxy *=.+/.test(x)) skipaddMethod=getHn(x,skipBox,skipaddMethod);
 
-if (/^(?:always-)?real-ip *=.+/.test(x)) getHn(x,realBox);
+if (/^(?:always-)?real-ip *=.+/.test(x)) realaddMethod=getHn(x,realBox,realaddMethod);
 
 //reject 解析
 	if (/^#?(?!DOMAIN.*? *,|IP-CIDR6? *,|IP-ASN *,|OR *,|AND *,|NOT *,|USER-AGENT *,|URL-REGEX *,|RULE-SET *,|DE?ST-PORT *,|PROTOCOL *,).+reject(?:-\w+)?$/i.test(x)) {
@@ -897,10 +902,10 @@ switch (targetApp){
 	};
 	
 	if (isSurgeiOS||isShadowrocket) {
-		MITM = hnBox != "" ? "[MITM]\n\nhostname = %APPEND% "+hnBox : "";
-		fheBox != "" && General.push('force-http-engine-hosts = %APPEND% '+fheBox);
-		skipBox != "" && General.push('skip-proxy = %APPEND% '+skipBox);
-		realBox != "" && General.push('always-real-ip = %APPEND% '+realBox);
+		MITM = hnBox != "" ? `[MITM]\n\nhostname = ${hnaddMethod} `+hnBox : "";
+		fheBox != "" && General.push(`force-http-engine-hosts = ${fheaddMethod} `+fheBox);
+		skipBox != "" && General.push(`skip-proxy = ${skipaddMethod} `+skipBox);
+		realBox != "" && General.push(`always-real-ip = ${realaddMethod} `+realBox);
     General = (General[0] || '') && `[General]\n\n${General.join("\n\n")}`;
 	};
 	
@@ -1097,15 +1102,17 @@ function getQxReInfo (x,y,mark) {
 	jsBox.push({mark,noteK,jsname,jstype,reptn,jsurl,rebody,size,"timeout":"30",jsarg,"num":y})
 };
 
-function getHn (x,arr) {
+function getHn (x,arr,addMethod) {
 	hnBox2 = x.replace(/ |%.+%/g,"").split("=")[1].split(/,/);
 	for (let i=0;i<hnBox2.length;i++){
 		arr.push(hnBox2[i]);
 	};//for
+	if (/%INSERT%/i.test(x)) return "%INSERT%"
+	else return addMethod;
 };
 
 function pieceHn (arr){
-	if (!isStashiOS && arr!=[]) return arr.join(',');
+	if (!isStashiOS && arr!=[]) return arr.join(', ');
 	else if (isStashiOS && arr!=[]) return arr.join(`"\n    - "`);
 	else return [];
 };
