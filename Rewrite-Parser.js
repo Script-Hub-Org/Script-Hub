@@ -110,15 +110,6 @@ if (nName === null){
 	desc = nName[1] != undefined ? nName[1] : name;
 };
 
-let modInfoBackup;
-if (isLooniOS) modInfoBackup = `#!name=${name}
-#!desc=${desc}
-${icon}`;
-if (isSurgeiOS || isShadowrocket) modInfoBackup = `#!name=${name}
-#!desc=${desc}`;
-if (isStashiOS) modInfoBackup = `name: "${name}"
-desc: "${desc}"`;
-
 //信息中转站
 let bodyBox = [];      //存储待转换的内容
 let otherRule = [];    //不支持的规则&脚本
@@ -270,9 +261,9 @@ if (/^#!.+?= *$/.test(x)){
 	
 } else if (isLooniOS&&/^#!(?:select|input) *= *.+/.test(x)){
 	getModInfo(x,modInputBox);
-}else if (reqArr.length>1&&/^#!(?:name|desc|date) *=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)){getModInfo(x,modInfoBox);
+}else if (reqArr.length>1&&/^#!(?:name|desc|date|author) *=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)){getModInfo(x,modInfoBox);
 	
-}else if (reqArr.length==1&&/^#!(?:name|desc|date|system) *=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)) {
+}else if (reqArr.length==1&&/^#!(?:name|desc|date|author|system) *=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)) {
 	getModInfo(x,modInfoBox);
 }else if (isLooniOS && /^#!.+?=.+/.test(x)){
 	getModInfo(x,modInfoBox);
@@ -289,31 +280,31 @@ if (/^(?:always-)?real-ip *=.+/.test(x)) realaddMethod=getHn(x,realBox,realaddMe
 
 //reject 解析
 	if (/^#?(?!DOMAIN.*? *,|IP-CIDR6? *,|IP-ASN *,|OR *,|AND *,|NOT *,|USER-AGENT *,|URL-REGEX *,|RULE-SET *,|DE?ST-PORT *,|PROTOCOL *,).+reject(?:-\w+)?$/i.test(x)) {
-		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		rw_reject(x,mark);
 	};
 	
 //重定向 解析
 	if (/(?: (?:302|307|header)(?:$| )|url 30(?:2|7) )/.test(x)) {
-		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		rw_redirect(x,mark);
 	};
 	
 //header rewrite 解析
 	if (/ header-(?:del|add|replace|replace-regex) /.test(x)) {
-		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		rwhdBox.push(mark,x);
 };
 
 //(request|response)-(header|body) 解析
 if (/ url *(?:request|response)-(?:header|body) /i.test(x)) {
-		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		getQxReInfo(x,y,mark);
 };
 
 //rule解析
 if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent|url-regex|de?st-port|and|not|or|protocol) *,.+/i.test(x)){
-		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 	x = x.replace(/ /g,"");
 	noteK = /^#/.test(x) ? "#" : "";
 	ruletype = x.split(/ *, */)[0].replace(/^#/,"");
@@ -335,7 +326,7 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 //host解析
 if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *: *)?[ 0-9a-z:/,.]+$/g.test(x)) {
 		noteK = /^#/.test(x) ? "#" : "";
-		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		hostdomain = x.split(/ *= */)[0];
 		hostvalue = x.split(/ *= */)[1];
 		hostBox.push({mark,noteK,hostdomain,hostvalue,"ori":x})
@@ -343,7 +334,7 @@ if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *:
 
 //脚本解析
 	if (/script-path *=.+/.test(x)){
-		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		noteK = /^#/.test(x) ? "#" : "";
 		jsurl = getJsInfo(x, /script-path *= */);
 		jsname = /[=,] *type *= */.test(x) ? x.split(/ *=/)[0].replace(/^#/,"") : /, *tag *= */.test(x) ? getJsInfo(x, /, *tag *= */) : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
@@ -391,7 +382,7 @@ if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *:
 //qx脚本解析
 if (/ url +script-/.test(x)){
 	x = x.replace(/ {2,}/g," ");
-	mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+	mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 	noteK = /^#/.test(x) ? "#" : "";
 	jstype = x.match(' url script-response') ? 'http-response' : 'http-request';
 	urlInNum = x.split(" ").indexOf("url");
@@ -416,7 +407,7 @@ if (/ url +script-/.test(x)){
 
 //qx cron脚本解析
 if (/^[^ ]+ +[^u ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+ +)?(https?|ftp|file):\/\//.test(x)){
-	mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+	mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 	noteK = /^#/.test(x) ? "#" : "";
 	cronexp = x.replace(/ {2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/^#/,'');
 	jsurl = x.replace(/^#/,"")
@@ -448,7 +439,7 @@ if (/^[^ ]+ +[^u ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+ +)?(https?|ftp|file):\/\//.test
 
 //mock 解析
 if (/url +echo-response | data *= *"/.test(x)){
-		mark = body[y - 1]?.match(/^#/) ? body[y - 1] : "";
+		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		getMockInfo(x,mark,y);
 };
 
@@ -557,6 +548,8 @@ switch (targetApp){
 		modInfo.push(info);
 	};//for
 
+	if ($.toStr(modInfo).search(/#!name=/) == -1) modInfo.push("#!name="+name);
+	if ($.toStr(modInfo).search(/#!desc=/) == -1) modInfo.push("#!desc="+desc);
 	if (isLooniOS && modInfo !="" && $.toStr(modInfo).search(/#!icon=/) == -1) modInfo.push(icon);
 	break;
 	
@@ -567,6 +560,9 @@ switch (targetApp){
 		if (nName!=null && /^desc: *"/.test(info)) info = 'desc: "'+desc+'"';
 		modInfo.push(info);
 		};//for
+	if ($.toStr(modInfo).search(/name: /) == -1) modInfo.push('name: "'+name+'"');
+	if ($.toStr(modInfo).search(/desc: /) == -1) modInfo.push('desc: "'+desc+'"');
+
 	break;
 };//模块信息输出结束
 
@@ -875,9 +871,7 @@ switch (targetApp){
 	case "shadowrocket-module":
 	case "loon-plugin":
 	
-	modInfo = (modInfo[0] || '') && `${modInfo.join("\n")}`;
-	
-	modInfo = modInfo == "" ? modInfoBackup : modInfo;
+	modInfo = (modInfo[0] || '') && `${modInfo.join("\n")}`.replace(/([\s\S]*)(#!desc=.+\n?)([\s\S]*)/,'$2\n$1\n$3').replace(/([\s\S]*)(#!name=.+\n?)([\s\S]*)/,'$2\n$1\n$3').replace(/\n{2,}/g,'\n');
     
     rules = (rules[0] || '') && `[Rule]\n\n${rules.join("\n")}`;
 	
@@ -937,9 +931,7 @@ ${script}
 	
 	case "stash-stoverride":
 	
-	modInfo = (modInfo[0] || '') && `${modInfo.join("\n")}`;
-	
-	modInfo = modInfo == "" ? modInfoBackup : modInfo;
+	modInfo = (modInfo[0] || '') && `${modInfo.join("\n")}`.replace(/([\s\S]*)(desc: .+\n?)([\s\S]*)/,'$2\n$1\n$3').replace(/([\s\S]*)(name: .+\n?)([\s\S]*)/,'$2\n$1\n$3').replace(/\n{2,}/g,'\n');;
 	
 	tiles = (tiles[0] || '') && `tiles:\n${tiles.join("\n\n")}`;
 	
