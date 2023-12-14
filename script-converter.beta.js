@@ -152,6 +152,9 @@ var $task = {
 }
 
 var $prefs = {
+  removeValueForKey: key => {
+    return $persistentStore.write(null, key)
+  },
   valueForKey: key => {
     return $persistentStore.read(key)
   },
