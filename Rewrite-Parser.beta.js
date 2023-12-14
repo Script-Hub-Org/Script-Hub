@@ -1079,11 +1079,11 @@ function getJsInfo (x, regx) {
 
 function getQxReInfo (x,y,mark) {
 	noteK = /^#/.test(x) ? '#' : '';
-	retype = / url *request-/i.test(x) ? 'request' : 'response';
+	retype = / url +request-/i.test(x) ? 'request' : 'response';
 	jstype = 'http-'+retype;
-	hdorbd = / url *re[^ ]+?-header /i.test(x) ? 'header' : 'body';
+	hdorbd = / url +re[^ ]+?-header /i.test(x) ? 'header' : 'body';
 	breakpoint = retype+'-'+hdorbd;
-	reptn = x.split(/ *url *re/)[0].replace(/^#/,'');
+	jsptn = x.split(/ +url +re/)[0].replace(/^#/,'');
 	jsname = /body/.test(hdorbd) ? 'replaceBody' : 'replaceHeader';
 	jsurl = /header/.test(hdorbd) ? 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-header.js' : 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-body.js';
 	rearg1 = x.split(breakpoint)[1].trim().replace(/^"(.+)"$/,"$1");
@@ -1091,7 +1091,7 @@ function getQxReInfo (x,y,mark) {
 	jsarg = rearg1+'->'+rearg2;
 	rebody = /body/.test(hdorbd) ? 'true' : '';
 	size = /body/.test(hdorbd) ? '3145728' : '';
-	jsBox.push({mark,noteK,jsname,jstype,reptn,jsurl,rebody,size,"timeout":"30",jsarg,"num":y})
+	jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,size,"timeout":"30",jsarg,"num":y})
 };
 
 function getHn (x,arr,addMethod) {
