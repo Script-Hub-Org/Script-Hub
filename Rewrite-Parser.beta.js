@@ -14,7 +14,7 @@
 https://github.com/Script-Hub-Org/Script-Hub
 ***************************/
 
-const $ = new Env(`Script Hub: 重写转换`)
+const $ = new Env(`Script Hub: 重写转换`);
 
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
@@ -184,7 +184,7 @@ eval(evUrlori);
 for await (var [y, x] of body.entries()) {
 
 //简单处理方便后续操作
-	x = x.replace(/^ *(#|;|\/\/) */,'#').replace(/ +[^ ]+ +url-and-header +/,' url ').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/^#!PROFILE-VERSION-REQUIRED +[0-9]+ +/i,'');
+	x = x.replace(/^ *(#|;|\/\/) */,'#').replace(/ +[^ ]+ +url-and-header +/,' url ').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/^#!PROFILE-VERSION-REQUIRED +[0-9]+ +/i,'').replace(/^(#)?host-wildcard *,.+/i,'').replace(/^(#)?host(-suffix|-keyword|)? *, */i,'$1DOMAIN$2,').replace(/^(#)?ip6-cidr *, */i,'$1IP-CIDR6,');
 	
 //去掉注释
 if (Pin0 != null) {
@@ -314,6 +314,10 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 	rulepolicy = rulePandV.substring(rulePandV.lastIndexOf(',') + 1);
 	rulepolicy = /\)|\}/.test(rulepolicy) ? "" : rulepolicy;
 	rulevalue = rulePandV.replace(rulepolicy,'').replace(/,$/,'').replace(/"/g,'');
+	if (rulepolicy != '' && rulevalue == '') {
+		rulevalue = rulepolicy;
+		rulepolicy = ''
+	};
 	
 	if (nPolicy!=null&&!/direct|reject/.test(rulepolicy)){
 		rulepolicy = nPolicy;
@@ -499,7 +503,7 @@ if (/url +echo-response | data *= *"/.test(x)){
       return curr;
     }, []);//去重结束
 
-//$.log($.toStr(jsBox))
+//$.log($.toStr(ruleBox))
 	
 inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join("\n\n")}`;
 outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join("\n")}`;
@@ -600,6 +604,8 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		if (rulevalue=="" || rulepolicy==""){
 			otherRule.push(ruleBox[i].ori)
 		} else if(/proxy/i.test(rulepolicy)&&modistatus=="no"&&(isSurgeiOS||isStashiOS||isShadowrocket)){
+otherRule.push(ruleBox[i].ori)
+		} else if(!/direct|reject|proxy/i.test(rulepolicy)&&modistatus=="no"){
 otherRule.push(ruleBox[i].ori)
 		} else if (/^(?:and|or|not|protocol|domain-set|rule-set)$/i.test(ruletype) && isSurgeiOS) {
 			rules.push(mark+noteK+ruletype+","+rulevalue+","+rulepolicy+rulenore+rulesni)
