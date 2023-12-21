@@ -503,7 +503,7 @@ if (/url +echo-response | data *= *"/.test(x)){
       return curr;
     }, []);//去重结束
 
-//$.log($.toStr(ruleBox))
+//$.log($.toStr(hnBox))
 	
 inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join("\n\n")}`;
 outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join("\n")}`;
@@ -1101,7 +1101,7 @@ function getQxReInfo (x,y,mark) {
 };
 
 function getHn (x,arr,addMethod) {
-	hnBox2 = x.replace(/ |%.+%/g,"").split("=")[1].split(/,/);
+	hnBox2 = x.replace(/\s|%.+%/g,"").split("=")[1].split(/,/);
 	for (let i=0;i<hnBox2.length;i++){
 		arr.push(hnBox2[i]);
 	};//for
