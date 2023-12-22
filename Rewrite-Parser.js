@@ -53,8 +53,8 @@ noNtf = openInBoxHtml ||openOutBoxHtml||openOtherRuleHtml ? true : noNtf;
 var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;//名字简介
 var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;//保留
 var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;//排除
-var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/ *, */) : null;//加
-var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/ *, */) : null;//减
+var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/\s*,\s*/) : null;//加
+var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/\s*,\s*/) : null;//减
 var hnRegDel = queryObject.hnregdel != undefined ? new RegExp(queryObject.hnregdel) : null;//正则删除hostname
 var synMitm = istrue(queryObject.synMitm);//将force与mitm同步
 var delNoteSc = istrue(queryObject.del);
@@ -151,7 +151,7 @@ let providers = [];
 
 hnBox = hnAdd != null ? hnAdd : [];
 
-const jsRegx = /[=,] *(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|tag|type|img-url|debug|event-name|desc) *=/;
+const jsRegx = /[=,]\s*(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|tag|type|img-url|debug|event-name|desc)\s*=/;
 
 //查询js binarymode相关
 let binaryInfo = $.getval("Parser_binary_info");
@@ -184,7 +184,7 @@ eval(evUrlori);
 for await (var [y, x] of body.entries()) {
 
 //简单处理方便后续操作
-	x = x.replace(/^ *(#|;|\/\/) */,'#').replace(/ +[^ ]+ +url-and-header +/,' url ').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/^#!PROFILE-VERSION-REQUIRED +[0-9]+ +/i,'').replace(/^(#)?host-wildcard *,.+/i,'').replace(/^(#)?host(-suffix|-keyword|)? *, */i,'$1DOMAIN$2,').replace(/^(#)?ip6-cidr *, */i,'$1IP-CIDR6,');
+	x = x.replace(/^\s*(#|;|\/\/)\s*/,'#').replace(/\s+[^\s]+\s+url-and-header\s+/,' url ').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/^#!PROFILE-VERSION-REQUIRED\s+[0-9]+\s+/i,'').replace(/^(#)?host-wildcard\s*,.+/i,'').replace(/^(#)?host(-suffix|-keyword|)?\s*,\s*/i,'$1DOMAIN$2,').replace(/^(#)?ip6-cidr\s*,\s*/i,'$1IP-CIDR6,');
 	
 //去掉注释
 if (Pin0 != null) {
@@ -201,7 +201,7 @@ if (Pin0 != null) {
 if (Pout0 != null){
 	for (let i=0; i < Pout0.length; i++) {
   const elem = Pout0[i];
-	if (x.indexOf(elem) != -1 && x.search(/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip) *=/) == -1&&!/^#/.test(x)){
+	if (x.indexOf(elem) != -1 && x.search(/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip)\s*=/) == -1&&!/^#/.test(x)){
 		x = "#" + x;
 		outBox.push(x);
 	};
@@ -217,7 +217,7 @@ if (delNoteSc === true && x.match(/^#/) && x.indexOf("#!") == -1){
 if (sni != null){
 	for (let i=0; i < sni.length; i++) {
   const elem = sni[i];
-	if (x.indexOf(elem) != -1 && /^(DOMAIN|RULE-SET)/i.test(x) && !/, *extended-matching/i.test(x)){
+	if (x.indexOf(elem) != -1 && /^(DOMAIN|RULE-SET)/i.test(x) && !/,\s*extended-matching/i.test(x)){
 		x = x + ",extended-matching";
 	};
 };//循环结束
@@ -225,7 +225,7 @@ if (sni != null){
 
 //ip规则不解析域名
 if(ipNoResolve === true){
-	if (/^(?:ip-[ca]|RULE-SET)/i.test(x) && !/, *no-resolve/.test(x)){
+	if (/^(?:ip-[ca]|RULE-SET)/i.test(x) && !/,\s*no-resolve/.test(x)){
 		x = x + ",no-resolve";
 	};
 };//增加ip规则不解析域名结束
@@ -257,57 +257,57 @@ jsSuf = jsSuf + "&compatibilityOnly=true"
 };
 
 //模块信息 
-if (/^#!.+?= *$/.test(x)){
+if (/^#!.+?=\s*$/.test(x)){
 	
-} else if (isLooniOS&&/^#!(?:select|input) *= *.+/.test(x)){
+} else if (isLooniOS&&/^#!(?:select|input)\s*=\s*.+/.test(x)){
 	getModInfo(x,modInputBox);
-}else if (reqArr.length>1&&/^#!(?:name|desc|date|author) *=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)){getModInfo(x,modInfoBox);
+}else if (reqArr.length>1&&/^#!(?:name|desc|date|author)\s*=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)){getModInfo(x,modInfoBox);
 	
-}else if (reqArr.length==1&&/^#!(?:name|desc|date|author|system) *=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)) {
+}else if (reqArr.length==1&&/^#!(?:name|desc|date|author|system)\s*=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)) {
 	getModInfo(x,modInfoBox);
 }else if (isLooniOS && /^#!.+?=.+/.test(x)){
 	getModInfo(x,modInfoBox);
 };
 
 //hostname
-if (/^hostname *=.+/.test(x)) hnaddMethod=getHn(x,hnBox,hnaddMethod);
+if (/^hostname\s*=.+/.test(x)) hnaddMethod=getHn(x,hnBox,hnaddMethod);
 
-if (/^force-http-engine-hosts *=.+/.test(x)) fheaddMethod=getHn(x,fheBox,fheaddMethod);
+if (/^force-http-engine-hosts\s*=.+/.test(x)) fheaddMethod=getHn(x,fheBox,fheaddMethod);
 
-if (/^skip-proxy *=.+/.test(x)) skipaddMethod=getHn(x,skipBox,skipaddMethod);
+if (/^skip-proxy\s*=.+/.test(x)) skipaddMethod=getHn(x,skipBox,skipaddMethod);
 
-if (/^(?:always-)?real-ip *=.+/.test(x)) realaddMethod=getHn(x,realBox,realaddMethod);
+if (/^(?:always-)?real-ip\s*=.+/.test(x)) realaddMethod=getHn(x,realBox,realaddMethod);
 
 //reject 解析
-	if (/^#?(?!DOMAIN.*? *,|IP-CIDR6? *,|IP-ASN *,|OR *,|AND *,|NOT *,|USER-AGENT *,|URL-REGEX *,|RULE-SET *,|DE?ST-PORT *,|PROTOCOL *,).+reject(?:-\w+)?$/i.test(x)) {
+	if (/^#?(?!DOMAIN.*?\s*,|IP-CIDR6?\s*,|IP-ASN\s*,|OR\s*,|AND\s*,|NOT\s*,|USER-AGENT\s*,|URL-REGEX\s*,|RULE-SET\s*,|DE?ST-PORT\s*,|PROTOCOL\s*,).+reject(?:-\w+)?$/i.test(x)) {
 		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		rw_reject(x,mark);
 	};
 	
 //重定向 解析
-	if (/(?: (?:302|307|header)(?:$| )|url 30(?:2|7) )/.test(x)) {
+	if (/(?:\s(?:302|307|header)(?:$|\s)|url\s+30(?:2|7)\s)/.test(x)) {
 		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		rw_redirect(x,mark);
 	};
 	
 //header rewrite 解析
-	if (/ header-(?:del|add|replace|replace-regex) /.test(x)) {
+	if (/\sheader-(?:del|add|replace|replace-regex)\s/.test(x)) {
 		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		rwhdBox.push(mark,x);
 };
 
 //(request|response)-(header|body) 解析
-if (/ url *(?:request|response)-(?:header|body) /i.test(x)) {
+if (/\surl\s*(?:request|response)-(?:header|body)\s/i.test(x)) {
 		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		getQxReInfo(x,y,mark);
 };
 
 //rule解析
-if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent|url-regex|de?st-port|and|not|or|protocol) *,.+/i.test(x)){
+if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent|url-regex|de?st-port|and|not|or|protocol)\s*,.+/i.test(x)){
 		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
-	x = x.replace(/ /g,"");
+	x = x.replace(/\s/g,"");
 	noteK = /^#/.test(x) ? "#" : "";
-	ruletype = x.split(/ *, */)[0].replace(/^#/,"");
+	ruletype = x.split(/\s*,\s*/)[0].replace(/^#/,"");
 	rulenore = /,no-resolve/.test(x) ? ",no-resolve" : "";
 	rulesni = /,extended-matching/.test(x) ? ",extended-matching" : "";
 	rulePandV = x.replace(/^#/,'').replace(ruletype,'').replace(rulenore,'').replace(rulesni,'').replace(/^,/,'');
@@ -328,35 +328,35 @@ if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent
 };//rule解析结束
 
 //host解析
-if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *: *)?[ 0-9a-z:/,.]+$/g.test(x)) {
+if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+)\s*=\s*(?:sever\s*:\s*|script\s*:\s*)?[\s0-9a-z:/,.]+$/g.test(x)) {
 		noteK = /^#/.test(x) ? "#" : "";
 		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
-		hostdomain = x.split(/ *= */)[0];
-		hostvalue = x.split(/ *= */)[1];
+		hostdomain = x.split(/\s*=\s*/)[0];
+		hostvalue = x.split(/\s*=\s*/)[1];
 		hostBox.push({mark,noteK,hostdomain,hostvalue,"ori":x})
 };
 
 //脚本解析
-	if (/script-path *=.+/.test(x)){
+	if (/script-path\s*=.+/.test(x)){
 		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		noteK = /^#/.test(x) ? "#" : "";
-		jsurl = getJsInfo(x, /script-path *= */);
-		jsname = /[=,] *type *= */.test(x) ? x.split(/ *=/)[0].replace(/^#/,"") : /, *tag *= */.test(x) ? getJsInfo(x, /, *tag *= */) : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
+		jsurl = getJsInfo(x, /script-path\s*=\s*/);
+		jsname = /[=,]\s*type\s*=\s*/.test(x) ? x.split(/\s*=/)[0].replace(/^#/,"") : /,\s*tag\s*=\s*/.test(x) ? getJsInfo(x, /,\s*tag\s*=\s*/) : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
 		jsfrom = "surge";
 		jsurl = toJsc(jsurl,jscStatus,jsc2Status,jsfrom);
-		jstype = /[=,] *type *= */.test(x) ? getJsInfo(x, /[=,] *type *=/) : x.split(/ +/)[0].replace(/^#/,"");
-		eventname = getJsInfo(x, /[=, ] *event-name *= */);
-		size = getJsInfo(x, /[=, ] *max-size *= */);
-		proto = getJsInfo(x, /[=, ] *binary-body-mode *= */);
-		jsptn = /[=,] *pattern *= */.test(x) ? getJsInfo(x, /[=,] *pattern *= */).replace(/"/g,'') : x.split(/ +/)[1];
+		jstype = /[=,]\s*type\s*=\s*/.test(x) ? getJsInfo(x, /[=,]\s*type\s*=/) : x.split(/\s+/)[0].replace(/^#/,"");
+		eventname = getJsInfo(x, /[=,\s]\s*event-name\s*=\s*/);
+		size = getJsInfo(x, /[=,\s]\s*max-size\s*=\s*/);
+		proto = getJsInfo(x, /[=,\s]\s*binary-body-mode\s*=\s*/);
+		jsptn = /[=,]\s*pattern\s*=\s*/.test(x) ? getJsInfo(x, /[=,]\s*pattern\s*=\s*/).replace(/"/g,'') : x.split(/\s+/)[1];
 		jsptn = /cron|event|network-changed|generic|dns|rule/i.test(jstype) ? "" : jsptn;
-		jsarg = getJsInfo(x, /[=, ] *argument *= */);
-		rebody = getJsInfo(x, /[=, ] *requires-body *= */);
-		wakesys = getJsInfo(x, /[=, ] *wake-system *= */);
-		cronexp = /cronexpr? *= */.test(x) ? getJsInfo(x, /[=, ] *cronexpr? *= */) : /cron *"/.test(x) ? x.split('"')[1] : '';
-		ability = getJsInfo(x, /[=, ] *ability *= */);
-		updatetime = getJsInfo(x, /[=, ] *script-update-interval *= */);
-		timeout = getJsInfo(x, /[=, ] *timeout *= */);
+		jsarg = getJsInfo(x, /[=,\s]\s*argument\s*=\s*/);
+		rebody = getJsInfo(x, /[=,\s]\s*requires-body\s*=\s*/);
+		wakesys = getJsInfo(x, /[=,\s]\s*wake-system\s*=\s*/);
+		cronexp = /cronexpr?\s*=\s*/.test(x) ? getJsInfo(x, /[=,\s]\s*cronexpr?\s*=\s*/) : /cron\s*"/.test(x) ? x.split('"')[1] : '';
+		ability = getJsInfo(x, /[=,\s]\s*ability\s*=\s*/);
+		updatetime = getJsInfo(x, /[=,\s]\s*script-update-interval\s*=\s*/);
+		timeout = getJsInfo(x, /[=,\s]\s*timeout\s*=\s*/);
 		tilesicon = (jstype=="generic"&&/icon=/.test(x)) ? x.split("icon=")[1].split("&")[0] : "";
 		tilescolor = (jstype=="generic"&&/icon-color=/.test(x)) ? x.split("icon-color=")[1].split("&")[0] : "";
 		if (nTilesTarget != null){
@@ -384,20 +384,20 @@ if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+) *= *(?:sever *: *|script *:
 };//脚本解析结束
 
 //qx脚本解析
-if (/ url +script-/.test(x)){
-	x = x.replace(/ {2,}/g," ");
+if (/\surl\s+script-/.test(x)){
+	x = x.replace(/\s{2,}/g," ");
 	mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 	noteK = /^#/.test(x) ? "#" : "";
 	jstype = x.match(' url script-response') ? 'http-response' : 'http-request';
-	urlInNum = x.split(" ").indexOf("url");
-	jsptn = x.split(" ")[urlInNum - 1].replace(/^#/,"");
-	jsurl = x.split(" ")[urlInNum + 2];
+	urlInNum = x.split(/\s/).indexOf("url");
+	jsptn = x.split(/\s/)[urlInNum - 1].replace(/^#/,"");
+	jsurl = x.split(/\s/)[urlInNum + 2];
 	jsfrom = "qx";
 	jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
 	jsarg = "";
 		jsurl = toJsc(jsurl,jscStatus,jsc2Status,jsfrom);
-	rebody = x.match(/ script[^ ]*(-body|-analyze)/) ? 'true' : '';
-	size = x.match(/ script[^ ]*(-body|-analyze)/) ? '-1' : '';
+	rebody = x.match(/\sscript[^\s]*(-body|-analyze)/) ? 'true' : '';
+	size = x.match(/\sscript[^\s]*(-body|-analyze)/) ? '-1' : '';
 	proto = await isBinaryMode(jsurl,jsname);
 			
 		if (nArgTarget != null){
@@ -410,14 +410,14 @@ if (/ url +script-/.test(x)){
 };//qx脚本解析结束
 
 //qx cron脚本解析
-if (/^[^ ]+ +[^u ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+ +)?(https?|ftp|file):\/\//.test(x)){
+if (/^[^\s]+\s+[^u\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+)?(https?|ftp|file):\/\//.test(x)){
 	mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 	noteK = /^#/.test(x) ? "#" : "";
-	cronexp = x.replace(/ {2,}/g," ").split(/\x20(https?|ftp|file)/)[0].replace(/^#/,'');
+	cronexp = x.replace(/\s{2,}/g," ").split(/\s(https?|ftp|file)/)[0].replace(/^#/,'');
 	jsurl = x.replace(/^#/,"")
 				.replace(/\x20{2,}/g," ")
 				.replace(cronexp,"")
-				.split(/ *, */)[0]
+				.split(/\s*,\s*/)[0]
 				.trim();
 	jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
 	jsfrom = "qx";
@@ -442,7 +442,7 @@ if (/^[^ ]+ +[^u ]+ +[^ ]+ +[^ ]+ +[^ ]+ +([^ ]+ +)?(https?|ftp|file):\/\//.test
 };//qx cron 脚本解析结束
 
 //mock 解析
-if (/url +echo-response | data *= *"/.test(x)){
+if (/url\s+echo-response\s|\sdata\s*=\s*"/.test(x)){
 		mark = body[y - 1]?.match(/^#(?!!)/) ? body[y - 1] : "";
 		getMockInfo(x,mark,y);
 };
@@ -541,9 +541,9 @@ switch (targetApp){
 	case "loon-plugin":
 	for (let i=0;i<modInfoBox.length;i++){
 		info = "#!"+modInfoBox[i].a+modInfoBox[i].b;
-		if (nName!=null && /#!name *=/.test(info)) info = "#!name="+name;
-		if (nName!=null && /#!desc *=/.test(info)) info = "#!desc="+desc;
-		if (isLooniOS && iconReplace=="启用" && /#!icon *=.+/.test(info)) info = icon;
+		if (nName!=null && /#!name\s*=/.test(info)) info = "#!name="+name;
+		if (nName!=null && /#!desc\s*=/.test(info)) info = "#!desc="+desc;
+		if (isLooniOS && iconReplace=="启用" && /#!icon\s*=.+/.test(info)) info = icon;
 		modInfo.push(info);
 	};//for
 
@@ -559,13 +559,13 @@ switch (targetApp){
 	
 	case "stash-stoverride":
 	for (let i=0;i<modInfoBox.length;i++){
-		info = modInfoBox[i].a.replace(/ *= */,'')+': "'+modInfoBox[i].b+'"';
-		if (nName!=null && /^name: *"/.test(info)) info = 'name: "'+name+'"';
-		if (nName!=null && /^desc: *"/.test(info)) info = 'desc: "'+desc+'"';
+		info = modInfoBox[i].a.replace(/\s*=\s*/,'')+': "'+modInfoBox[i].b+'"';
+		if (nName!=null && /^name:\s*"/.test(info)) info = 'name: "'+name+'"';
+		if (nName!=null && /^desc:\s*"/.test(info)) info = 'desc: "'+desc+'"';
 		modInfo.push(info);
 		};//for
-	if ($.toStr(modInfo).search(/name: /) == -1) modInfo.push('name: "'+name+'"');
-	if ($.toStr(modInfo).search(/desc: /) == -1) modInfo.push('desc: "'+desc+'"');
+	if ($.toStr(modInfo).search(/name:\s/) == -1) modInfo.push('name: "'+name+'"');
+	if ($.toStr(modInfo).search(/desc:\s/) == -1) modInfo.push('desc: "'+desc+'"');
 
 	break;
 };//模块信息输出结束
@@ -675,7 +675,7 @@ switch (targetApp){
 	
 	case "loon-plugin":
 	for (let i=0;i<rwhdBox.length;i++){
-		URLRewrite.push(rwhdBox[i].replace(/^(#)?http-(?:request|response) */,"$1"));
+		URLRewrite.push(rwhdBox[i].replace(/^(#)?http-(?:request|response)\s*/,"$1"));
 	};//for
 	break;
 	
@@ -684,8 +684,8 @@ switch (targetApp){
 		if (!/^#/.test(rwhdBox[i])){
 noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";noteK2 = "  ";
 	}else{noteKn8 = "\n#        ";noteKn6 = "\n#      ";noteKn4 = "\n#    ";noteK4 = "#    ";noteK2 = "#  ";};
-		hdtype = /^#?http-response /.test(x) ? ' response-' : ' request-';
-		HeaderRewrite.push(`${noteK4}- >-${noteKn6}`+rwhdBox[i].replace(/^#?http-(?:request|response) */,"").replace(/ header-/,hdtype));
+		hdtype = /^#?http-response\s/.test(x) ? ' response-' : ' request-';
+		HeaderRewrite.push(`${noteK4}- >-${noteKn6}`+rwhdBox[i].replace(/^#?http-(?:request|response)\s*/,"").replace(/\sheader-/,hdtype));
 	};//for
 	break;
 	
@@ -704,7 +704,7 @@ rwhdBox = (rwhdBox[0] || '') && `${rwhdBox.join("\n")}`;
 		hostvalue = hostBox[i].hostvalue;
 		if (isStashiOS) {
 			otherRule.push(hostBox[i].ori)
-		}else if (isLooniOS && /script *: */.test(hostvalue)){
+		}else if (isLooniOS && /script\s*:\s*/.test(hostvalue)){
 			otherRule.push(hostBox[i].ori)
 		}else{
 	host.push(mark+noteK+hostdomain+' = '+hostvalue)
@@ -1034,7 +1034,7 @@ $.done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/pla
 
 //名字简介解析
 function getModInfo (x,box) {
-	x = x.replace(/ *= */,'=');
+	x = x.replace(/\s*=\s*/,'=');
 	/^#!.+=.+/.test(x) ? a = x.replace(/^#!/,"").match(/.+?=/)[0] : "";
 	/^#!.+=.+/.test(x) ? b = x.replace(/^#!/,"").replace(a,"") : "";
 	box.push({a,b});
@@ -1043,7 +1043,7 @@ function getModInfo (x,box) {
 //reject
 function rw_reject (x,mark) {
 	noteK = /^#/.test(x) ? "#" :"";
-	rwptn = x.replace(/^#/,"").split(" ")[0];
+	rwptn = x.replace(/^#/,"").split(/\s/)[0];
 	rwtype = x.match(/reject(-\w+)?$/i)[0].toLowerCase();
 	
 rwBox.push({mark,noteK,rwptn,"rwvalue":"-",rwtype});
@@ -1052,9 +1052,9 @@ rwBox.push({mark,noteK,rwptn,"rwvalue":"-",rwtype});
 //重定向
 function rw_redirect (x,mark) {
 	noteK = /^#/.test(x) ? "#" :"";
-	x = x.replace(/ {2,}/g," ");
-	redirect_type = x.match(/ 302| 307| header$/)[0].replace(" ","");
-	xArr = x.split(" ");
+	x = x.replace(/\s{2,}/g," ");
+	redirect_type = x.match(/\s302|\s307|\sheader$/)[0].replace(/\s/,"");
+	xArr = x.split(/\s/);
 	rw_typeInNum = xArr.indexOf(redirect_type);
 	if (rw_typeInNum == "2" && xArr.length == 3) {
 		rwptn = xArr[0].replace(/^#/,"");
@@ -1085,11 +1085,11 @@ function getJsInfo (x, regx) {
 
 function getQxReInfo (x,y,mark) {
 	noteK = /^#/.test(x) ? '#' : '';
-	retype = / url +request-/i.test(x) ? 'request' : 'response';
+	retype = /\surl\s+request-/i.test(x) ? 'request' : 'response';
 	jstype = 'http-'+retype;
-	hdorbd = / url +re[^ ]+?-header /i.test(x) ? 'header' : 'body';
+	hdorbd = /\surl\s+re[^\s]+?-header\s/i.test(x) ? 'header' : 'body';
 	breakpoint = retype+'-'+hdorbd;
-	jsptn = x.split(/ +url +re/)[0].replace(/^#/,'');
+	jsptn = x.split(/\s+url\s+re/)[0].replace(/^#/,'');
 	jsname = /body/.test(hdorbd) ? 'replaceBody' : 'replaceHeader';
 	jsurl = /header/.test(hdorbd) ? 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-header.js' : 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-body.js';
 	rearg1 = x.split(breakpoint)[1].trim().replace(/^"(.+)"$/,"$1");
@@ -1148,17 +1148,17 @@ if (/proto/i.test(name)) {
 //获取mock参数
 function getMockInfo (x,mark,y) {
 	noteK = /^#/.test(x) ? "#" : "";
-	if (/url +echo-response /.test(x)){
-		x = x.replace(/ {2,}/g," ");
+	if (/url\s+echo-response\s/.test(x)){
+		x = x.replace(/\s{2,}/g," ");
 		mockptn = x.split(" url ")[0];
 		mockurl = x.split(" echo-response ")[2];
 		mockheader = '&contentType=' + encodeURIComponent(x.split(" echo-response ")[1]);
 	};
 		
-	if (/ data *= *"/.test(x)){
-		mockptn = x.replace(/ {2,}/g," ").split(" data=")[0].replace(/^#|"/g,"");
+	if (/\sdata\s*=\s*"/.test(x)){
+		mockptn = x.replace(/\s{2,}/g," ").split(/\sdata=/)[0].replace(/^#|"/g,"");
 		mockurl = x.split(' data="')[1].split('"')[0];
-		/ header="/.test(x) ? mockheader = x.split(' header="')[1].split('"')[0] : mockheader = "";
+		/\sheader="/.test(x) ? mockheader = x.split(' header="')[1].split('"')[0] : mockheader = "";
 		}
 mockBox.push({mark,noteK,mockptn,mockurl,mockheader,"mocknum":y});
 };//获取Mock参数
@@ -1188,15 +1188,15 @@ function toJsc (jsurl,jscStatus,jsc2Status,jsfrom) {
 };
 
 function parseQueryString(url) {
-  const queryString = url.split('?')[1]; // 获取查询字符串部分
-  const regex = /([^=&]+)=([^&]*)/g; // 匹配键值对的正则表达式
+  const queryString = url.split('?')[1]; //获取查询字符串部分
+  const regex = /([^=&]+)=([^&]*)/g; //匹配键值对的正则表达式
   const params = {};
   let match;
 
   while ((match = regex.exec(queryString))) {
-    const key = decodeURIComponent(match[1]); // 解码键
-    const value = decodeURIComponent(match[2]); // 解码值
-    params[key] = value; // 将键值对添加到对象中
+    const key = decodeURIComponent(match[1]); //解码键
+    const value = decodeURIComponent(match[2]); //解码值
+    params[key] = value; //将键值对添加到对象中
   }
 
   return params;
