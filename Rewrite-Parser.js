@@ -591,7 +591,7 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		if (/reject-video/i.test(rulepolicy)&& !isLooniOS){
 			rulepolicy = "REJECT-TINYGIF";
 		};
-		if (/reject-tinygif|reject-no-dorp/i.test(rulepolicy)&& isLooniOS){
+		if (/reject-tinygif|reject-no-drop/i.test(rulepolicy)&& isLooniOS){
 			rulepolicy = "REJECT-IMG";
 		};
 		if (/reject-(?:dict|array|img)/i.test(rulepolicy)&&isSurgeiOS){
@@ -1120,7 +1120,7 @@ async function isBinaryMode(url,name) {
 
 if (/proto/i.test(name)) {
 	return "true"
-  } else if (/(?:tieba|youtube|bili|spotify)/i.test(name)){
+  } else if (/(?:tieba|youtube|bili|spotify|wyreqparam)/i.test(name)){
 		if (binaryInfo != "" && binaryInfo.some(item=>item.url===url)){
 			for (let i = 0; i < binaryInfo.length; i++) {
   if (binaryInfo[i].url === url) {
