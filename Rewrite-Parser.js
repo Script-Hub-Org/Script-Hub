@@ -1120,7 +1120,7 @@ async function isBinaryMode(url,name) {
 
 if (/proto/i.test(name)) {
 	return "true"
-  } else if (/(?:tieba|youtube|bili|spotify|wyreqparam)/i.test(name)){
+  } else if (/(?:tieba|youtube|bili|spotify|wyreqparam)/i.test(url)){
 		if (binaryInfo != "" && binaryInfo.some(item=>item.url===url)){
 			for (let i = 0; i < binaryInfo.length; i++) {
   if (binaryInfo[i].url === url) {
