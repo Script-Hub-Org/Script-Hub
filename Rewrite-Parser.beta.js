@@ -155,7 +155,7 @@ const jsRegx = /[=,]\s*(?:script-path|pattern|timeout|argument|script-update-int
 
 //查询js binarymode相关
 var binaryInfo = $.getval("Parser_binary_info");
-if (binaryInfo != null && binaryInfo.length != 0){
+if (binaryInfo != null && binaryInfo.length > 0){
 	binaryInfo = $.toObj(binaryInfo);
 }else{binaryInfo = [];};
 
@@ -508,11 +508,11 @@ if (/url\s+echo-response\s|\sdata\s*=\s*"/.test(x)){
 inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join("\n\n")}`;
 outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join("\n")}`;
 
-inBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击通知查看详情',`${inBox}`,{url:url+'&openInBoxHtml=true'});
-outBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击通知查看详情',`${outBox}`,{url:url+'&openOutBoxHtml=true'});
+inBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击通知查看详情',`${inBox}`,{url:url+'&openInBoxHtml=true'});
+outBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击通知查看详情',`${outBox}`,{url:url+'&openOutBoxHtml=true'});
 
 //mitm删除主机名
-if (hnDel != null && hnBox.length != 0) hnBox=hnBox.filter(function(item) {
+if (hnDel != null && hnBox.length > 0) hnBox=hnBox.filter(function(item) {
     return hnDel.indexOf(item) == -1
 });
 
@@ -526,7 +526,7 @@ if (hnRegDel != null) {
     return !hnRegDel.test(item)
 });
 };
-hndelBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','已根据正则剔除主机名',`${hndelBox}`);
+hndelBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','已根据正则剔除主机名',`${hndelBox}`);
 
 	hnBox = pieceHn(hnBox);
 	fheBox = pieceHn(fheBox);
@@ -554,7 +554,7 @@ switch (targetApp){
 
 	if ($.toStr(modInfo).search(/#!name=/) == -1) modInfo.push("#!name="+name);
 	if ($.toStr(modInfo).search(/#!desc=/) == -1) modInfo.push("#!desc="+desc);
-	if (isLooniOS && modInfo.length != 0 && $.toStr(modInfo).search(/#!icon=/) == -1) modInfo.push(icon);
+	if (isLooniOS && modInfo.length > 0 && $.toStr(modInfo).search(/#!icon=/) == -1) modInfo.push(icon);
 	break;
 	
 	case "stash-stoverride":
@@ -690,7 +690,7 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 	case "shadowrocket-module":
 	
 rwhdBox = (rwhdBox[0] || '') && `${rwhdBox.join("\n")}`;
-	rwhdBox.length != 0 && noNtf == false && $.msg('Script Hub: 重写转换','❌小火箭不支持HeaderRewrite',`${rwhdBox}`);
+	rwhdBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','❌小火箭不支持HeaderRewrite',`${rwhdBox}`);
 	break;
 };//headerRewrite输出结束
 
@@ -899,18 +899,18 @@ switch (targetApp){
     script = (script[0] || '') && `[Script]\n\n${script.join("\n\n")}`;
 	
 	if (isLooniOS) {
-		MITM = hnBox.length != 0 ? "[MITM]\n\nhostname = "+hnBox : "";
-		fheBox.length != 0 && General.push('force-http-engine-hosts = '+fheBox);
-		skipBox.length != 0 && General.push('skip-proxy = '+skipBox);
-		realBox.length != 0 && General.push('real-ip = '+realBox);
+		MITM = hnBox.length > 0 ? "[MITM]\n\nhostname = "+hnBox : "";
+		fheBox.length > 0 && General.push('force-http-engine-hosts = '+fheBox);
+		skipBox.length > 0 && General.push('skip-proxy = '+skipBox);
+		realBox.length > 0 && General.push('real-ip = '+realBox);
     General = (General[0] || '') && `[General]\n\n${General.join("\n\n")}`;
 	};
 	
 	if (isSurgeiOS||isShadowrocket) {
-		MITM = hnBox.length != 0 ? `[MITM]\n\nhostname = ${hnaddMethod} `+hnBox : "";
-		fheBox.length != 0 && General.push(`force-http-engine-hosts = ${fheaddMethod} `+fheBox);
-		skipBox.length != 0 && General.push(`skip-proxy = ${skipaddMethod} `+skipBox);
-		realBox.length != 0 && General.push(`always-real-ip = ${realaddMethod} `+realBox);
+		MITM = hnBox.length > 0 ? `[MITM]\n\nhostname = ${hnaddMethod} `+hnBox : "";
+		fheBox.length > 0 && General.push(`force-http-engine-hosts = ${fheaddMethod} `+fheBox);
+		skipBox.length > 0 && General.push(`skip-proxy = ${skipaddMethod} `+skipBox);
+		realBox.length > 0 && General.push(`always-real-ip = ${realaddMethod} `+realBox);
     General = (General[0] || '') && `[General]\n\n${General.join("\n\n")}`;
 	};
 	
@@ -946,9 +946,9 @@ ${script}
 	
 	tiles = (tiles[0] || '') && `tiles:\n${tiles.join("\n\n")}`;
 	
-	MITM = hnBox.length != 0 ? '  mitm:\n    - "'+hnBox+'"' : "";
+	MITM = hnBox.length > 0 ? '  mitm:\n    - "'+hnBox+'"' : "";
 	
-	force = fheBox.length != 0 ? '  force-http-engine:\n    - "'+fheBox+'"' : "";
+	force = fheBox.length > 0 ? '  force-http-engine:\n    - "'+fheBox+'"' : "";
     
     rules = (rules[0] || '') && `rules:\n${rules.join("\n")}`;
 		
@@ -957,7 +957,7 @@ ${script}
 	HeaderRewrite = (HeaderRewrite[0] || '') && `  header-rewrite:\n${HeaderRewrite.join("\n")}`;
 	script = (script[0] || '') && `  script:\n${script.join("\n\n")}`;
 	
-	if (URLRewrite.length != 0 || script.length != 0 || HeaderRewrite.length != 0 || MITM.length != 0 || force.length != 0){
+	if (URLRewrite.length > 0 || script.length > 0 || HeaderRewrite.length > 0 || MITM.length > 0 || force.length > 0){
 httpFrame = `http:
 
 ${force}
@@ -1002,7 +1002,7 @@ eval(evUrlmodi);
 		
 otherRule = (otherRule[0] || '') && `${app}不支持以下内容:\n${otherRule.join("\n")}`;
 
-noNtf == false && otherRule.length != 0 && $.msg('Script Hub: 重写转换',`点击通知查看详情`,`${otherRule}`,{url:url+'&openOtherRuleHtml=true'});
+noNtf == false && otherRule.length > 0 && $.msg('Script Hub: 重写转换',`点击通知查看详情`,`${otherRule}`,{url:url+'&openOtherRuleHtml=true'});
 
 if (openInBoxHtml||openOutBoxHtml||openOtherRuleHtml){
 	$.done({
@@ -1135,8 +1135,8 @@ async function isBinaryMode(url,name) {
 
 if (/proto/i.test(name)) {
 	return "true"
-  } else if (/(?:tieba|youtube|bili|spotify|wyreqparam)/i.test(url)){
-		if (binaryInfo.length != 0 && binaryInfo.some(item=>item.url===url)){
+  } else if (/(?:tieba|youtube|bili|spotify|wyreqparam|DualSubs\.Subtitles\.Translate\.response)/i.test(url)){
+		if (binaryInfo.length > 0 && binaryInfo.some(item=>item.url===url)){
 			for (let i = 0; i < binaryInfo.length; i++) {
   if (binaryInfo[i].url === url) {
     binarymode = binaryInfo[i].binarymode;
