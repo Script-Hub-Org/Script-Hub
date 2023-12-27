@@ -82,7 +82,6 @@ const iconReplace = $.getval("替换原始插件图标");
 const iconLibrary1 = $.getval("插件随机图标合集") ?? "Doraemon(100P)";
 const iconLibrary2 = iconLibrary1.split("(")[0];
 const iconFormat = iconLibrary2.search(/gif/i) == -1 ? ".png" : ".gif";
-if (iconStatus == "禁用" && iconReplace == "禁用"){iconLibrary2 = "Doraemon"};
 
 //随机插件图标
 var icon = "";
@@ -512,19 +511,14 @@ inBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击�
 outBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击通知查看详情',`${outBox}`,{url:url+'&openOutBoxHtml=true'});
 
 //mitm删除主机名
-if (hnDel != null && hnBox.length > 0) hnBox=hnBox.filter(function(item) {
-    return hnDel.indexOf(item) == -1
-});
+if (hnDel != null && hnBox.length > 0) hnBox=hnBox.filter(item => hnDel.indexOf(item) == -1);
 
 //mitm正则删除主机名
 if (hnRegDel != null) {
 	
-	hndelBox=hnBox.filter(function(item) {
-    return hnRegDel.test(item)
-});
-	hnBox=hnBox.filter(function(item) {
-    return !hnRegDel.test(item)
-});
+	hndelBox=hnBox.filter(item => hnRegDel.test(item));
+	hnBox=hnBox.filter(item => !hnRegDel.test(item)
+);
 };
 hndelBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','已根据正则剔除主机名',`${hndelBox}`);
 
@@ -1058,7 +1052,7 @@ function getModInfo (x,box) {
 //reject
 function rw_reject (x,mark) {
 	noteK = isNoteK(x);
-	rwptn = x.replace(/^#/,"").split(/\s/)[0];
+	rwptn = x.replace(/^#/,"").split(/\s/)[0].replace(/^"(.+)"$/,"$1");
 	rwtype = x.match(/reject(-\w+)?$/i)[0].toLowerCase();
 	
 rwBox.push({mark,noteK,rwptn,"rwvalue":"-",rwtype});
@@ -1072,19 +1066,19 @@ function rw_redirect (x,mark) {
 	xArr = x.split(/\s/);
 	rw_typeInNum = xArr.indexOf(redirect_type);
 	if (rw_typeInNum == "2" && xArr.length == 3) {
-		rwptn = xArr[0].replace(/^#/,"");
+		rwptn = xArr[0].replace(/^#/,"").replace(/^"(.+)"$/,"$1");
 		rwvalue = xArr[1];
 		rwtype = xArr[2];
 	};
 	
 	if (rw_typeInNum == "1" && xArr.length == 3) {
-		rwptn = xArr[0].replace(/^#/,"");
+		rwptn = xArr[0].replace(/^#/,"").replace(/^"(.+)"$/,"$1");
 		rwvalue = xArr[2];
 		rwtype = xArr[1];
 	};
 	
 	if (rw_typeInNum == "2" && xArr.length == 4) {
-		rwptn = xArr[0].replace(/^#/,"");
+		rwptn = xArr[0].replace(/^#/,"").replace(/^"(.+)"$/,"$1");
 		rwvalue = xArr[3];
 		rwtype = xArr[2];
 	};
@@ -1171,7 +1165,7 @@ function getMockInfo (x,mark,y) {
 	};
 		
 	if (/\sdata\s*=\s*"/.test(x)){
-		mockptn = x.replace(/\s{2,}/g," ").split(/\sdata=/)[0].replace(/^#|"/g,"");
+		mockptn = x.replace(/\s{2,}/g," ").split(/\sdata=/)[0].replace(/^#|"/g,"").replace(/^"(.+)"$/,"$1");
 		mockurl = x.split(' data="')[1].split('"')[0];
 		/\sheader="/.test(x) ? mockheader = x.split(' header="')[1].split('"')[0] : mockheader = "";
 		}
