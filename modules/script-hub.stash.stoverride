@@ -37,10 +37,10 @@ script-providers:
     url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js
     interval: 86400
   "Script Hub: 重写转换":
-    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/Rewrite-Parser.js
+    url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/Rewrite-Parser.js
     interval: 86400
   "Script Hub: 规则集转换":
-    url: https://github.com/Script-Hub-Org/Script-Hub/raw/main/rule-parser.js
+    url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/rule-parser.js
     interval: 86400
   "Script Hub: 脚本转换":
     url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.js

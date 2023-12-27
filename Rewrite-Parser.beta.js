@@ -999,25 +999,24 @@ otherRule = (otherRule[0] || '') && `${app}不支持以下内容:\n${otherRule.j
 noNtf == false && otherRule.length > 0 && $.msg('Script Hub: 重写转换',`点击通知查看详情`,`${otherRule}`,{url:url+'&openOtherRuleHtml=true'});
 
 if (openInBoxHtml||openOutBoxHtml||openOtherRuleHtml){
-	$.done({
-  response: {
-    status: 200,
+	result = {
     body: inBox+'\n\n'+outBox+'\n\n'+otherRule,
-    headers: {'Content-Type': 'text/plain; charset=utf-8'},
-  },
-})
+    headers: {'Content-Type': 'text/plain; charset=utf-8'}
+	};
+	$.done($.isQuanX() ? result : {response:result})
 }else{
-	
-$.done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
+	result = {
+		body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'}
+	};
+$.done($.isQuanX() ? result : {response:result});
 };
 
 
 })()
 .catch((e) => {
 	noNtf == false && $.msg(`Script Hub: 重写转换`,`${notifyName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
+	
 		result = {
-      response: {
-        status: 500,
         body: `${notifyName}：${e}\n\n\n\n\n\nScript Hub 重写转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
 `,
         headers: {
@@ -1025,10 +1024,10 @@ $.done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/pla
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
           'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-        },
-      },
-    }
-	$.done(result);
+        }
+    };
+	$.isQuanX() ? result.status = 'HTTP/1.1 500' : result.status = 500;
+	$.done($.isQuanX() ? result : {response:result});
 	})
 
 //判断是否被注释
