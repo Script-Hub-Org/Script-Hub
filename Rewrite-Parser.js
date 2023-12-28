@@ -690,11 +690,11 @@ for (let i=0;i<jsBox.length;i++){
 		jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : "";
 		ori = jsBox[i].ori;
 			
-		jsarg = reJsValue(nArgTarget,nArg,jsname,ori,jsarg).replace(/t;amp;/g,"&").replace(/t;add;/g,"+");
+		jsarg = reJsValue(nArgTarget || 'null',nArg,jsname,ori,jsarg).replace(/t;amp;/g,"&").replace(/t;add;/g,"+");
 			
-		cronexp = reJsValue(nCron,ncronexp,jsname,ori,cronexp);
+		cronexp = reJsValue(nCron || 'null',ncronexp,jsname,ori,cronexp);
 			
-		jsname = reJsValue(njsnametarget,njsname,jsname,ori,jsname);
+		jsname = reJsValue(njsnametarget || 'null',njsname,jsname,ori,jsname);
 
 switch (targetApp){
 	case "surge-module":
@@ -1075,15 +1075,16 @@ function getJsInfo (x, regx) {
 };
 
 function reJsValue (target,nvalue,jsname,ori,orivalue) {
-	
-			if (target != null){
+	let q = orivalue;
+			if (target != 'null'){
 	for (let i=0; i < target.length; i++) {
-  const elem = target[i];
+  let elem = target[i];
 	if (jsname.indexOf(elem) != -1 || ori.indexOf(elem) != -1){
-        return nvalue[i];
-	}else return orivalue;
+        q = nvalue[i];
+	}
 }//for
-}else return orivalue;
+}
+return q;
 }//reJsValue
 
 function getQxReInfo (x,y,mark) {
