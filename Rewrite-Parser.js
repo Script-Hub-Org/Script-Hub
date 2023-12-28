@@ -360,33 +360,6 @@ if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+)\s*=\s*(?:sever\s*:\s*|scrip
 		timeout = getJsInfo(x, /[=,\s]\s*timeout\s*=\s*/);
 		tilesicon = (jstype=="generic"&&/icon=/.test(x)) ? x.split("icon=")[1].split("&")[0] : "";
 		tilescolor = (jstype=="generic"&&/icon-color=/.test(x)) ? x.split("icon-color=")[1].split("&")[0] : "";
-		if (nTilesTarget != null){
-	for (let i=0; i < nTilesTarget.length; i++) {
-  const elem = nTilesTarget[i];
-	if (x.indexOf(elem) != -1){
-        tilescolor = ntilescolor[i].replace(/@/g,"#");   
-            };};};
-			
-		if (nArgTarget != null){
-	for (let i=0; i < nArgTarget.length; i++) {
-  const elem = nArgTarget[i];
-	if (x.indexOf(elem) != -1){
-        jsarg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
-            };};};
-			
-			if (nCron != null){
-	for (let i=0; i < nCron.length; i++) {
-  const elem = nCron[i];
-	if (x.indexOf(elem) != -1){
-        cronexp = ncronexp[i];   
-            };};};
-			
-			if (njsnametarget != null){
-	for (let i=0; i < njsnametarget.length; i++) {
-  const elem = njsnametarget[i];
-	if (x.indexOf(elem) != -1){
-        jsname = njsname[i];   
-            };};};
 			jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,proto,size,ability,updatetime,timeout,jsarg,cronexp,wakesys,tilesicon,tilescolor,eventname,"ori":x,"num":y})
 
 };//脚本解析结束
@@ -407,20 +380,6 @@ if (/\surl\s+script-/.test(x)){
 	rebody = /\sscript[^\s]*(-body|-analyze)/.test(x) ? 'true' : '';
 	size = rebody == 'true' ? '-1' : '';
 	proto = await isBinaryMode(jsurl,jsname);
-			
-		if (nArgTarget != null){
-	for (let i=0; i < nArgTarget.length; i++) {
-  const elem = nArgTarget[i];
-	if (x.indexOf(elem) != -1){
-        jsarg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
-            };};};
-			
-			if (njsnametarget != null){
-	for (let i=0; i < njsnametarget.length; i++) {
-  const elem = njsnametarget[i];
-	if (x.indexOf(elem) != -1){
-        jsname = njsname[i];   
-            };};};
 	jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,proto,size,"timeout":"60",jsarg,"ori":x,"num":y})
 };//qx脚本解析结束
 
@@ -438,27 +397,6 @@ if (/^[^\s]+\s+[^u\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+)?(https?|ftp|file
 	jsfrom = "qx";
 	jsurl = toJsc(jsurl,jscStatus,jsc2Status,jsfrom);
 	jsarg = "";
-		
-		if (nCron != null){
-	for (let i=0; i < nCron.length; i++) {
-  const elem = nCron[i];
-	if (x.indexOf(elem) != -1){
-        cronexp = ncronexp[i];   
-            };};};
-			
-			if (nArgTarget != null){
-	for (let i=0; i < nArgTarget.length; i++) {
-  const elem = nArgTarget[i];
-	if (x.indexOf(elem) != -1){
-        jsarg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
-            };};};
-			
-			if (njsnametarget != null){
-	for (let i=0; i < njsnametarget.length; i++) {
-  const elem = njsnametarget[i];
-	if (x.indexOf(elem) != -1){
-        jsname = njsname[i];   
-            };};};
 	jsBox.push({mark,noteK,jsname,"jstype":"cron","jsptn":"",cronexp,jsurl,"wakesys":"1","timeout":"60",jsarg,"ori":x,"num":y})
 
 };//qx cron 脚本解析结束
@@ -750,6 +688,13 @@ for (let i=0;i<jsBox.length;i++){
 		wakesys = jsBox[i].wakesys ? ", wake-system="+jsBox[i].wakesys : "";
 		timeout = jsBox[i].timeout ? jsBox[i].timeout : "";
 		jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : "";
+		ori = jsBox[i].ori;
+			
+		jsarg = reJsValue(nArgTarget,nArg,jsname,ori,jsarg).replace(/t;amp;/g,"&").replace(/t;add;/g,"+");
+			
+		cronexp = reJsValue(nCron,ncronexp,jsname,ori,cronexp);
+			
+		jsname = reJsValue(njsnametarget,njsname,jsname,ori,jsname);
 
 switch (targetApp){
 	case "surge-module":
@@ -821,9 +766,19 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		cronexp = jsBox[i].cronexp;
 		timeout = jsBox[i].timeout ? noteKn6+"timeout: "+jsBox[i].timeout : "";
 		jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : "";
-		jsarg = jsarg && jstype == "generic" ? noteKn4+"argument: |-"+noteKn6+jsarg : jsarg && jstype != "generic" ? noteKn6+"argument: |-"+noteKn8+jsarg : "";
 		tilesicon = jsBox[i].tilesicon ? jsBox[i].tilesicon : "";
 		tilescolor = jsBox[i].tilescolor ? jsBox[i].tilescolor : "";
+		ori = jsBox[i].ori;
+		
+		tilescolor = reJsValue(nTilesTarget,ntilescolor,jsname,ori,tilescolor).replace(/@/g,"#");
+			
+		jsarg = reJsValue(nArgTarget,nArg,jsname,ori,jsarg).replace(/t;amp;/g,"&").replace(/t;add;/g,"+");
+			
+		cronexp = reJsValue(nCron,ncronexp,jsname,ori,cronexp);
+			
+		jsname = reJsValue(njsnametarget,njsname,jsname,ori,jsname);
+			
+		jsarg = jsarg && jstype == "generic" ? noteKn4+"argument: |-"+noteKn6+jsarg : jsarg && jstype != "generic" ? noteKn6+"argument: |-"+noteKn8+jsarg : "";
 		
 		if (/request|response/.test(jstype)){
 			script.push(mark+noteKn4+'- match: '+jsptn+noteKn6+'name: "'+jsname+'"'+noteKn6+'type: '+jstype+rebody+size+proto+timeout+jsarg);
@@ -864,15 +819,18 @@ switch (targetApp){
 noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";noteK2 = "  ";
 	}else{noteKn8 = "\n#        ";noteKn6 = "\n#      ";noteKn4 = "\n#    ";noteK4 = "#    ";noteK2 = "#  ";};
 		mockheader = mockBox[i].mockheader ? mockBox[i].mockheader : "";
-		mfile = mockurl.substring(mockurl.lastIndexOf('/') + 1);
-		mfName = mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.') );
 		mocknum = mockBox[i].mocknum;
-		if (/dict/i.test(mfName)) m2rType="-dict"
-		else if (/array/i.test(mfName)) m2rType="-array"
-		else if (/200|blank/i.test(mfName)) m2rType="-200"
-		else if (/img|tinygif/i.test(mfName)) m2rType="-img"
+		ori = mockBox[i].ori;
+		mfile = mockurl.substring(mockurl.lastIndexOf('/') + 1);
+		
+		if (/dict/i.test(mfile)) m2rType="-dict"
+		else if (/array/i.test(mfile)) m2rType="-array"
+		else if (/200|blank/i.test(mfile)) m2rType="-200"
+		else if (/img|tinygif/i.test(mfile)) m2rType="-img"
 		else m2rType = null;
 		
+		jsname = mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.') )+'_'+mocknum;
+		jsname = m2rType == null ? reJsValue(njsnametarget,njsname,jsname,ori,jsname) : jsname;
 		m2rType != null && !isStashiOS && URLRewrite.push(mark+noteK+mockptn+' - reject'+m2rType);
 		m2rType != null && isStashiOS && URLRewrite.push(mark+noteK4+'- >-'+noteKn6+mockptn+' - reject'+m2rType);
 		mockheader = m2rType == null && mockheader != "" && !/&contentType=/.test(mockheader) ? '&header=' + encodeURIComponent(mockheader) : m2rType == null && mockheader != "" && /&contentType=/.test(mockheader) ? mockheader : "" ;
@@ -881,12 +839,12 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		mockurl = m2rType == null ? `http://script.hub/convert/_start_/${mockurl}/_end_/${mfile}?type=mock&target-app=${targetApp}${mockheader}${sufkeepHeader}${sufjsDelivr}` : "";
 		
 		if (isStashiOS && m2rType==null) {
-		script.push(mark+`${noteK4}- match: ${mockptn}${noteKn6}name: "${mfName}_${mocknum}"${noteKn6}type: request${noteKn6}timeout: 60${noteKn6}binary-mode: true`)
+		script.push(mark+`${noteK4}- match: ${mockptn}${noteKn6}name: "${jsname}"${noteKn6}type: request${noteKn6}timeout: 60${noteKn6}binary-mode: true`)
 		
-		providers.push(`${noteK2}"${mfName}_${mocknum}":${noteKn4}url: ${mockurl}${noteKn4}interval: 86400`)};
+		providers.push(`${noteK2}"${jsname}":${noteKn4}url: ${mockurl}${noteKn4}interval: 86400`)};
 		
 		if ((isLooniOS || isShadowrocket)&&m2rType==null){
-		script.push(mark+`${noteK}http-request ${mockptn} script-path=${mockurl}, timeout=60, tag=${mfName}`)
+		script.push(mark+`${noteK}http-request ${mockptn} script-path=${mockurl}, timeout=60, tag=${jsname}`)
 		};
 	break;
 	
@@ -1116,6 +1074,18 @@ function getJsInfo (x, regx) {
 	}else{return ""}
 };
 
+function reJsValue (target,nvalue,jsname,ori,orivalue) {
+	
+			if (target != null){
+	for (let i=0; i < target.length; i++) {
+  const elem = target[i];
+	if (jsname.indexOf(elem) != -1 || ori.indexOf(elem) != -1){
+        return nvalue[i];
+	}else return orivalue;
+}//for
+}else return orivalue;
+}//reJsValue
+
 function getQxReInfo (x,y,mark) {
 	noteK = isNoteK(x);
 	retype = /\surl\s+request-/i.test(x) ? 'request' : 'response';
@@ -1130,7 +1100,7 @@ function getQxReInfo (x,y,mark) {
 	jsarg = rearg1+'->'+rearg2;
 	rebody = /body/.test(hdorbd) ? 'true' : '';
 	size = /body/.test(hdorbd) ? '3145728' : '';
-	jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,size,"timeout":"30",jsarg,"num":y})
+	jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,size,"timeout":"30",jsarg,"ori":x,"num":y})
 };
 
 function getHn (x,arr,addMethod) {
@@ -1193,7 +1163,7 @@ function getMockInfo (x,mark,y) {
 		mockurl = x.split(' data="')[1].split('"')[0];
 		/\sheader="/.test(x) ? mockheader = x.split(' header="')[1].split('"')[0] : mockheader = "";
 		}
-mockBox.push({mark,noteK,mockptn,mockurl,mockheader,"mocknum":y});
+mockBox.push({mark,noteK,mockptn,mockurl,mockheader,"ori":x,"mocknum":y});
 };//获取Mock参数
 
 function istrue(str) {
