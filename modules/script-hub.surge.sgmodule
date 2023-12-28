@@ -3,15 +3,12 @@
 #!author=@小白脸 @xream @keywos @ckyb
 
 [General]
-
 force-http-engine-hosts = %APPEND% script.hub, *.script.hub
 
 [MITM]
-
 hostname = %APPEND% script.hub, *.script.hub
 
 [Script]
-
 Script Hub: 前端 = type=http-request, pattern=^https?:\/\/script\.hub\/($|edit\/|reload), script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js, timeout=300
 
 Script Hub: 重写转换 = type=http-request, pattern=^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|loon-plugin|all-module), script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/Rewrite-Parser.js, timeout=300
