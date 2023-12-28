@@ -65,6 +65,8 @@ var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;//
 var nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+") : null;
 var ntilescolor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
 var nPolicy = queryObject.policy != undefined ? queryObject.policy : null;
+var njsnametarget = queryObject.njsnametarget != undefined ? queryObject.njsnametarget.split("+") : null;//修改脚本名目标
+var njsname = queryObject.njsname != undefined ? queryObject.njsname.split("+") : null;//修改脚本名
 var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;//脚本转换1
 var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;//脚本转换2
 var compatibilityOnly = istrue(queryObject.compatibilityOnly);//兼容转换
@@ -378,6 +380,13 @@ if (/^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+)\s*=\s*(?:sever\s*:\s*|scrip
 	if (x.indexOf(elem) != -1){
         cronexp = ncronexp[i];   
             };};};
+			
+			if (njsnametarget != null){
+	for (let i=0; i < njsnametarget.length; i++) {
+  const elem = njsnametarget[i];
+	if (x.indexOf(elem) != -1){
+        jsname = njsname[i];   
+            };};};
 			jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,proto,size,ability,updatetime,timeout,jsarg,cronexp,wakesys,tilesicon,tilescolor,eventname,"ori":x,"num":y})
 
 };//脚本解析结束
@@ -404,6 +413,13 @@ if (/\surl\s+script-/.test(x)){
   const elem = nArgTarget[i];
 	if (x.indexOf(elem) != -1){
         jsarg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
+            };};};
+			
+			if (njsnametarget != null){
+	for (let i=0; i < njsnametarget.length; i++) {
+  const elem = njsnametarget[i];
+	if (x.indexOf(elem) != -1){
+        jsname = njsname[i];   
             };};};
 	jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,proto,size,"timeout":"60",jsarg,"ori":x,"num":y})
 };//qx脚本解析结束
@@ -435,6 +451,13 @@ if (/^[^\s]+\s+[^u\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+)?(https?|ftp|file
   const elem = nArgTarget[i];
 	if (x.indexOf(elem) != -1){
         jsarg = nArg[i].replace(/t;amp;/g,"&").replace(/t;add;/g,"+");   
+            };};};
+			
+			if (njsnametarget != null){
+	for (let i=0; i < njsnametarget.length; i++) {
+  const elem = njsnametarget[i];
+	if (x.indexOf(elem) != -1){
+        jsname = njsname[i];   
             };};};
 	jsBox.push({mark,noteK,jsname,"jstype":"cron","jsptn":"",cronexp,jsurl,"wakesys":"1","timeout":"60",jsarg,"ori":x,"num":y})
 
@@ -878,34 +901,34 @@ switch (targetApp){
 	
 	modInfo = (modInfo[0] || '') && `${modInfo.join("\n")}`.replace(/([\s\S]*)(#!desc=.+\n?)([\s\S]*)/,'$2\n$1\n$3').replace(/([\s\S]*)(#!name=.+\n?)([\s\S]*)/,'$2\n$1\n$3').replace(/\n{2,}/g,'\n');
     
-    rules = (rules[0] || '') && `[Rule]\n\n${rules.join("\n")}`;
+    rules = (rules[0] || '') && `[Rule]\n${rules.join("\n")}`;
 	
-    Panel = (Panel[0] || '') && `[Panel]\n\n${Panel.join("\n\n")}`;
+    Panel = (Panel[0] || '') && `[Panel]\n${Panel.join("\n\n")}`;
 	
-	URLRewrite = (URLRewrite[0] || '') && `[URL Rewrite]\n\n${URLRewrite.join("\n")}`;
+	URLRewrite = (URLRewrite[0] || '') && `[URL Rewrite]\n${URLRewrite.join("\n")}`;
 	
-	HeaderRewrite = (HeaderRewrite[0] || '') && `[Header Rewrite]\n\n${HeaderRewrite.join("\n")}`;
+	HeaderRewrite = (HeaderRewrite[0] || '') && `[Header Rewrite]\n${HeaderRewrite.join("\n")}`;
 	
-	MapLocal = (MapLocal[0] || '') && `[Map Local]\n\n${MapLocal.join("\n\n")}`;
+	MapLocal = (MapLocal[0] || '') && `[Map Local]\n${MapLocal.join("\n\n")}`;
 	
-    host = (host[0] || '') && `[Host]\n\n${host.join("\n")}`;
+    host = (host[0] || '') && `[Host]\n${host.join("\n")}`;
 	
-    script = (script[0] || '') && `[Script]\n\n${script.join("\n\n")}`;
+    script = (script[0] || '') && `[Script]\n${script.join("\n\n")}`;
 	
 	if (isLooniOS) {
-		MITM = hnBox.length > 0 ? "[MITM]\n\nhostname = "+hnBox : "";
+		MITM = hnBox.length > 0 ? "[MITM]\nhostname = "+hnBox : "";
 		fheBox.length > 0 && General.push('force-http-engine-hosts = '+fheBox);
 		skipBox.length > 0 && General.push('skip-proxy = '+skipBox);
 		realBox.length > 0 && General.push('real-ip = '+realBox);
-    General = (General[0] || '') && `[General]\n\n${General.join("\n\n")}`;
+    General = (General[0] || '') && `[General]\n${General.join("\n\n")}`;
 	};
 	
 	if (isSurgeiOS||isShadowrocket) {
-		MITM = hnBox.length > 0 ? `[MITM]\n\nhostname = ${hnaddMethod} `+hnBox : "";
+		MITM = hnBox.length > 0 ? `[MITM]\nhostname = ${hnaddMethod} `+hnBox : "";
 		fheBox.length > 0 && General.push(`force-http-engine-hosts = ${fheaddMethod} `+fheBox);
 		skipBox.length > 0 && General.push(`skip-proxy = ${skipaddMethod} `+skipBox);
 		realBox.length > 0 && General.push(`always-real-ip = ${realaddMethod} `+realBox);
-    General = (General[0] || '') && `[General]\n\n${General.join("\n\n")}`;
+    General = (General[0] || '') && `[General]\n${General.join("\n\n")}`;
 	};
 	
 
