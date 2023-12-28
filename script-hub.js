@@ -1033,15 +1033,29 @@ const htmls = `
       
 
       <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
+        <summary>修改脚本名</summary>
+        <details>
+          <summary>关键词锁定脚本(njsnametarget)</summary>
+          <span>根据关键词锁定脚本, 配合参数 <code>njsname</code> 修改脚本名. 多关键词用 <code>+</code> 分隔, <code>njsnametarget</code> 传入了几项,  <code>njsname</code> 也必须对应传入几项</span>
+          <textarea id="njsnametarget" v-model.lazy="njsnametarget" placeholder=""></textarea>
+        </details>
+        <details>
+          <summary>新的脚本名(njsname)</summary>
+          <span>见 <code>njsnametarget</code> 参数说明</span>
+          <textarea id="njsname" v-model.lazy="njsname" placeholder=""></textarea>
+        </details>
+      </details>
+
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改定时任务</summary>
         <details>
           <summary>修改定时任务(cron)</summary>
-          <span>根据关键词锁定cron脚本配合参数cronexp= 修改定时任务的cron表达式 多关键词用 <code>+</code> 分隔，cron=传入了几项，cronexp=也必须对应传入几项。 cron表达式中空格可用"."或"%20"替代</span>
+          <span>根据关键词锁定 <code>cron</code> 脚本配合参数 <code>cronexp</code> 修改定时任务的cron表达式 多关键词用 <code>+</code> 分隔, <code>cron</code> 传入了几项, <code>cronexp</code> 也必须对应传入几项。 cron 表达式中空格可用 "." 或 "%20" 替代</span>
           <textarea id="cron" v-model.lazy="cron" placeholder=""></textarea>
         </details>
         <details>
           <summary>修改定时任务(cronexp)</summary>
-          <span>见 cron= 参数说明</span>
+          <span>见 <code>cron</code> 参数说明</span>
           <textarea id="cronexp" v-model.lazy="cronexp" placeholder=""></textarea>
         </details>
       </details>
@@ -1173,6 +1187,8 @@ const htmls = `
     jsc2_all: '',
     cron: '',
     cronexp: '',
+    njsname: '',
+    njsnametarget: '',
     arg: '',
     argv: '',
     tiles: '',
@@ -1207,7 +1223,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
