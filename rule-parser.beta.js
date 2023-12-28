@@ -108,7 +108,7 @@ eval(evUrlori);
 
 	body = body.match(/[^\r\n]+/g);
 	
-let others = [];       //不支持的规则
+let other = [];       //不支持的规则
 let ruleSet = [];      //解析过后的规则
 let domainSet = [];    //域名集
 let outRules = [];     //被排除的规则
@@ -172,7 +172,7 @@ if (sni != null){
 		outRules.push(x.replace(/^;#/,"").replace(/^HO-ST/i,'HOST'))
 	}else if (x.match(/^(HO-ST|U|PROTOCOL|OR|AND|NOT)/i)){
 		
-		others.push(x.replace(/^HO-ST/i,'HOST'))
+		other.push(x.replace(/^HO-ST/i,'HOST'))
 
 	}else if (x!=""){
 		
@@ -194,7 +194,7 @@ if (sni != null){
 		
 		outRules.push(x.replace(/^;#/,"").replace(/^HO-ST/i,'HOST'))
 	}else if (x.match(/^(HO-ST|DST-PORT|PROTOCOL|PROCESS-NAME|OR|AND|NOT)/i)){
-		others.push(x.replace(/^HO-ST/i,'HOST'))
+		other.push(x.replace(/^HO-ST/i,'HOST'))
 
 	}else if (x!=""){
 		
@@ -215,7 +215,7 @@ if (sni != null){
 		outRules.push(x.replace(/^;#/,"").replace(/^HO-ST/i,'HOST'))
 	}else if (x.match(/^HO-ST/i)){
 		
-		others.push(x.replace(/^HO-ST/i,'HOST'))
+		other.push(x.replace(/^HO-ST/i,'HOST'))
 
 	}else if (x.match(/^(OR|AND|NOT)/i)){
 		ruleSet.push(x);
@@ -240,15 +240,15 @@ if (sni != null){
 }; //循环结束
 
 let ruleNum = ruleSet.length;
-let notSupport = others.length;
+let notSupport = other.length;
 let outRuleNum = outRules.length;
-others = (others[0] || '') && `\n#不支持的规则:\n#${others.join("\n#")}`;
+other = (other[0] || '') && `\n#不支持的规则:\n#${other.join("\n#")}`;
 outRules = (outRules[0] || '') && `\n#已排除规则:\n#${outRules.join("\n#")}`;
 
 if (isStashiOS){
-	ruleSet = (ruleSet[0] || '') && `#规则数量:${ruleNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\npayload:\n${ruleSet.join("\n")}`;
+	ruleSet = (ruleSet[0] || '') && `#规则数量:${ruleNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${other}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\npayload:\n${ruleSet.join("\n")}`;
 }else if (isSurgeiOS || isShadowrocket || isLooniOS){
-	ruleSet = (ruleSet[0] || '') && `#规则数量:${ruleNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n${ruleSet.join("\n")}`;
+	ruleSet = (ruleSet[0] || '') && `#规则数量:${ruleNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${other}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n${ruleSet.join("\n")}`;
 }else if (isSurgedomainset || isSurgedomainset2){
 	domainSet = ruleSet.filter((ruleSet) => ruleSet.search(/^DOMAIN(,|-SUFFIX)/) != -1);
 	
@@ -258,9 +258,9 @@ ruleNum2 = ruleSet.length;
 domainNum = domainSet.length;
 
 	if (isSurgedomainset){
-		ruleSet = (domainSet[0] || '') && `#总规则数量:${ruleNum}\n#域名规则数量:${domainNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n` + domainSet.join("\n").replace(/^DOMAIN,/mg,"").replace(/^DOMAIN-SUFFIX,/mg,".");
+		ruleSet = (domainSet[0] || '') && `#总规则数量:${ruleNum}\n#域名规则数量:${domainNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${other}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n` + domainSet.join("\n").replace(/^DOMAIN,/mg,"").replace(/^DOMAIN-SUFFIX,/mg,".");
 	}else if (isSurgedomainset2){
-		ruleSet = (ruleSet[0] || '') && `#总规则数量:${ruleNum}\n#非域名规则数量:${ruleNum2}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n${ruleSet.join("\n")}`
+		ruleSet = (ruleSet[0] || '') && `#总规则数量:${ruleNum}\n#非域名规则数量:${ruleNum2}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${other}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n${ruleSet.join("\n")}`
 	};
 }else if (isStashdomainset || isStashdomainset2){
 	domainSet = ruleSet.filter((ruleSet) => ruleSet.search(/  - DOMAIN(,|-SUFFIX)/) != -1);
@@ -273,7 +273,7 @@ domainNum = domainSet.length;
 	if (isStashdomainset){
 		ruleSet = (domainSet[0] || '') && domainSet.join("\n").replace(/  - DOMAIN,/mg,"").replace(/  - DOMAIN-SUFFIX,/mg,".").replace(/^([^,]*),?.*/mig,"$1");
 	}else if (isStashdomainset2){
-		ruleSet = (ruleSet[0] || '') && `#总规则数量:${ruleNum}\n#非域名规则数量:${ruleNum2}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${others}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\npayload:\n${ruleSet.join("\n")}`
+		ruleSet = (ruleSet[0] || '') && `#总规则数量:${ruleNum}\n#非域名规则数量:${ruleNum2}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${other}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\npayload:\n${ruleSet.join("\n")}`
 	};
 };
 
@@ -282,14 +282,16 @@ body = `${ruleSet}`.replace(/t&zd;/g,',').replace(/ ;#/g," ");
 eval(evJsmodi);
 eval(evUrlmodi);
 
- $.done({ response: { status: 200 ,body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'} } });
+result = {
+		body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'}
+	};
+	$.isQuanX() ? result.status = 'HTTP/1.1 200' : result.status = 200;
+	$.done($.isQuanX() ? result : {response:result});
 
 })()
 .catch((e) => {
 		noNtf == false && $.msg(`Script Hub: 规则集转换`,`${resFileName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
 		result = {
-      response: {
-        status: 500,
         body: `${resFileName}：${e}\n\n\n\n\n\nScript Hub 规则集转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
 `,
         headers: {
@@ -297,10 +299,10 @@ eval(evUrlmodi);
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
           'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-        },
-      },
+        }
     }
-	$.done(result);
+	$.isQuanX() ? result.status = 'HTTP/1.1 500' : result.status = 500;
+	$.done($.isQuanX() ? result : {response:result});
 	})
 	
 function istrue(str) {

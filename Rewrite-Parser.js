@@ -1026,12 +1026,14 @@ if (openInBoxHtml||openOutBoxHtml||openOtherRuleHtml){
     body: inBox+'\n\n'+outBox+'\n\n'+otherRule,
     headers: {'Content-Type': 'text/plain; charset=utf-8'}
 	};
+	$.isQuanX() ? result.status = 'HTTP/1.1 200' : result.status = 200;
 	$.done($.isQuanX() ? result : {response:result})
 }else{
 	result = {
 		body:body ,headers: {'Content-Type': 'text/plain; charset=utf-8'}
 	};
-$.done($.isQuanX() ? result : {response:result});
+	$.isQuanX() ? result.status = 'HTTP/1.1 200' : result.status = 200;
+	$.done($.isQuanX() ? result : {response:result});
 };
 
 
