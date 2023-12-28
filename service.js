@@ -92,8 +92,8 @@ const reqFn = async ({ ctx, scriptMap, baseUrl }) => {
     url,
   }
   const result = await evalFn({ $request, scriptFilePath })
-  console.log(`result`, result)
-  ctx.response.status = result?.response?.status
+  // console.log(`result`, result)
+  ctx.response.status = Number(result?.response?.status || 200)
   for (const [k, v] of Object.entries(result?.response?.headers)) {
     // if (!/^content-length|content-encoding$/i.test(k)) {
     ctx.set(k, v)
