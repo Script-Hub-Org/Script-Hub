@@ -770,13 +770,13 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		tilescolor = jsBox[i].tilescolor ? jsBox[i].tilescolor : "";
 		ori = jsBox[i].ori;
 		
-		tilescolor = reJsValue(nTilesTarget,ntilescolor,jsname,ori,tilescolor).replace(/@/g,"#");
+		tilescolor = reJsValue(nTilesTarget || 'null',ntilescolor,jsname,ori,tilescolor).replace(/@/g,"#");
 			
-		jsarg = reJsValue(nArgTarget,nArg,jsname,ori,jsarg).replace(/t;amp;/g,"&").replace(/t;add;/g,"+");
+		jsarg = reJsValue(nArgTarget || 'null',nArg,jsname,ori,jsarg).replace(/t;amp;/g,"&").replace(/t;add;/g,"+");
 			
-		cronexp = reJsValue(nCron,ncronexp,jsname,ori,cronexp);
+		cronexp = reJsValue(nCron || 'null',ncronexp,jsname,ori,cronexp);
 			
-		jsname = reJsValue(njsnametarget,njsname,jsname,ori,jsname);
+		jsname = reJsValue(njsnametarget || 'null',njsname,jsname,ori,jsname);
 			
 		jsarg = jsarg && jstype == "generic" ? noteKn4+"argument: |-"+noteKn6+jsarg : jsarg && jstype != "generic" ? noteKn6+"argument: |-"+noteKn8+jsarg : "";
 		
@@ -830,7 +830,7 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		else m2rType = null;
 		
 		jsname = mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.') )+'_'+mocknum;
-		jsname = m2rType == null ? reJsValue(njsnametarget,njsname,jsname,ori,jsname) : jsname;
+		jsname = m2rType == null ? reJsValue(njsnametarget || 'null',njsname,jsname,ori,jsname) : jsname;
 		m2rType != null && !isStashiOS && URLRewrite.push(mark+noteK+mockptn+' - reject'+m2rType);
 		m2rType != null && isStashiOS && URLRewrite.push(mark+noteK4+'- >-'+noteKn6+mockptn+' - reject'+m2rType);
 		mockheader = m2rType == null && mockheader != "" && !/&contentType=/.test(mockheader) ? '&header=' + encodeURIComponent(mockheader) : m2rType == null && mockheader != "" && /&contentType=/.test(mockheader) ? mockheader : "" ;
