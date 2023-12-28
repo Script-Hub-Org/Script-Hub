@@ -190,7 +190,7 @@ for await (var [y, x] of body.entries()) {
 //去掉注释
 if (Pin0 != null) {
 	for (let i=0; i < Pin0.length; i++) {
-  const elem = Pin0[i];
+  const elem = Pin0[i].trim();
 	if (x.indexOf(elem) != -1&&/^#/.test(x)){
 		x = x.replace(/^#/,"")
 		inBox.push(x);
@@ -201,7 +201,7 @@ if (Pin0 != null) {
 //增加注释
 if (Pout0 != null){
 	for (let i=0; i < Pout0.length; i++) {
-  const elem = Pout0[i];
+  const elem = Pout0[i].trim();
 	if (x.indexOf(elem) != -1 && x.search(/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip)\s*=/) == -1&&!/^#/.test(x)){
 		x = "#" + x;
 		outBox.push(x);
@@ -217,7 +217,7 @@ if (delNoteSc === true && x.match(/^#/) && x.indexOf("#!") == -1){
 //sni嗅探
 if (sni != null){
 	for (let i=0; i < sni.length; i++) {
-  const elem = sni[i];
+  const elem = sni[i].trim();
 	if (x.indexOf(elem) != -1 && /^(DOMAIN|RULE-SET)/i.test(x) && !/,\s*extended-matching/i.test(x)){
 		x = x + ",extended-matching";
 	};
@@ -1078,12 +1078,13 @@ function reJsValue (target,nvalue,jsname,ori,orivalue) {
 	let q = orivalue;
 			if (target != 'null'){
 	for (let i=0; i < target.length; i++) {
-  let elem = target[i];
+  let elem = target[i].trim();
 	if (jsname.indexOf(elem) != -1 || ori.indexOf(elem) != -1){
         q = nvalue[i];
-	}
+		return q;
+	};
 }//for
-}
+};
 return q;
 }//reJsValue
 
@@ -1100,7 +1101,7 @@ function getQxReInfo (x,y,mark) {
 	rearg2 = x.split(breakpoint)[2].trim().replace(/^"(.+)"$/,"$1");
 	jsarg = rearg1+'->'+rearg2;
 	rebody = /body/.test(hdorbd) ? 'true' : '';
-	size = /body/.test(hdorbd) ? '3145728' : '';
+	size = /body/.test(hdorbd) ? '-1' : '';
 	jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,size,"timeout":"30",jsarg,"ori":x,"num":y})
 };
 
@@ -1176,7 +1177,7 @@ function istrue(str) {
 function isJsCon (x, arr) {
 	if (arr != null){
 		for (let i=0; i < arr.length; i++) {
-  const elem = arr[i];
+  const elem = arr[i].trim();
 	if (x.indexOf(elem) != -1){return true};
 	};//循环结束
   };//if (arr != null)
