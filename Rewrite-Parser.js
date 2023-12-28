@@ -194,6 +194,7 @@ if (Pin0 != null) {
 	if (x.indexOf(elem) != -1&&/^#/.test(x)){
 		x = x.replace(/^#/,"")
 		inBox.push(x);
+		break;
 	};
 };//循环结束
 };//去掉注释结束
@@ -205,6 +206,7 @@ if (Pout0 != null){
 	if (x.indexOf(elem) != -1 && x.search(/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip)\s*=/) == -1&&!/^#/.test(x)){
 		x = "#" + x;
 		outBox.push(x);
+		break;
 	};
 };//循环结束
 };//增加注释结束
@@ -220,6 +222,7 @@ if (sni != null){
   const elem = sni[i].trim();
 	if (x.indexOf(elem) != -1 && /^(DOMAIN|RULE-SET)/i.test(x) && !/,\s*extended-matching/i.test(x)){
 		x = x + ",extended-matching";
+		break;
 	};
 };//循环结束
 };//启用sni嗅探结束
