@@ -290,7 +290,7 @@ result = {
 
 })()
 .catch((e) => {
-		noNtf == false && $.msg(`Script Hub: 规则集转换`,`${resFileName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
+		noNtf == false ? $.msg(`Script Hub: 规则集转换`,`${resFileName}：${e}\n${url}`,'','https://t.me/zhetengsha_group') : $.log(e);
 		result = {
         body: `${resFileName}：${e}\n\n\n\n\n\nScript Hub 规则集转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
 `,

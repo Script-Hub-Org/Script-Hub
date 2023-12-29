@@ -265,9 +265,9 @@ if (/^#!.+?=\s*$/.test(x)){
 	
 } else if (isLooniOS&&/^#!(?:select|input)\s*=\s*.+/.test(x)){
 	getModInfo(x,modInputBox);
-}else if (reqArr.length>1&&/^#!(?:name|desc|date|author)\s*=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)){getModInfo(x,modInfoBox);
+}else if (reqArr.length>1&&/^#!(?:name|desc|date|author)\s*=.+/.test(x) && !isLooniOS){getModInfo(x,modInfoBox);
 	
-}else if (reqArr.length==1&&/^#!(?:name|desc|date|author|system)\s*=.+/.test(x) && (isSurgeiOS || isShadowrocket || isStashiOS)) {
+}else if (reqArr.length==1&&/^#!(?:name|desc|date|author|system)\s*=.+/.test(x) && !isLooniOS) {
 	getModInfo(x,modInfoBox);
 }else if (isLooniOS && /^#!.+?=.+/.test(x)){
 	getModInfo(x,modInfoBox);
@@ -308,7 +308,7 @@ if (/\surl\s+(?:request|response)-(?:header|body)\s/i.test(x)) {
 
 //rule解析
 if (/^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent|url-regex|de?st-port|and|not|or|protocol)\s*,.+/i.test(x)){
-		mark = getMark(y,body);
+	mark = getMark(y,body);
 	x = x.replace(/\s/g,"");
 	noteK = isNoteK(x);
 	ruletype = x.split(/\s*,\s*/)[0].replace(/^#/,"");
@@ -1000,7 +1000,7 @@ if (openInBoxHtml||openOutBoxHtml||openOtherRuleHtml){
 
 })()
 .catch((e) => {
-	noNtf == false && $.msg(`Script Hub: 重写转换`,`${notifyName}：${e}\n${url}`,'','https://t.me/zhetengsha_group');
+	noNtf == false ? $.msg(`Script Hub: 重写转换`,`${notifyName}：${e}\n${url}`,'','https://t.me/zhetengsha_group') : $.log(e);
 	
 		result = {
         body: `${notifyName}：${e}\n\n\n\n\n\nScript Hub 重写转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
