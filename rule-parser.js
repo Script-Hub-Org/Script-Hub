@@ -2,8 +2,9 @@
    支持QX & Surge & Clash 规则集解析
    适用app: Surge Shadowrocket Stash Loon
 ***************************/
+const JS_NAME = "Script Hub: 规则集转换";
 
-const $ = new Env("Script Hub: 规则集转换");
+const $ = new Env(JS_NAME);
 
 //目标app
 const isEgern = 'object' == typeof egern;
@@ -94,6 +95,8 @@ if (req == 'http://local.text'){
 		bodyobj = await $.http.get(reqArr[i]);
 		bodystatus = bodyobj.status;
 		body = bodystatus == 200 ? bodyobj.body : bodystatus == 404 ? "#!error=404: Not Found" : "";
+		bodystatus == 404 && $.msg(JS_NAME,"来源链接已失效","404: Not Found ---> "+reqArr[i],'');
+		
 		if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)){
 
 body = body.match(/^(?:\n|\r)*\/\*([\s\S]*?)(?:\r|\n)\s*\*+\//)[1];
@@ -292,7 +295,7 @@ result = {
 
 })()
 .catch((e) => {
-		noNtf == false ? $.msg(`Script Hub: 规则集转换`,`${resFileName}：${e}\n${url}`,'','https://t.me/zhetengsha_group') : $.log(e);
+		noNtf == false ? $.msg(JS_NAME,`${resFileName}：${e}\n${url}`,'','https://t.me/zhetengsha_group') : $.log(e);
 		result = {
         body: `${resFileName}：${e}\n\n\n\n\n\nScript Hub 规则集转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
 `,

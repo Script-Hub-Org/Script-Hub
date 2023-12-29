@@ -13,8 +13,9 @@
 项目地址:
 https://github.com/Script-Hub-Org/Script-Hub
 ***************************/
+const JS_NAME = "Script Hub: 重写转换";
 
-const $ = new Env(`Script Hub: 重写转换`);
+const $ = new Env(JS_NAME);
 
 const url = $request.url;
 var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
@@ -169,6 +170,7 @@ if (req == 'http://local.text'){
 		bodyobj = await $.http.get(reqArr[i]);
 		bodystatus = bodyobj.status;
 		body = bodystatus == 200 ? bodyobj.body : bodystatus == 404 ? "#!error=404: Not Found" : "";
+		bodystatus == 404 && $.msg(JS_NAME,"来源链接已失效","404: Not Found ---> "+reqArr[i],'');
 		
 		if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)){
 
@@ -474,8 +476,8 @@ if (/url\s+echo-response\s|\sdata\s*=\s*"/.test(x)){
 inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join("\n\n")}`;
 outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join("\n")}`;
 
-inBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击通知查看详情',`${inBox}`,{url:url+'&openInBoxHtml=true'});
-outBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','点击通知查看详情',`${outBox}`,{url:url+'&openOutBoxHtml=true'});
+inBox.length > 0 && noNtf == false && $.msg(JS_NAME,'点击通知查看详情',`${inBox}`,{url:url+'&openInBoxHtml=true'});
+outBox.length > 0 && noNtf == false && $.msg(JS_NAME,'点击通知查看详情',`${outBox}`,{url:url+'&openOutBoxHtml=true'});
 
 //mitm删除主机名
 if (hnDel != null && hnBox.length > 0) hnBox=hnBox.filter(item => hnDel.indexOf(item) == -1);
@@ -487,7 +489,7 @@ if (hnRegDel != null) {
 	hnBox=hnBox.filter(item => !hnRegDel.test(item)
 );
 };
-hndelBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','已根据正则剔除主机名',`${hndelBox}`);
+hndelBox.length > 0 && noNtf == false && $.msg(JS_NAME,'已根据正则剔除主机名',`${hndelBox}`);
 
 	hnBox = pieceHn(hnBox);
 	fheBox = pieceHn(fheBox);
@@ -651,7 +653,7 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 	case "shadowrocket-module":
 	
 rwhdBox = (rwhdBox[0] || '') && `${rwhdBox.join("\n")}`;
-	rwhdBox.length > 0 && noNtf == false && $.msg('Script Hub: 重写转换','❌小火箭不支持HeaderRewrite',`${rwhdBox}`);
+	rwhdBox.length > 0 && noNtf == false && $.msg(JS_NAME,'❌小火箭不支持HeaderRewrite',`${rwhdBox}`);
 	break;
 };//headerRewrite输出结束
 
@@ -983,7 +985,7 @@ eval(evUrlmodi);
 		
 otherRule = (otherRule[0] || '') && `${app}不支持以下内容:\n${otherRule.join("\n")}`;
 
-noNtf == false && otherRule.length > 0 && $.msg('Script Hub: 重写转换',`点击通知查看详情`,`${otherRule}`,{url:url+'&openOtherRuleHtml=true'});
+noNtf == false && otherRule.length > 0 && $.msg(JS_NAME,`点击通知查看详情`,`${otherRule}`,{url:url+'&openOtherRuleHtml=true'});
 
 if (openInBoxHtml||openOutBoxHtml||openOtherRuleHtml){
 	result = {
@@ -1003,7 +1005,7 @@ if (openInBoxHtml||openOutBoxHtml||openOtherRuleHtml){
 
 })()
 .catch((e) => {
-	noNtf == false ? $.msg(`Script Hub: 重写转换`,`${notifyName}：${e}\n${url}`,'','https://t.me/zhetengsha_group') : $.log(e);
+	noNtf == false ? $.msg(JS_NAME,`${notifyName}：${e}\n${url}`,'','https://t.me/zhetengsha_group') : $.log(e);
 	
 		result = {
         body: `${notifyName}：${e}\n\n\n\n\n\nScript Hub 重写转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
@@ -1143,7 +1145,7 @@ if (/proto/i.test(name)) {
 		} else {
 			const res = (await $.http.get(url)).body;
 	if (res == undefined || res == null){
-		//$.log("Script Hub: 重写转换");
+		//$.log(JS_NAME);
 		return "";
 	}else if (res.includes(".bodyBytes")){
 		binaryInfo.push({url,"binarymode":"true"});
