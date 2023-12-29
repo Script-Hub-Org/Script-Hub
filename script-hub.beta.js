@@ -840,7 +840,7 @@ const htmls = `
 
       <div style=" margin-top: 30px;">
       <!--<code>输入类型:</code> -->
-        <span v-for="item in inputTypes">
+        <span style="position: relative; top: -9px;" v-for="item in inputTypes">
             <input type="radio" :id="'input-type-' + item.value" :value="item.value" v-model.lazy="inputType" :disabled="item.disabled"/>
             <label :for="'input-type-' + item.value" class="radio-label">{{item.label}}</label>
         </span>
