@@ -166,7 +166,10 @@ if (req == 'http://local.text'){
 	body = localText;
 }else{
 	for (let i=0; i<reqArr.length; i++){
-		body = (await $.http.get(reqArr[i])).body;
+		bodyobj = await $.http.get(reqArr[i]);
+		bodystatus = bodyobj.status;
+		body = bodystatus == 200 ? bodyobj.body : bodystatus == 404 ? "#!error=404: Not Found" : "";
+		
 		if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)){
 
 body = body.match(/^(?:\n|\r)*\/\*([\s\S]*?)(?:\r|\n)\s*\*+\//)[1];
@@ -265,9 +268,9 @@ if (/^#!.+?=\s*$/.test(x)){
 	
 } else if (isLooniOS&&/^#!(?:select|input)\s*=\s*.+/.test(x)){
 	getModInfo(x,modInputBox);
-}else if (reqArr.length>1&&/^#!(?:name|desc|date|author)\s*=.+/.test(x) && !isLooniOS){getModInfo(x,modInfoBox);
+}else if (reqArr.length>1&&/^#!(?:name|desc|date|author|error)\s*=.+/.test(x) && !isLooniOS){getModInfo(x,modInfoBox);
 	
-}else if (reqArr.length==1&&/^#!(?:name|desc|date|author|system)\s*=.+/.test(x) && !isLooniOS) {
+}else if (reqArr.length==1&&/^#!(?:name|desc|date|author|system|error)\s*=.+/.test(x) && !isLooniOS) {
 	getModInfo(x,modInfoBox);
 }else if (isLooniOS && /^#!.+?=.+/.test(x)){
 	getModInfo(x,modInfoBox);

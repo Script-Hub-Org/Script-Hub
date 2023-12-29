@@ -91,7 +91,9 @@ if (req == 'http://local.text'){
 	body = localText;
 }else{
 	for (let i=0; i<reqArr.length; i++){
-		body = (await $.http.get(reqArr[i])).body;
+		bodyobj = await $.http.get(reqArr[i]);
+		bodystatus = bodyobj.status;
+		body = bodystatus == 200 ? bodyobj.body : bodystatus == 404 ? "#!error=404: Not Found" : "";
 		if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)){
 
 body = body.match(/^(?:\n|\r)*\/\*([\s\S]*?)(?:\r|\n)\s*\*+\//)[1];
