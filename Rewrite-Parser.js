@@ -712,9 +712,6 @@ switch (targetApp){
 		rebody = rebody ? ", requires-body="+rebody : "";
 		proto = proto ? ", binary-body-mode="+proto : "";
 		size = size ? ", max-size="+size : "";
-		ability = ability ? ", ability="+ability : "";
-		updatetime = updatetime ? ", script-update-interval="+updatetime : "";
-		wakesys = wakesys ? ", wake-system="+wakesys : "";
 		timeout = timeout ? ", timeout="+timeout : "";
 		if (jsarg != "" && /,/.test(jsarg)) jsarg = ', argument="'+jsarg+'"';
 		if (jsarg != "" && !/,/.test(jsarg)) jsarg = ', argument='+jsarg;
