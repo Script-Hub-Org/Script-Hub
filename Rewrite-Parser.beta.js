@@ -217,7 +217,7 @@ if (Pout0 != null){
 };//增加注释结束
 
 //剔除被注释的重写
-if (delNoteSc === true && x.match(/^#/) && x.indexOf("#!") == -1){
+if (delNoteSc == true && /^#/.test(x) && !/^#!/.test(x)){
 		x = "";
 };
 
@@ -233,7 +233,7 @@ if (sni != null){
 };//启用sni嗅探结束
 
 //ip规则不解析域名
-if(ipNoResolve === true){
+if(ipNoResolve == true){
 	if (/^(?:ip-[ca]|RULE-SET)/i.test(x) && !/,\s*no-resolve/.test(x)){
 		x = x + ",no-resolve";
 	};
@@ -672,6 +672,53 @@ rwhdBox = (rwhdBox[0] || '') && `${rwhdBox.join("\n")}`;
 		};
 	};//for
 
+//Mock输出
+for (let i=0;i<mockBox.length;i++){
+		noteK = mockBox[i].noteK ? "#" : "";
+		mark = mockBox[i].mark ? mockBox[i].mark+"\n" : "";
+		mockptn = mockBox[i].mockptn;
+		mockurl = mockBox[i].mockurl;
+
+switch (targetApp){
+	case "surge-module":
+		mockheader = keepHeader == true && mockBox[i].mockheader && !/&contentType=/.test(mockBox[i].mockheader) ? ' header="'+mockBox[i].mockheader+'"' : "";
+	MapLocal.push(mark+noteK+mockptn+' data="'+mockurl+'"'+mockheader)
+	break;
+
+	case "shadowrocket-module":
+	case "loon-plugin":
+	case "stash-stoverride":
+		mockheader = mockBox[i].mockheader ? mockBox[i].mockheader : "";
+		num = mockBox[i].mocknum;
+		ori = mockBox[i].ori;
+		mfile = mockurl.substring(mockurl.lastIndexOf('/') + 1);
+		
+		if (/dict/i.test(mfile)) m2rType="-dict"
+		else if (/array/i.test(mfile)) m2rType="-array"
+		else if (/200|blank/i.test(mfile)) m2rType="-200"
+		else if (/img|tinygif/i.test(mfile)) m2rType="-img"
+		else m2rType = null;
+		
+		jsname = mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.') );
+		m2rType != null && !isStashiOS && URLRewrite.push(mark+noteK+mockptn+' - reject'+m2rType);
+		m2rType != null && isStashiOS && URLRewrite.push(mark+noteK4+'- >-'+noteKn6+mockptn+' - reject'+m2rType);
+		mockheader = m2rType == null && mockheader != "" && !/&contentType=/.test(mockheader) ? '&header=' + encodeURIComponent(mockheader) : m2rType == null && mockheader != "" && /&contentType=/.test(mockheader) ? mockheader : "" ;
+		if (keepHeader == false) mockheader="";
+		
+		mockurl = m2rType == null ? `http://script.hub/convert/_start_/${mockurl}/_end_/${mfile}?type=mock&target-app=${targetApp}${mockheader}${sufkeepHeader}${sufjsDelivr}` : "";
+		
+		if (isStashiOS && m2rType==null) {
+		jsBox.push({"mark":mockBox[i].mark,noteK,jsname,"jstype":"http-request","jsptn":mockptn,"jsurl":mockurl,"proto":"true","timeout":"60",ori,num});
+		};
+		
+		if ((isLooniOS || isShadowrocket)&&m2rType==null){
+		jsBox.push({"mark":mockBox[i].mark,noteK,jsname,"jstype":"http-request","jsptn":mockptn,"jsurl":mockurl,"timeout":"60",ori,num});
+		};
+	break;
+	
+	}//switch
+}//Mock输出for
+
 //脚本输出
 if (!isStashiOS && jsBox.length>0){
 
@@ -803,58 +850,6 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 };//for循环
 
 }//是Stash的脚本输出
-
-//Mock输出
-for (let i=0;i<mockBox.length;i++){
-		noteK = mockBox[i].noteK ? "#" : "";
-		mark = mockBox[i].mark ? mockBox[i].mark+"\n" : "";	
-		mockptn = mockBox[i].mockptn;
-		mockurl = mockBox[i].mockurl;
-
-switch (targetApp){
-	case "surge-module":
-		mockheader = keepHeader == true && mockBox[i].mockheader && !/&contentType=/.test(mockBox[i].mockheader) ? ' header="'+mockBox[i].mockheader+'"' : "";
-	MapLocal.push(mark+noteK+mockptn+' data="'+mockurl+'"'+mockheader)
-	break;
-
-	case "shadowrocket-module":
-	case "loon-plugin":
-	case "stash-stoverride":
-		if (isStashiOS && noteK!="#"){
-noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";noteK2 = "  ";
-	}else{noteKn8 = "\n#        ";noteKn6 = "\n#      ";noteKn4 = "\n#    ";noteK4 = "#    ";noteK2 = "#  ";};
-		mockheader = mockBox[i].mockheader ? mockBox[i].mockheader : "";
-		mocknum = mockBox[i].mocknum;
-		ori = mockBox[i].ori;
-		mfile = mockurl.substring(mockurl.lastIndexOf('/') + 1);
-		
-		if (/dict/i.test(mfile)) m2rType="-dict"
-		else if (/array/i.test(mfile)) m2rType="-array"
-		else if (/200|blank/i.test(mfile)) m2rType="-200"
-		else if (/img|tinygif/i.test(mfile)) m2rType="-img"
-		else m2rType = null;
-		
-		jsname = mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.') )+'_'+mocknum;
-		jsname = m2rType == null ? reJsValue(njsnametarget || 'null',njsname,jsname,ori,jsname) : jsname;
-		m2rType != null && !isStashiOS && URLRewrite.push(mark+noteK+mockptn+' - reject'+m2rType);
-		m2rType != null && isStashiOS && URLRewrite.push(mark+noteK4+'- >-'+noteKn6+mockptn+' - reject'+m2rType);
-		mockheader = m2rType == null && mockheader != "" && !/&contentType=/.test(mockheader) ? '&header=' + encodeURIComponent(mockheader) : m2rType == null && mockheader != "" && /&contentType=/.test(mockheader) ? mockheader : "" ;
-		if (keepHeader == false) mockheader="";
-		
-		mockurl = m2rType == null ? `http://script.hub/convert/_start_/${mockurl}/_end_/${mfile}?type=mock&target-app=${targetApp}${mockheader}${sufkeepHeader}${sufjsDelivr}` : "";
-		
-		if (isStashiOS && m2rType==null) {
-		script.push(mark+`${noteK4}- match: ${mockptn}${noteKn6}name: "${jsname}"${noteKn6}type: request${noteKn6}timeout: 60${noteKn6}binary-mode: true`)
-		
-		providers.push(`${noteK2}"${jsname}":${noteKn4}url: ${mockurl}${noteKn4}interval: 86400`)};
-		
-		if ((isLooniOS || isShadowrocket)&&m2rType==null){
-		script.push(mark+`${noteK}http-request ${mockptn} script-path=${mockurl}, timeout=60, tag=${jsname}`)
-		};
-	break;
-	
-	}//switch
-}//Mock输出for
 
 //输出内容
 switch (targetApp){
@@ -1113,7 +1108,7 @@ function getQxReInfo (x,y,mark) {
 function getHn (x,arr,addMethod) {
 	hnBox2 = x.replace(/\s|%.+%/g,"").split("=")[1].split(/,/);
 	for (let i=0;i<hnBox2.length;i++){
-		arr.push(hnBox2[i]);
+		hnBox2[i].length > 0 && arr.push(hnBox2[i]);
 	};//for
 	if (/%INSERT%/i.test(x)) return "%INSERT%"
 	else return addMethod;
