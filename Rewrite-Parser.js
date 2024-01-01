@@ -478,8 +478,8 @@ if (/url\s+echo-response\s|\sdata\s*=\s*"/.test(x)){
 inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join("\n\n")}`;
 outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join("\n")}`;
 
-inBox.length > 0 && noNtf == false && $.msg(JS_NAME,'点击通知查看详情',`${inBox}`,{url:url+'&openInBoxHtml=true'});
-outBox.length > 0 && noNtf == false && $.msg(JS_NAME,'点击通知查看详情',`${outBox}`,{url:url+'&openOutBoxHtml=true'});
+inBox.length > 0 && noNtf == false && $.msg(JS_NAME,notifyName+' 点击通知查看详情',`${inBox}`,{url:url+'&openInBoxHtml=true'});
+outBox.length > 0 && noNtf == false && $.msg(JS_NAME,notifyName+' 点击通知查看详情',`${outBox}`,{url:url+'&openOutBoxHtml=true'});
 
 //mitm删除主机名
 if (hnDel != null && hnBox.length > 0) hnBox=hnBox.filter(item => hnDel.indexOf(item) == -1);
@@ -491,7 +491,7 @@ if (hnRegDel != null) {
 	hnBox=hnBox.filter(item => !hnRegDel.test(item)
 );
 };
-hndelBox.length > 0 && noNtf == false && $.msg(JS_NAME,'已根据正则剔除主机名',`${hndelBox}`);
+hndelBox.length > 0 && noNtf == false && $.msg(JS_NAME,notifyName+' 已根据正则剔除主机名',`${hndelBox}`);
 
 	hnBox = pieceHn(hnBox);
 	fheBox = pieceHn(fheBox);
@@ -948,7 +948,7 @@ eval(evUrlmodi);
 		
 otherRule = (otherRule[0] || '') && `${app}不支持以下内容:\n${otherRule.join("\n")}`;
 
-noNtf == false && otherRule.length > 0 && $.msg(JS_NAME,`点击通知查看详情`,`${otherRule}`,{url:url+'&openOtherRuleHtml=true'});
+noNtf == false && otherRule.length > 0 && $.msg(JS_NAME,`${notifyName} 点击通知查看详情`,`${otherRule}`,{url:url+'&openOtherRuleHtml=true'});
 
 if (openInBoxHtml||openOutBoxHtml||openOtherRuleHtml){
 	result = {
