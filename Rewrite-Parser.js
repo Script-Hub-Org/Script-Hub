@@ -302,7 +302,9 @@ if (/^(?:always-)?real-ip\s*=.+/.test(x)) realaddMethod=getHn(x,realBox,realaddM
 //header rewrite 解析
 	if (/\sheader-(?:del|add|replace|replace-regex)\s/.test(x)) {
 		mark = getMark(y,body);
-		rwhdBox.push(mark,x);
+		noteK = isNoteK(x);
+		x = x.replace(/^#/,"");
+		rwhdBox.push({mark,noteK,x});
 };
 
 //(request|response)-(header|body) 解析
@@ -591,7 +593,7 @@ otherRule.push(ruleBox[i].ori)
                     Urx2Reject = '';
                 };
 				
-				URLRewrite.push(mark+noteK4+'- >-'+noteKn6+rulevalue+' - reject'+Urx2Reject)
+				URLRewrite.push(mark+"\n"+noteK4+'- >-'+noteKn6+rulevalue+' - reject'+Urx2Reject)
 			}else{otherRule.push(ruleBox[i].ori)};
 		
 	};//for rule输出结束
@@ -615,7 +617,7 @@ switch (targetApp){
 		if (noteK != "#"){
 noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";noteK2 = "  ";
 	}else{noteKn8 = "\n#        ";noteKn6 = "\n#      ";noteKn4 = "\n#    ";noteK4 = "#    ";noteK2 = "#  ";};
-	URLRewrite.push(mark+noteK4+"- >-"+noteKn6+rwptn+" "+rwvalue+" "+rwtype.replace(/-video|-tinygif/,"-img"));
+	URLRewrite.push(mark+"\n"+noteK4+"- >-"+noteKn6+rwptn+" "+rwvalue+" "+rwtype.replace(/-video|-tinygif/,"-img"));
 	break;
 	
 	case "surge-module":
@@ -629,33 +631,35 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 };//reject redirect输出for
 
 //headerRewrite输出
+for (let i=0;i<rwhdBox.length;i++){
+		noteK = rwhdBox[i].noteK ? "#" : "";
+		mark = rwhdBox[i].mark ? rwhdBox[i].mark : "";
+		x = rwhdBox[i].x;
 switch (targetApp){
 	case "surge-module":
-	HeaderRewrite = rwhdBox;
+	HeaderRewrite.push(mark+noteK+x);
 	break;
 	
 	case "loon-plugin":
-	for (let i=0;i<rwhdBox.length;i++){
-		URLRewrite.push(rwhdBox[i].replace(/^(#)?http-(?:request|response)\s*/,"$1"));
-	};//for
+	x = x.replace(/^http-(request|response)\s+/,"");
+		URLRewrite.push(mark+noteK+x);
 	break;
 	
 	case "stash-stoverride":
-	for (let i=0;i<rwhdBox.length;i++){
-		if (!/^#/.test(rwhdBox[i])){
+		if (noteK != "#"){
 noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";noteK2 = "  ";
 	}else{noteKn8 = "\n#        ";noteKn6 = "\n#      ";noteKn4 = "\n#    ";noteK4 = "#    ";noteK2 = "#  ";};
-		hdtype = /^#?http-response\s/.test(x) ? ' response-' : ' request-';
-		HeaderRewrite.push(`${noteK4}- >-${noteKn6}`+rwhdBox[i].replace(/^#?http-(?:request|response)\s*/,"").replace(/\sheader-/,hdtype));
-	};//for
+		hdtype = /^http-response\s/.test(x) ? ' response-' : ' request-';
+		x = x.replace(/^http-(?:request|response)\s+/,"").replace(/\s+header-/,hdtype)
+		HeaderRewrite.push(mark+"\n"+`${noteK4}- >-${noteKn6}`+x);
 	break;
 	
 	case "shadowrocket-module":
-	
-rwhdBox = (rwhdBox[0] || '') && `${rwhdBox.join("\n")}`;
-	rwhdBox.length > 0 && noNtf == false && $.msg(JS_NAME,'❌小火箭不支持HeaderRewrite',`${rwhdBox}`);
+	otherRule.push(noteK+x);
 	break;
 };//headerRewrite输出结束
+}//for
+
 
 //host输出
 	for (let i=0;i<hostBox.length;i++){
