@@ -18,11 +18,11 @@ const JS_NAME = "Script Hub: 重写转换";
 const $ = new Env(JS_NAME);
 
 const url = $request.url;
-var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
-var reqArr = req.match("%F0%9F%98%82") ? req.split("%F0%9F%98%82") : [req];
+const req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0];
+const reqArr = req.match("%F0%9F%98%82") ? req.split("%F0%9F%98%82") : [req];
 	//$.log("原始链接：" + req);
 
-var urlArg = url.split(/\/_end_\//)[1];
+const urlArg = url.split(/\/_end_\//)[1];
 
 //获取参数
 const queryObject = parseQueryString(urlArg);
@@ -36,48 +36,48 @@ const isStashiOS = targetApp == "stash-stoverride";
 const isLooniOS = targetApp == "loon-plugin";
 const isShadowrocket = targetApp == "shadowrocket-module";
 
-var evJsori = queryObject.evalScriptori;
-var evJsmodi = queryObject.evalScriptmodi;
-var evUrlori = queryObject.evalUrlori;
-var evUrlmodi = queryObject.evalUrlmodi;
+const evJsori = queryObject.evalScriptori;
+const evJsmodi = queryObject.evalScriptmodi;
+const evUrlori = queryObject.evalUrlori;
+const evUrlmodi = queryObject.evalUrlmodi;
 
-var noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false;//默认开启通知
-var localsetNtf = $.getdata("ScriptHub通知");
+let noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false;//默认开启通知
+let localsetNtf = $.getdata("ScriptHub通知");
 noNtf = localsetNtf == "开启通知" ? false : localsetNtf == "关闭通知" ? true : noNtf ;
 
-var openInBoxHtml = istrue(queryObject.openInBoxHtml);
-var openOutBoxHtml = istrue(queryObject.openOutBoxHtml);
-var openOtherRuleHtml = istrue(queryObject.openOtherRuleHtml);
+let openInBoxHtml = istrue(queryObject.openInBoxHtml);
+let openOutBoxHtml = istrue(queryObject.openOutBoxHtml);
+let openOtherRuleHtml = istrue(queryObject.openOtherRuleHtml);
 
 noNtf = openInBoxHtml ||openOutBoxHtml||openOtherRuleHtml ? true : noNtf;
 
-var nName = queryObject.n != undefined ? queryObject.n.split("+") : null;//名字简介
-var Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;//保留
-var Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;//排除
-var hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/\s*,\s*/) : null;//加
-var hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/\s*,\s*/) : null;//减
-var hnRegDel = queryObject.hnregdel != undefined ? new RegExp(queryObject.hnregdel) : null;//正则删除hostname
-var synMitm = istrue(queryObject.synMitm);//将force与mitm同步
-var delNoteSc = istrue(queryObject.del);
-var nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;//替换cron目标
-var ncronexp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;//新cronexp
-var nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : null;//arg目标
-var nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;//arg参数
-var nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+") : null;
-var ntilescolor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
-var nPolicy = queryObject.policy != undefined ? queryObject.policy : null;
-var njsnametarget = queryObject.njsnametarget != undefined ? queryObject.njsnametarget.split("+") : null;//修改脚本名目标
-var njsname = queryObject.njsname != undefined ? queryObject.njsname.split("+") : null;//修改脚本名
-var jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;//脚本转换1
-var jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;//脚本转换2
-var compatibilityOnly = istrue(queryObject.compatibilityOnly);//兼容转换
-var keepHeader = istrue(queryObject.keepHeader);//保留mock header
-var jsDelivr = istrue(queryObject.jsDelivr);//开启jsDelivr
-var localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : "";//纯文本输入
-var ipNoResolve = istrue(queryObject.nore);//ip规则不解析域名
-var sni = queryObject.sni != undefined ? queryObject.sni.split("+") : null;//sni嗅探
-var sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '';//用于保留header的后缀
-var sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '';//用于开启jsDeliver的后缀
+let nName = queryObject.n != undefined ? queryObject.n.split("+") : null;//名字简介
+let Pin0 = queryObject.y != undefined ? queryObject.y.split("+") : null;//保留
+let Pout0 = queryObject.x != undefined ? queryObject.x.split("+") : null;//排除
+let hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/\s*,\s*/) : null;//加
+let hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/\s*,\s*/) : null;//减
+let hnRegDel = queryObject.hnregdel != undefined ? new RegExp(queryObject.hnregdel) : null;//正则删除hostname
+let synMitm = istrue(queryObject.synMitm);//将force与mitm同步
+let delNoteSc = istrue(queryObject.del);
+let nCron = queryObject.cron != undefined ? queryObject.cron.split("+") : null;//替换cron目标
+let ncronexp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g," ").split("+") : null;//新cronexp
+let nArgTarget = queryObject.arg != undefined ? queryObject.arg.split("+") : null;//arg目标
+let nArg = queryObject.argv != undefined ? queryObject.argv.split("+") : null;//arg参数
+let nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split("+") : null;
+let ntilescolor = queryObject.tcolor != undefined ? queryObject.tcolor.split("+") : null;
+let nPolicy = queryObject.policy != undefined ? queryObject.policy : null;
+let njsnametarget = queryObject.njsnametarget != undefined ? queryObject.njsnametarget.split("+") : null;//修改脚本名目标
+let njsname = queryObject.njsname != undefined ? queryObject.njsname.split("+") : null;//修改脚本名
+let jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split("+") : null;//脚本转换1
+let jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split("+") : null;//脚本转换2
+let compatibilityOnly = istrue(queryObject.compatibilityOnly);//兼容转换
+let keepHeader = istrue(queryObject.keepHeader);//保留mock header
+let jsDelivr = istrue(queryObject.jsDelivr);//开启jsDelivr
+let localText = queryObject.localtext != undefined ? "\n" + queryObject.localtext : "";//纯文本输入
+let ipNoResolve = istrue(queryObject.nore);//ip规则不解析域名
+let sni = queryObject.sni != undefined ? queryObject.sni.split("+") : null;//sni嗅探
+let sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '';//用于保留header的后缀
+let sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '';//用于开启jsDeliver的后缀
 
 //插件图标区域
 const iconStatus = $.getval("启用插件随机图标") ?? "启用";
@@ -86,21 +86,25 @@ const iconLibrary1 = $.getval("插件随机图标合集") ?? "Doraemon(100P)";
 const iconLibrary2 = iconLibrary1.split("(")[0];
 const iconFormat = iconLibrary2.search(/gif/i) == -1 ? ".png" : ".gif";
 
+//统一前置声明变量
+let name,desc,body,jscStatus,jsc2Status,jsPre,jsSuf,mark,noteK,ruletype,rulenore,rulesni,rulePandV,rulepolicy,rulevalue,modistatus,hostdomain,hostvalue,jsurl,jsname,jsfrom,jstype,eventname,size,proto,jsptn,jsarg,rebody,wakesys,cronexp,ability,updatetime,timeout,tilesicon,tilescolor,urlInNum,noteK2,noteK4,noteKn4,noteKn6,noteKn8,rwtype,rwptn,rwvalue,ori,MITM,force,result;
+let icon = "";
+
+
 //随机插件图标
-var icon = "";
 if(isLooniOS && iconStatus == "启用"){
 	const stickerStartNum = 1001;
 const stickerSum = iconLibrary1.split("(")[1].split("P")[0];
-var randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).toString();
+let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).toString();
    icon = "#!icon=" + "https://github.com/Toperlock/Quantumult/raw/main/icon/" + iconLibrary2 + "/" + iconLibrary2 + "-" + randomStickerNum + iconFormat;
 };
 
 //通知名区域
-var rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
-var resFile = urlArg.split("?")[0];
-var resFileName = 
+let rewriteName = req.substring(req.lastIndexOf('/') + 1).split('.')[0];
+let resFile = urlArg.split("?")[0];
+let resFileName = 
 resFile.substring(0,resFile.lastIndexOf('.'));
-var notifyName
+let notifyName
 if (nName != null && nName[0] != ""){notifyName = nName[0];}else{notifyName = resFileName;};
 
 //修改名字和简介
@@ -113,50 +117,50 @@ if (nName === null){
 };
 
 //信息中转站
-var bodyBox = [];      //存储待转换的内容
-var otherRule = [];    //不支持的规则&脚本
-var inBox = [];        //被释放的重写或规则
-var outBox = [];       //被排除的重写或规则
-var modInfoBox = [];   //模块简介等信息
-var modInputBox = [];  //loon插件的可交互按钮
-var hostBox = [];      //host
-var ruleBox = [];      //规则
-var rwBox = [];        //重写
-var rwhdBox = [];      //HeaderRewrite
-var jsBox = [];        //脚本
-var mockBox = [];      //MapLocal或echo-response
-var hnBox = [];        //MITM主机名
-var fheBox = [];       //force-http-engine
-var skipBox = [];      //skip-ip
-var realBox = [];      //real-ip
-var hndelBox = [];     //正则剔除的主机名
+let bodyBox = [];      //存储待转换的内容
+let otherRule = [];    //不支持的规则&脚本
+let inBox = [];        //被释放的重写或规则
+let outBox = [];       //被排除的重写或规则
+let modInfoBox = [];   //模块简介等信息
+let modInputBox = [];  //loon插件的可交互按钮
+let hostBox = [];      //host
+let ruleBox = [];      //规则
+let rwBox = [];        //重写
+let rwhdBox = [];      //HeaderRewrite
+let jsBox = [];        //脚本
+let mockBox = [];      //MapLocal或echo-response
+let hnBox = [];        //MITM主机名
+let fheBox = [];       //force-http-engine
+let skipBox = [];      //skip-ip
+let realBox = [];      //real-ip
+let hndelBox = [];     //正则剔除的主机名
 
-var hnaddMethod = "%APPEND%";
-var fheaddMethod = "%APPEND%";
-var skipaddMethod = "%APPEND%";
-var realaddMethod = "%APPEND%";
+let hnaddMethod = "%APPEND%";
+let fheaddMethod = "%APPEND%";
+let skipaddMethod = "%APPEND%";
+let realaddMethod = "%APPEND%";
 
 //待输出
-var modInfo = [];      //模块简介
-var httpFrame = [];    //Stash的http:父框架
-var tiles = [];        //磁贴覆写
-var General = [];      
-var Panel = [];
-var host = [];        
-var rules = [];
-var URLRewrite = [];
-var HeaderRewrite = [];
-var MapLocal = [];
-var script = [];
-var cron = [];
-var providers = [];
+let modInfo = [];      //模块简介
+let httpFrame = "";    //Stash的http:父框架
+let tiles = [];        //磁贴覆写
+let General = [];      
+let Panel = [];
+let host = [];        
+let rules = [];
+let URLRewrite = [];
+let HeaderRewrite = [];
+let MapLocal = [];
+let script = [];
+let cron = [];
+let providers = [];
 
 hnBox = hnAdd != null ? hnAdd : [];
 
 const jsRegx = /[=,]\s*(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|tag|type|img-url|debug|event-name|desc)\s*=/;
 
 //查询js binarymode相关
-var binaryInfo = $.getval("Parser_binary_info");
+let binaryInfo = $.getval("Parser_binary_info");
 if (binaryInfo != null && binaryInfo.length > 0){
 	binaryInfo = $.toObj(binaryInfo);
 }else{binaryInfo = [];};
@@ -167,8 +171,8 @@ if (req == 'http://local.text'){
 	body = localText;
 }else{
 	for (let i=0; i<reqArr.length; i++){
-		bodyobj = await $.http.get(reqArr[i]);
-		bodystatus = bodyobj.status;
+		let bodyobj = await $.http.get(reqArr[i]);
+		let bodystatus = bodyobj.status;
 		body = bodystatus == 200 ? bodyobj.body : bodystatus == 404 ? "#!error=404: Not Found" : "";
 		bodystatus == 404 && $.msg(JS_NAME,"来源链接已失效","404: Not Found ---> "+reqArr[i],'');
 		
@@ -180,14 +184,15 @@ body = body.match(/^(?:\n|\r)*\/\*([\s\S]*?)(?:\r|\n)\s*\*+\//)[1];
 		}else{bodyBox.push(body)}
 		
 	};//for
-	body = bodyBox.join("\n\n")+localText;};
+	body = bodyBox.join("\n\n")+localText;
+};
 
 eval(evJsori);
 eval(evUrlori);
 
     body = body.match(/[^\r\n]+/g);
 
-for await (var [y, x] of body.entries()) {
+for await (let [y, x] of body.entries()) {
 
 //简单处理方便后续操作
 	x = x.replace(/^\s*(#|;|\/\/)\s*/,'#').replace(/\s+[^\s]+\s+url-and-header\s+/,' url ').replace(/(^[^#].+)\x20+\/\/.+/,"$1").replace(/^#!PROFILE-VERSION-REQUIRED\s+[0-9]+\s+/i,'').replace(/^(#)?host-wildcard\s*,.+/i,'').replace(/^(#)?host(-suffix|-keyword|)?\s*,\s*/i,'$1DOMAIN$2,').replace(/^(#)?ip6-cidr\s*,\s*/i,'$1IP-CIDR6,');
@@ -239,9 +244,6 @@ if(ipNoResolve == true){
 	};
 };//增加ip规则不解析域名结束
 
-jscStatus = false;
-jsc2Status = false;
-
 if (jsConverter != null){
 	jscStatus = isJsCon(x, jsConverter);}
 if (jsConverter2 != null){
@@ -250,15 +252,13 @@ if (jsc2Status == true){jscStatus = false};
 
 jsPre = "";
 jsSuf = "";
-jsTarget = targetApp.split("-")[0];
-
 if (jscStatus == true || jsc2Status == true){
 jsPre = "http://script.hub/convert/_start_/";
 };
 if (jscStatus == true){
-jsSuf = `/_end_/_yuliu_.js?type=_js_from_-script&target=${jsTarget}-script`;
+jsSuf = `/_end_/_yuliu_.js?type=_js_from_-script&target=${app}-script`;
 }else if (jsc2Status == true){
-jsSuf = `/_end_/_yuliu_.js?type=_js_from_-script&target=${jsTarget}-script&wrap_response=true`;
+jsSuf = `/_end_/_yuliu_.js?type=_js_from_-script&target=${app}-script&wrap_response=true`;
 };
 
 if (compatibilityOnly == true && (jscStatus == true || jsc2Status == true)){
@@ -386,10 +386,10 @@ if (/\surl\s+script-/.test(x)){
 	jsfrom = "qx";
 	jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
 	jsarg = "";
+	proto = await isBinaryMode(jsurl,jsname);
 		jsurl = toJsc(jsurl,jscStatus,jsc2Status,jsfrom);
 	rebody = /\sscript[^\s]*(-body|-analyze)/.test(x) ? 'true' : '';
 	size = rebody == 'true' ? '-1' : '';
-	proto = await isBinaryMode(jsurl,jsname);
 	jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,proto,size,"timeout":"60",jsarg,"ori":x,"num":y})
 };//qx脚本解析结束
 
@@ -581,6 +581,7 @@ otherRule.push(ruleBox[i].ori)
 			rules.push(mark+noteK+ruletype+','+rulevalue+','+rulepolicy+rulenore+rulesni)
 		}else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|de?st-port)/i.test(ruletype)&&isStashiOS){
 			rules.push(mark+noteK2+'- '+ruletype+','+rulevalue+','+rulepolicy+rulenore)}else if (/de?st-port/.test(ruletype)&&(isSurgeiOS&&isShadowrocket)){rules.push(mark+noteK+ruletype+','+rulevalue+','+rulepolicy)}else if (/url-regex/i.test(ruletype)&&isStashiOS&&/reject/i.test(rulepolicy)){
+				let Urx2Reject;
 				if (/DICT/i.test(rulepolicy)){
                     Urx2Reject = '-dict';
                 }else if (/ARRAY/i.test(rulepolicy)){
@@ -649,7 +650,7 @@ switch (targetApp){
 		if (noteK != "#"){
 noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";noteK2 = "  ";
 	}else{noteKn8 = "\n#        ";noteKn6 = "\n#      ";noteKn4 = "\n#    ";noteK4 = "#    ";noteK2 = "#  ";};
-		hdtype = /^http-response\s/.test(x) ? ' response-' : ' request-';
+		let hdtype = /^http-response\s/.test(x) ? ' response-' : ' request-';
 		x = x.replace(/^http-(?:request|response)\s+/,"").replace(/\s+header-/,hdtype)
 		HeaderRewrite.push(mark+"\n"+`${noteK4}- >-${noteKn6}`+x);
 	break;
@@ -903,7 +904,7 @@ ${script}
 	
 	HeaderRewrite = (HeaderRewrite[0] || '') && `  header-rewrite:\n${HeaderRewrite.join("\n")}`;
 	script = (script[0] || '') && `  script:\n${script.join("\n\n")}`;
-	
+
 	if (URLRewrite.length > 0 || script.length > 0 || HeaderRewrite.length > 0 || MITM.length > 0 || force.length > 0){
 httpFrame = `http:
 
@@ -918,13 +919,13 @@ ${URLRewrite}
 ${script}
 `
 };
-	providers = [...new Set(providers)];
+
+providers = [...new Set(providers)];
 
 cron = (cron[0] || '') && `cron:\n  script:\n${cron.join("\n")}`;
 
 providers = (providers[0] || '') && `script-providers:\n${providers.join("\n")}`;
 	
-
 body = `${modInfo}
 
 ${rules}
@@ -991,7 +992,7 @@ function isNoteK (x) {
 
 //获取当前内容的注释
 function getMark (index,obj) {
-		mark = obj[index - 1]?.match(/^#(?!!)/) ? obj[index - 1] : "";
+		let mark = obj[index - 1]?.match(/^#(?!!)/) ? obj[index - 1] : "";
 		if (mark) {
 			mark = isStashiOS ? mark : mark + "\n";
 		};
@@ -1008,20 +1009,21 @@ function getModInfo (x,box) {
 
 //reject
 function rw_reject (x,mark) {
-	noteK = isNoteK(x);
-	rwptn = x.replace(/^#/,"").split(/\s/)[0].replace(/^"(.+)"$/,"$1");
-	rwtype = x.match(/reject(-\w+)?$/i)[0].toLowerCase();
+	let noteK = isNoteK(x);
+	let rwptn = x.replace(/^#/,"").split(/\s/)[0].replace(/^"(.+)"$/,"$1");
+	let rwtype = x.match(/reject(-\w+)?$/i)[0].toLowerCase();
 	
 rwBox.push({mark,noteK,rwptn,"rwvalue":"-",rwtype});
 };
 
 //重定向
 function rw_redirect (x,mark) {
-	noteK = isNoteK(x);
+	let noteK = isNoteK(x);
 	x = x.replace(/\s{2,}/g," ");
-	redirect_type = x.match(/\s302|\s307|\sheader$/)[0].replace(/\s/,"");
-	xArr = x.split(/\s/);
-	rw_typeInNum = xArr.indexOf(redirect_type);
+	let redirect_type = x.match(/\s302|\s307|\sheader$/)[0].replace(/\s/,"");
+	let xArr = x.split(/\s/);
+	let rw_typeInNum = xArr.indexOf(redirect_type);
+	let rwptn,rwvalue,rwtype;
 	if (rw_typeInNum == "2" && xArr.length == 3) {
 		rwptn = xArr[0].replace(/^#/,"").replace(/^"(.+)"$/,"$1");
 		rwvalue = xArr[1];
@@ -1064,24 +1066,24 @@ return q;
 }//reJsValue
 
 function getQxReInfo (x,y,mark) {
-	noteK = isNoteK(x);
-	retype = /\surl\s+request-/i.test(x) ? 'request' : 'response';
-	jstype = 'http-'+retype;
-	hdorbd = /\surl\s+re[^\s]+?-header\s/i.test(x) ? 'header' : 'body';
-	breakpoint = retype+'-'+hdorbd;
-	jsptn = x.split(/\s+url\s+re/)[0].replace(/^#/,'');
-	jsname = /body/.test(hdorbd) ? 'replaceBody' : 'replaceHeader';
-	jsurl = /header/.test(hdorbd) ? 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-header.js' : 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-body.js';
-	rearg1 = x.split(breakpoint)[1].trim().replace(/^"(.+)"$/,"$1");
-	rearg2 = x.split(breakpoint)[2].trim().replace(/^"(.+)"$/,"$1");
-	jsarg = rearg1+'->'+rearg2;
-	rebody = /body/.test(hdorbd) ? 'true' : '';
-	size = /body/.test(hdorbd) ? '-1' : '';
+	let noteK = isNoteK(x);
+	let retype = /\surl\s+request-/i.test(x) ? 'request' : 'response';
+	let jstype = 'http-'+retype;
+	let hdorbd = /\surl\s+re[^\s]+?-header\s/i.test(x) ? 'header' : 'body';
+	let breakpoint = retype+'-'+hdorbd;
+	let jsptn = x.split(/\s+url\s+re/)[0].replace(/^#/,'');
+	let jsname = /body/.test(hdorbd) ? 'replaceBody' : 'replaceHeader';
+	let jsurl = /header/.test(hdorbd) ? 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-header.js' : 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-body.js';
+	let rearg1 = x.split(breakpoint)[1].trim().replace(/^"(.+)"$/,"$1");
+	let rearg2 = x.split(breakpoint)[2].trim().replace(/^"(.+)"$/,"$1");
+	let jsarg = rearg1+'->'+rearg2;
+	let rebody = /body/.test(hdorbd) ? 'true' : '';
+	let size = /body/.test(hdorbd) ? '-1' : '';
 	jsBox.push({mark,noteK,jsname,jstype,jsptn,jsurl,rebody,size,"timeout":"30",jsarg,"ori":x,"num":y})
 };
 
 function getHn (x,arr,addMethod) {
-	hnBox2 = x.replace(/\s|%.+%/g,"").split("=")[1].split(/,/);
+	let hnBox2 = x.replace(/\s|%.+%/g,"").split("=")[1].split(/,/);
 	for (let i=0;i<hnBox2.length;i++){
 		hnBox2[i].length > 0 && arr.push(hnBox2[i]);
 	};//for
@@ -1104,8 +1106,7 @@ if (/proto/i.test(name)) {
 		if (binaryInfo.length > 0 && binaryInfo.some(item=>item.url===url)){
 			for (let i = 0; i < binaryInfo.length; i++) {
   if (binaryInfo[i].url === url) {
-    binarymode = binaryInfo[i].binarymode;
-		return binarymode;
+		return binaryInfo[i].binarymode;
     break;
   }
 }
@@ -1127,7 +1128,8 @@ if (/proto/i.test(name)) {
 
 //获取mock参数
 function getMockInfo (x,mark,y) {
-	noteK = isNoteK(x);
+	let noteK = isNoteK(x);
+	let mockptn,mockurl,mockheader;
 	if (/url\s+echo-response\s/.test(x)){
 		mockptn = x.split(/\s+url\s+/)[0];
 		mockurl = x.split(/\s+echo-response\s+/)[2];
@@ -1148,16 +1150,17 @@ mockBox.push({mark,noteK,mockptn,mockurl,mockheader,"ori":x,"mocknum":y});
 	case "shadowrocket-module":
 	case "loon-plugin":
 	case "stash-stoverride":
-		mfile = mockurl.substring(mockurl.lastIndexOf('/') + 1);
-		
+		let mfile = mockurl.substring(mockurl.lastIndexOf('/') + 1);
+		let m2rType;
 		if (/dict/i.test(mfile)) m2rType="reject-dict"
 		else if (/array/i.test(mfile)) m2rType="reject-array"
 		else if (/200|blank/i.test(mfile)) m2rType="reject-200"
 		else if (/img|tinygif/i.test(mfile)) m2rType="reject-img"
 		else m2rType = null;
 		
-		jsname = mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.') );
+		let jsname = mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.') );
 		m2rType != null && rwBox.push({mark,noteK,"rwptn":mockptn,"rwvalue":"-","rwtype":m2rType});
+		let proto;
 		if (m2rType == null){
 		proto = isStashiOS ? "true" : "";
 		mockheader = mockheader != "" && !/&contentType=/.test(mockheader) ? '&header=' + encodeURIComponent(mockheader) : mockheader != "" && /&contentType=/.test(mockheader) ? mockheader : "" ;
@@ -1188,7 +1191,7 @@ function isJsCon (x, arr) {
 
 function toJsc (jsurl,jscStatus,jsc2Status,jsfrom) {
 	if (jscStatus == true || jsc2Status == true){
-				jsFileName = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
+				let jsFileName = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.') );
 				return jsurl = jsPre + jsurl + jsSuf.replace(/_yuliu_/,jsFileName).replace(/_js_from_/,jsfrom);
 		
 	}else{return jsurl}
