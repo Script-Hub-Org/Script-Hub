@@ -414,6 +414,8 @@ done(result)
     delete headers['Content-Length']
     delete headers['content-encoding']
     delete headers['Content-Encoding']
+    delete headers['content-security-policy']
+    delete headers['Content-Security-Policy']
   } catch (e) {}
 
   if (evJsmodi) {
