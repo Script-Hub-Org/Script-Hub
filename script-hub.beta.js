@@ -1011,7 +1011,11 @@ const htmls = `
         </details>
       </details>
 
-
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
+        <summary>指定策略</summary>
+        <span>为 <code>[Rule]</code> 字段下未指定策略或指定的策略不是 app 内置策略的规则指定一个策略，如未指定将自动跳过该规则</span>
+        <textarea id="policy" v-model.lazy="policy" placeholder=""></textarea>
+      </details>
 
 
 
@@ -1190,6 +1194,7 @@ const htmls = `
     cronexp: '',
     njsname: '',
     njsnametarget: '',
+    policy: '',
     arg: '',
     argv: '',
     tiles: '',
@@ -1224,7 +1229,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'policy', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
