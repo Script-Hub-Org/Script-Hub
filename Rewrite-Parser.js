@@ -90,7 +90,6 @@ const iconFormat = iconLibrary2.search(/gif/i) == -1 ? ".png" : ".gif";
 let name,desc,body,jscStatus,jsc2Status,jsPre,jsSuf,mark,noteK,ruletype,rulenore,rulesni,rulePandV,rulepolicy,rulevalue,modistatus,hostdomain,hostvalue,jsurl,jsname,jsfrom,jstype,eventname,size,proto,jsptn,jsarg,rebody,wakesys,cronexp,ability,updatetime,timeout,tilesicon,tilescolor,urlInNum,noteK2,noteK4,noteKn4,noteKn6,noteKn8,rwtype,rwptn,rwvalue,ori,MITM,force,result;
 let icon = "";
 
-
 //随机插件图标
 if(isLooniOS && iconStatus == "启用"){
 	const stickerStartNum = 1001;
@@ -556,7 +555,7 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		if (/reject-video/i.test(rulepolicy)&& !isLooniOS){
 			rulepolicy = "REJECT-TINYGIF";
 		};
-		if (/reject-tinygif|reject-no-drop/i.test(rulepolicy)&& isLooniOS){
+		if (/reject-tinygif/i.test(rulepolicy)&& isLooniOS){
 			rulepolicy = "REJECT-IMG";
 		};
 		if (/reject-(?:dict|array|img)/i.test(rulepolicy)&&isSurgeiOS){
@@ -564,6 +563,9 @@ noteKn8 = "\n        ";noteKn6 = "\n      ";noteKn4 = "\n    ";noteK4 = "    ";n
 		};
 		if (/reject-/i.test(rulepolicy)&& !/url-regex/i.test(ruletype)&&isStashiOS){
 			rulepolicy = "REJECT";
+		};
+		if (/reject-[^-]+-no-drop/i.test(rulepolicy)&&!isLooniOS) {
+			rulepolicy = rulepolicy.replace(/-no-drop/i,"")
 		};
 
 		if (rulevalue=="" || rulepolicy==""){
