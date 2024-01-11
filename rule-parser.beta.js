@@ -261,6 +261,26 @@ var evUrlmodi = queryObject.evalUrlmodi
       `#规则数量:${ruleNum}\n#不支持的规则数量:${notSupport}\n#已排除的规则数量:${outRuleNum}${other}${outRules}\n\n#-----------------以下为解析后的规则-----------------#\n\n${ruleSet.join(
         '\n'
       )}`
+    if (isSurgeiOS) {
+      const stname = 'SurgeTool_Rule_NUM'
+      let SurgeTool = {}
+      try {
+        SurgeTool = JSON.parse($persistentStore.read(stname))
+        if (!SurgeTool && SurgeTool?.length > 10000) {
+          clearcr()
+        } else {
+          SurgeTool[url] = ruleNum
+          $persistentStore.write(JSON.stringify(SurgeTool), stname)
+        }
+      } catch (error) {
+        clearcr()
+      }
+      function clearcr(){
+        SurgeTool = {}
+        SurgeTool[url] = ruleNum
+        $persistentStore.write(JSON.stringify(SurgeTool), stname)
+      }
+    }
   } else if (isSurgedomainset || isSurgedomainset2) {
     domainSet = ruleSet.filter(ruleSet => ruleSet.search(/^DOMAIN(,|-SUFFIX)/) != -1)
 
