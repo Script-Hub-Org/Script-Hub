@@ -265,12 +265,12 @@ var evUrlmodi = queryObject.evalUrlmodi
       const stname = 'SurgeTool_Rule_NUM'
       let SurgeTool = {}
       try {
-        SurgeTool = JSON.parse($.getval(stname))
+        SurgeTool = $.getjson(stname)
         if (!SurgeTool && SurgeTool?.length > 10000) {
           clearcr()
         } else {
           SurgeTool[url] = ruleNum
-          $.setval(JSON.stringify(SurgeTool), stname)
+          $.setjson(SurgeTool, stname)
         }
       } catch (error) {
         clearcr()
@@ -278,7 +278,7 @@ var evUrlmodi = queryObject.evalUrlmodi
       function clearcr() {
         SurgeTool = {}
         SurgeTool[url] = ruleNum
-        $.setval(JSON.stringify(SurgeTool), stname)
+        $.setjson(SurgeTool, stname)
       }
     }
   } else if (isSurgedomainset || isSurgedomainset2) {
