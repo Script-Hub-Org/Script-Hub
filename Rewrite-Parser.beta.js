@@ -1194,8 +1194,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
 ${General}
 
-${MITM}
-
 ${rules}
 
 ${URLRewrite}
@@ -1209,6 +1207,8 @@ ${Panel}
 ${host}
 
 ${script}
+
+${MITM}
 
 `.replace(/\n{2,}/g, '\n\n')
 
