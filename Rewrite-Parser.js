@@ -136,6 +136,7 @@ let name,
   force,
   result
 let icon = ''
+let Rewrite = isLooniOS ? '[Rewrite]' : '[URL Rewrite]'
 
 //随机插件图标
 if (isLooniOS && iconStatus == '启用') {
@@ -1164,7 +1165,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       Panel = (Panel[0] || '') && `[Panel]\n${Panel.join('\n\n')}`
 
-      URLRewrite = (URLRewrite[0] || '') && `[URL Rewrite]\n${URLRewrite.join('\n')}`
+      URLRewrite = (URLRewrite[0] || '') && Rewrite+`\n${URLRewrite.join('\n')}`
 
       HeaderRewrite = (HeaderRewrite[0] || '') && `[Header Rewrite]\n${HeaderRewrite.join('\n')}`
 
