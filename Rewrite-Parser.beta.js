@@ -1165,7 +1165,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       Panel = (Panel[0] || '') && `[Panel]\n${Panel.join('\n\n')}`
 
-      URLRewrite = (URLRewrite[0] || '') && Rewrite+`\n${URLRewrite.join('\n')}`
+      URLRewrite = (URLRewrite[0] || '') && Rewrite + `\n${URLRewrite.join('\n')}`
 
       HeaderRewrite = (HeaderRewrite[0] || '') && `[Header Rewrite]\n${HeaderRewrite.join('\n')}`
 
@@ -1456,7 +1456,7 @@ function pieceHn(arr) {
 async function isBinaryMode(url, name) {
   if (/proto/i.test(name)) {
     return 'true'
-  } else if (/(?:tieba|youtube|bili|spotify|wyreqparam|DualSubs\.Subtitles\.Translate\.response)/i.test(url)) {
+  } else if (/(?:tieba|youtube|bili|spotify|wyresparam|DualSubs\.Subtitles\.Translate\.response)/i.test(url)) {
     if (binaryInfo.length > 0 && binaryInfo.some(item => item.url === url)) {
       for (let i = 0; i < binaryInfo.length; i++) {
         if (binaryInfo[i].url === url) {
@@ -1471,6 +1471,7 @@ async function isBinaryMode(url, name) {
         return ''
       } else if (res.includes('.bodyBytes')) {
         binaryInfo.push({ url, binarymode: 'true' })
+
         $.setjson(binaryInfo, 'Parser_binary_info')
         return 'true'
       } else {
