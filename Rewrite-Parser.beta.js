@@ -21,7 +21,6 @@ const url = $request.url
 const req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0]
 const reqArr = req.match('%F0%9F%98%82') ? req.split('%F0%9F%98%82') : [req]
 //$.log("原始链接：" + req);
-
 const urlArg = url.split(/\/_end_\//)[1]
 
 //获取参数
@@ -216,7 +215,7 @@ let providers = []
 hnBox = hnAdd != null ? hnAdd : []
 
 const jsRegx =
-  /[=,]\s*(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|tag|type|img-url|debug|event-name|desc)\s*=/
+  /\s*[=,]\s*(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|tag|type|img-url|debug|event-name|desc)\s*=\s*/
 
 //查询js binarymode相关
 let binaryInfo = $.getval('Parser_binary_info')
@@ -255,6 +254,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     //简单处理方便后续操作
     x = x
       .replace(/^\s*(#|;|\/\/)\s*/, '#')
+      .replace(/\s+$/,'')
       .replace(/\s+[^\s]+\s+url-and-header\s+/, ' url ')
       .replace(/(^[^#].+)\x20+\/\/.+/, '$1')
       .replace(/^#!PROFILE-VERSION-REQUIRED\s+[0-9]+\s+/i, '')
@@ -444,7 +444,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.'))
       jsfrom = 'surge'
       jsurl = toJsc(jsurl, jscStatus, jsc2Status, jsfrom)
-      jstype = /[=,]\s*type\s*=\s*/.test(x) ? getJsInfo(x, /[=,]\s*type\s*=/) : x.split(/\s+/)[0].replace(/^#/, '')
+      jstype = /[=,]\s*type\s*=\s*/.test(x) ? getJsInfo(x, /[=,]\s*type\s*=\s*/) : x.split(/\s+/)[0].replace(/^#/, '')
       eventname = getJsInfo(x, /[=,\s]\s*event-name\s*=\s*/)
       size = getJsInfo(x, /[=,\s]\s*max-size\s*=\s*/)
       proto = getJsInfo(x, /[=,\s]\s*binary-body-mode\s*=\s*/)
@@ -457,7 +457,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       wakesys = getJsInfo(x, /[=,\s]\s*wake-system\s*=\s*/)
       cronexp = /cronexpr?\s*=\s*/.test(x)
         ? getJsInfo(x, /[=,\s]\s*cronexpr?\s*=\s*/)
-        : /cron\s*"/.test(x)
+        : /cron\s+"/.test(x)
         ? x.split('"')[1]
         : ''
       ability = getJsInfo(x, /[=,\s]\s*ability\s*=\s*/)
@@ -1348,7 +1348,7 @@ function rw_reject(x, mark) {
   let noteK = isNoteK(x)
   let rwptn = x
     .replace(/^#/, '')
-    .split(/\s/)[0]
+    .split(/\s+/)[0]
     .replace(/^"(.+)"$/, '$1')
   let rwtype = x.match(/reject(-\w+)?$/i)[0].toLowerCase()
 
