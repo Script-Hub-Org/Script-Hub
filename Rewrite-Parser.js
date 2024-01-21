@@ -342,11 +342,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     if (/^#!.+?=\s*$/.test(x)) {
     } else if (isLooniOS && /^#!(?:select|input)\s*=\s*.+/.test(x)) {
       getModInfo(x, modInputBox)
-    } else if (reqArr.length > 1 && /^#!(?:name|desc|date|author|error)\s*=.+/.test(x) && !isLooniOS) {
-      getModInfo(x, modInfoBox)
-    } else if (reqArr.length == 1 && /^#!(?:name|desc|date|author|system|error)\s*=.+/.test(x) && !isLooniOS) {
-      getModInfo(x, modInfoBox)
-    } else if (isLooniOS && /^#!.+?=.+/.test(x)) {
+    } else if (/^#!.+?=.+/.test(x) && !/^#!(?:select|input)\s*=\s*.+/.test(x)) {
       getModInfo(x, modInfoBox)
     }
 
