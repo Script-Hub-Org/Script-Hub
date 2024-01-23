@@ -253,8 +253,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   for await (let [y, x] of body.entries()) {
     //简单处理方便后续操作
     x = x
-      .replace(/^\s*(#|;|\/\/)\s*/, '#')
-      .replace(/\s+$/,'')
+      .trim()
+      .replace(/^(#|;|\/\/)\s*/, '#')
       .replace(/\s+[^\s]+\s+url-and-header\s+/, ' url ')
       .replace(/(^[^#].+)\x20+\/\/.+/, '$1')
       .replace(/^#!PROFILE-VERSION-REQUIRED\s+[0-9]+\s+/i, '')
