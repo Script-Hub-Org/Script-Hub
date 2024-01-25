@@ -463,7 +463,7 @@ function Env(t, e) {
     done(t = {}) {
     //   const e = new Date().getTime(),
     //     s = (e - this.startTime) / 1e3
-      switch ((/*this.log('', `🔔${this.name}, 结束! 🕛 ${s} 秒`), */this.log(), this.getEnv())) {
+      switch ((/*this.log('', `🔔${this.name}, 结束! 🕛 ${s} 秒`), this.log(),*/ this.getEnv())) {
         case 'Surge':
         case 'Loon':
         case 'Stash':
