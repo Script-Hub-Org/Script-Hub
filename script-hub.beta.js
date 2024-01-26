@@ -1413,6 +1413,8 @@ const htmls = `
           } else {
             return ''
           }
+        } else {
+          delete fields.localtext
         }
         if (src && target && type) {
           const suffix = target.suffix || ''
