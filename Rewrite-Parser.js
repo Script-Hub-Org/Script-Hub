@@ -931,7 +931,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       size = jsBox[i].size ? jsBox[i].size : ''
       ability = jsBox[i].ability ? ', ability=' + jsBox[i].ability : ''
       updatetime = jsBox[i].updatetime ? ', script-update-interval=' + jsBox[i].updatetime : ''
-      cronexp = jsBox[i].cronexp.replace(/"/g,"")
+      cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g,"") : ""
       wakesys = jsBox[i].wakesys ? ', wake-system=' + jsBox[i].wakesys : ''
       timeout = jsBox[i].timeout ? jsBox[i].timeout : ''
       jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : ''
@@ -1091,7 +1091,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rebody = jsBox[i].rebody ? noteKn6 + 'require-body: ' + istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? noteKn6 + 'binary-mode: ' + istrue(jsBox[i].proto) : ''
       size = jsBox[i].size ? noteKn6 + 'max-size: ' + jsBox[i].size : ''
-      cronexp = jsBox[i].cronexp.replace(/"/g,"")
+      cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g,"") : ""
       timeout = jsBox[i].timeout ? noteKn6 + 'timeout: ' + jsBox[i].timeout : ''
       jsarg = jsBox[i].jsarg ? jsBox[i].jsarg.replace(/^"(.+)"$/,"$1") : ''
       tilesicon = jsBox[i].tilesicon ? jsBox[i].tilesicon : ''
