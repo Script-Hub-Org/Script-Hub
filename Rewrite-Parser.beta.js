@@ -931,7 +931,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       size = jsBox[i].size ? jsBox[i].size : ''
       ability = jsBox[i].ability ? ', ability=' + jsBox[i].ability : ''
       updatetime = jsBox[i].updatetime ? ', script-update-interval=' + jsBox[i].updatetime : ''
-      cronexp = jsBox[i].cronexp
+      cronexp = jsBox[i].cronexp.replace(/"/g,"")
       wakesys = jsBox[i].wakesys ? ', wake-system=' + jsBox[i].wakesys : ''
       timeout = jsBox[i].timeout ? jsBox[i].timeout : ''
       jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : ''
@@ -953,8 +953,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           proto = proto ? ', binary-body-mode=' + proto : ''
           size = size ? ', max-size=' + size : ''
           timeout = timeout ? ', timeout=' + timeout : ''
-          if (jsarg != '' && /,/.test(jsarg)) jsarg = ', argument="' + jsarg + '"'
-          if (jsarg != '' && !/,/.test(jsarg)) jsarg = ', argument=' + jsarg
+          if (jsarg != '' && /,/.test(jsarg) && !/^".+"$/.test(jsarg)) jsarg = ', argument="' + jsarg + '"'
+          if (jsarg != '' && (!/,/.test(jsarg) || /^".+"$/.test(jsarg))) jsarg = ', argument=' + jsarg
 
           if (/generic/.test(jstype) && isShadowrocket) {
             otherRule.push(jsBox[i].ori)
@@ -1091,9 +1091,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rebody = jsBox[i].rebody ? noteKn6 + 'require-body: ' + istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? noteKn6 + 'binary-mode: ' + istrue(jsBox[i].proto) : ''
       size = jsBox[i].size ? noteKn6 + 'max-size: ' + jsBox[i].size : ''
-      cronexp = jsBox[i].cronexp
+      cronexp = jsBox[i].cronexp.replace(/"/g,"")
       timeout = jsBox[i].timeout ? noteKn6 + 'timeout: ' + jsBox[i].timeout : ''
-      jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : ''
+      jsarg = jsBox[i].jsarg ? jsBox[i].jsarg.replace(/^"(.+)"$/,"$1") : ''
       tilesicon = jsBox[i].tilesicon ? jsBox[i].tilesicon : ''
       tilescolor = jsBox[i].tilescolor ? jsBox[i].tilescolor : ''
       ori = jsBox[i].ori
@@ -1400,7 +1400,6 @@ function getJsInfo(x, regx) {
     return x
       .split(regx)[1]
       .split(jsRegx)[0]
-      .replace(/^"(.+)"$/, '$1')
   } else {
     return ''
   }
@@ -1434,12 +1433,10 @@ function getQxReInfo(x, y, mark) {
   let rearg1 = x
     .split(breakpoint)[1]
     .trim()
-    .replace(/^"(.+)"$/, '$1')
   let rearg2 = x
     .split(breakpoint)[2]
     .trim()
-    .replace(/^"(.+)"$/, '$1')
-  let jsarg = rearg1 + '->' + rearg2
+  let jsarg = '"' + rearg1 + '->' + rearg2 + '"'
   let rebody = /body/.test(hdorbd) ? 'true' : ''
   let size = /body/.test(hdorbd) ? '-1' : ''
   jsBox.push({ mark, noteK, jsname, jstype, jsptn, jsurl, rebody, size, timeout: '30', jsarg, ori: x, num: y })
