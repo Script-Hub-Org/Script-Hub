@@ -1452,7 +1452,7 @@ function pieceHn(arr) {
 async function isBinaryMode(url, name) {
   if (/proto/i.test(name)) {
     return 'true'
-  } else if (/(?:tieba|youtube|bili|spotify|wyresparam|DualSubs\.Subtitles\.Translate\.response)/i.test(url)) {
+  } else if (/(?:tieba|youtube|bili|spotify|wyres|DualSubs\.Subtitles\.Translate\.response)/i.test(url)) {
     if (binaryInfo.length > 0 && binaryInfo.some(item => item.url === url)) {
       for (let i = 0; i < binaryInfo.length; i++) {
         if (binaryInfo[i].url === url) {
