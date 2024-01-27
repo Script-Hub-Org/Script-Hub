@@ -191,6 +191,7 @@ let fheBox = [] //force-http-engine
 let skipBox = [] //skip-ip
 let realBox = [] //real-ip
 let hndelBox = [] //正则剔除的主机名
+let sgArg = [] //surge模块参数
 
 let hnaddMethod = '%APPEND%'
 let fheaddMethod = '%APPEND%'
@@ -345,6 +346,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     } else if (/^#!.+?=.+/.test(x) && !/^#!(?:select|input)\s*=\s*.+/.test(x)) {
       getModInfo(x, modInfoBox)
     }
+    
+    //#!arguments参数
+    if (!isSurgeiOS && /^#!arguments\s*=\s*.+/.test(x)) {
+      sgArg = parseArguments(x)
+    } 
 
     //hostname
     if (/^hostname\s*=.+/.test(x)) hnaddMethod = getHn(x, hnBox, hnaddMethod)
@@ -665,13 +671,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     case 'stash-stoverride':
       for (let i = 0; i < modInfoBox.length; i++) {
-        info = modInfoBox[i].a.replace(/\s*=\s*/, '') + ': "' + modInfoBox[i].b + '"'
-        if (nName != null && /^name:\s*"/.test(info)) info = 'name: "' + name + '"'
-        if (nName != null && /^desc:\s*"/.test(info)) info = 'desc: "' + desc + '"'
+        info = modInfoBox[i].a.replace(/\s*=\s*/, '') + ': ' + modInfoBox[i].b
+        if (nName != null && /^name:\s*"/.test(info)) info = 'name: ' + name
+        if (nName != null && /^desc:\s*"/.test(info)) info = 'desc: ' + desc
         modInfo.push(info)
       } //for
-      if ($.toStr(modInfo).search(/name:\s/) == -1) modInfo.push('name: "' + name + '"')
-      if ($.toStr(modInfo).search(/desc:\s/) == -1) modInfo.push('desc: "' + desc + '"')
+      if ($.toStr(modInfo).search(/name:\s/) == -1) modInfo.push('name: ' + name)
+      if ($.toStr(modInfo).search(/desc:\s/) == -1) modInfo.push('desc: ' + desc)
 
       break
   } //模块信息输出结束
@@ -1215,8 +1221,9 @@ ${MITM}
       modInfo =
         (modInfo[0] || '') &&
         `${modInfo.join('\n')}`
-          .replace(/([\s\S]*)(desc: .+\n?)([\s\S]*)/, '$2\n$1\n$3')
-          .replace(/([\s\S]*)(name: .+\n?)([\s\S]*)/, '$2\n$1\n$3')
+          .replace(/([\s\S]*)(^desc: .+\n?)([\s\S]*)/m, '$2\n$1\n$3')
+          .replace(/([\s\S]*)(^name: .+\n?)([\s\S]*)/m, '$2\n$1\n$3')
+          .replace(/^([^:]+: )/mg,"$1|-\n  ")
           .replace(/\n{2,}/g, '\n')
 
       tiles = (tiles[0] || '') && `tiles:\n${tiles.join('\n\n')}`
@@ -1275,6 +1282,14 @@ ${providers}
 
       break
   } //输出内容结束
+
+  if (sgArg.length > 0) {
+    for (let i = 0 ;i<sgArg.length; i++) {
+      let e = "{{{" + sgArg[i].key + "}}}"
+      let r = sgArg[i].value
+      body = body.replaceAll(e,r)
+}//for
+}
 
   eval(evJsmodi)
   eval(evUrlmodi)
@@ -1573,6 +1588,21 @@ function toJsc(jsurl, jscStatus, jsc2Status, jsfrom) {
   } else {
     return jsurl
   }
+}
+
+function parseArguments (str) {
+  const queryString = str.split(/#!arguments\s*=\s*/)[1] //获取查询字符串部分
+  const regex = /([^:,]+):(\s*".+?"|[^,]*)/g //匹配键值对的正则表达式
+  const params = []
+  let match
+
+  while ((match = regex.exec(queryString))) {
+    const key = match[1].trim().replace(/^"(.+)"$/,"$1") //去除头尾空白符和引号
+    const value = match[2].trim().replace(/^"(.+)"$/,"$1") //去除头尾空白符和引号
+    params.push({key,value}) //将键值对添加到对象中
+  }
+
+  return params
 }
 
 function parseQueryString(url) {
