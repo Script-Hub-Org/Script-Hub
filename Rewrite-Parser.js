@@ -349,7 +349,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     
     //#!arguments参数
     if (!isSurgeiOS && /^#!arguments\s*=\s*.+/.test(x)) {
-      sgArg = parseArguments(x)
+      parseArguments(x)
     } 
 
     //hostname
@@ -757,7 +757,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         Urx2Reject = ''
       }
 
-      URLRewrite.push(mark + '\n' + noteK4 + '- >-' + noteKn6 + rulevalue + ' - reject' + Urx2Reject)
+      URLRewrite.push(mark + noteK4 + '- >-' + noteKn6 + rulevalue + ' - reject' + Urx2Reject)
     } else {
       otherRule.push(ruleBox[i].ori)
     }
@@ -799,7 +799,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         }
         URLRewrite.push(
           mark +
-            '\n' +
             noteK4 +
             '- >-' +
             noteKn6 +
@@ -865,7 +864,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         }
         let hdtype = /^http-response\s/.test(x) ? ' response-' : ' request-'
         x = x.replace(/^http-(?:request|response)\s+/, '').replace(/\s+header-/, hdtype)
-        HeaderRewrite.push(mark + '\n' + `${noteK4}- >-${noteKn6}` + x)
+        HeaderRewrite.push(mark + `${noteK4}- >-${noteKn6}` + x)
         break
 
       case 'shadowrocket-module':
@@ -1118,7 +1117,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       if (/request|response/.test(jstype)) {
         script.push(
           mark +
-            noteKn4 +
+            noteK4 +
             '- match: ' +
             jsptn +
             noteKn6 +
@@ -1137,7 +1136,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
       if (jstype == 'cron') {
-        cron.push(mark + `${noteKn4}- name: "` + jsname + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg)
+        cron.push(mark + `${noteK4}- name: "` + jsname + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg)
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
       if (jstype == 'generic') {
@@ -1339,10 +1338,8 @@ function isNoteK(x) {
 
 //获取当前内容的注释
 function getMark(index, obj) {
-  let mark = obj[index - 1]?.match(/^#(?!!)/) ? obj[index - 1] : ''
-  if (mark) {
-    mark = isStashiOS ? mark : mark + '\n'
-  }
+  let mark = obj[index - 1]?.match(/^#(?!!)/) ? obj[index - 1] + '\n': ''
+  
   return mark
 }
 
@@ -1590,16 +1587,13 @@ function toJsc(jsurl, jscStatus, jsc2Status, jsfrom) {
 function parseArguments (str) {
   const queryString = str.split(/#!arguments\s*=\s*/)[1] //获取查询字符串部分
   const regex = /([^:,]+):(\s*".+?"|[^,]*)/g //匹配键值对的正则表达式
-  const params = []
   let match
 
   while ((match = regex.exec(queryString))) {
     const key = match[1].trim().replace(/^"(.+)"$/,"$1") //去除头尾空白符和引号
     const value = match[2].trim().replace(/^"(.+)"$/,"$1") //去除头尾空白符和引号
-    params.push({key,value}) //将键值对添加到对象中
+    sgArg.push({key,value}) //将键值对添加到对象中
   }
-
-  return params
 }
 
 function parseQueryString(url) {
