@@ -104,8 +104,14 @@ let name,
   modistatus,
   hostdomain,
   hostvalue,
+  panelname,
+  title,
+  content,
+  style,
+  scriptname,
   jsurl,
   jsname,
+  img,
   jsfrom,
   jstype,
   eventname,
@@ -184,6 +190,7 @@ let hostBox = [] //host
 let ruleBox = [] //规则
 let rwBox = [] //重写
 let rwhdBox = [] //HeaderRewrite
+let panelBox = [] //Panel信息
 let jsBox = [] //脚本
 let mockBox = [] //MapLocal或echo-response
 let hnBox = [] //MITM主机名
@@ -215,8 +222,11 @@ let providers = []
 
 hnBox = hnAdd != null ? hnAdd : []
 
-const jsRegx =
+const jsRegex =
   /\s*[=,]\s*(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|tag|type|img-url|debug|event-name|desc)\s*=\s*/
+
+const panelRegex =
+  /\s*[=,]\s*(?:title|content|style|script-name|update-interval)\s*=\s*/
 
 //查询js binarymode相关
 let binaryInfo = $.getval('Parser_binary_info')
@@ -433,6 +443,30 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       hostvalue = x.split(/\s*=\s*/)[1]
       hostBox.push({ mark, noteK, hostdomain, hostvalue, ori: x })
     }
+    
+    //Panel信息
+    if (/[=,]\s*script-name\s*=.+/.test(x)) {
+      mark = getMark(y, body)
+      noteK = isNoteK(x)
+      panelname = x.split(/\s*=/)[0].replace(/^#/, '')
+      title = getJsInfo(x, /[=,\s]\s*title\s*=\s*/)
+      content = getJsInfo(x, /[=,\s]\s*content\s*=\s*/)
+      style = getJsInfo(x, /[=,\s]\s*style\s*=\s*/)
+      scriptname = getJsInfo(x, /[=,\s]\s*script-name\s*=\s*/)
+      updatetime = getJsInfo(x, /[=,\s]\s*update-interval\s*=\s*/)
+      panelBox.push({
+        mark,
+        noteK,
+        panelname,
+        title,
+        content,
+        style,
+        scriptname,
+        updatetime,
+        ori: x,
+        num: y,
+      })  
+    }//Panel信息解析结束
 
     //脚本解析
     if (/script-path\s*=.+/.test(x)) {
@@ -444,6 +478,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         : /,\s*tag\s*=\s*/.test(x)
         ? getJsInfo(x, /,\s*tag\s*=\s*/)
         : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.'))
+      img = getJsInfo(x, /[,\s]\s*img-url\s*=\s*/)
       jsfrom = 'surge'
       jsurl = toJsc(jsurl, jscStatus, jsc2Status, jsfrom)
       jstype = /[=,]\s*type\s*=\s*/.test(x) ? getJsInfo(x, /[=,]\s*type\s*=\s*/) : x.split(/\s+/)[0].replace(/^#/, '')
@@ -471,6 +506,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         mark,
         noteK,
         jsname,
+        img,
         jstype,
         jsptn,
         jsurl,
@@ -538,7 +574,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         .replace(cronexp, '')
         .split(/\s*,\s*/)[0]
         .trim()
-      jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.'))
+      jsname = /,\s*tag\s*=/.test(x) ? getJsInfo(x, /[,\s]\s*tag\s*=\s*/) : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.'))
+      img = getJsInfo(x, /[,\s]\s*img-url\s*=\s*/)
       jsfrom = 'qx'
       jsurl = toJsc(jsurl, jscStatus, jsc2Status, jsfrom)
       jsarg = ''
@@ -546,6 +583,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         mark,
         noteK,
         jsname,
+        img,
         jstype: 'cron',
         jsptn: '',
         cronexp,
@@ -603,6 +641,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   rwBox = rwBox.reduce((curr, next) => {
     /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
     obj[next.rwptn] ? '' : (obj[next.rwptn] = curr.push(next))
+    return curr
+  }, [])
+
+  panelBox = panelBox.reduce((curr, next) => {
+    /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
+    obj[next.scriptname] ? '' : (obj[next.scriptname] = curr.push(next))
     return curr
   }, [])
 
@@ -906,6 +950,34 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     } //switch
   } //Mock输出for
 
+  //Panel输出
+  if (isSurgeiOS && panelBox.length > 0) {
+    for (let i = 0; i < panelBox.length; i++) {
+      noteK = panelBox[i].noteK ? '#' : ''
+      mark = panelBox[i].mark ? panelBox[i].mark : ''
+      panelname = panelBox[i].panelname
+      title = panelBox[i].title ? ', title=' + panelBox[i].title : ''
+      content = panelBox[i].content ? ', content=' + panelBox[i].content : ''
+      style = panelBox[i].style ? ',style=' + panelBox[i].style : ''
+      scriptname = panelBox[i].scriptname
+      updatetime = panelBox[i].updatetime ? ', update-interval=' + panelBox[i].updatetime : ''
+      ori = panelBox[i].ori
+      scriptname = reJsValue(njsnametarget || 'null', njsname, scriptname, ori, scriptname)
+      Panel.push(
+              mark +
+                noteK +
+                panelname +
+                ' = ' +
+                'script-name=' +
+                scriptname +
+                title +
+                content +
+                style +
+                updatetime
+            )
+    }//for
+  }//panel输出结束
+
   //脚本输出
   if (!isStashiOS && jsBox.length > 0) {
     for (let i = 0; i < jsBox.length; i++) {
@@ -917,6 +989,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       if (/,/.test(jsptn) && isSurgeiOS) jsptn = '"' + jsptn + '"'
       if ((isSurgeiOS || isShadowrocket) && jsptn != '') jsptn = ', pattern=' + jsptn
       jsname = jsBox[i].jsname
+      img = jsBox[i].img ? ', img-url=' + jsBox[i].img : ''
       eventname = jsBox[i].eventname ? ', event-name=' + jsBox[i].eventname : ', event-name=network-changed'
       jstype =
         isLooniOS && /event/.test(jstype)
@@ -970,6 +1043,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 timeout +
                 ', tag=' +
                 jsname +
+                img +
                 jsarg
             )
           } else if (/request|response|generic/.test(jstype) && (isSurgeiOS || isShadowrocket)) {
@@ -1035,6 +1109,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 timeout +
                 ', tag=' +
                 jsname +
+                img +
                 jsarg
             )
           } else if (/dns|rule/.test(jstype) && (isSurgeiOS || isShadowrocket)) {
@@ -1043,10 +1118,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             )
           } else {
             otherRule.push(jsBox[i].ori)
-          }
-
-          if (isSurgeiOS && jstype == 'generic') {
-            Panel.push(noteK + jsname + ' = script-name=' + jsname + ', update-interval=3600')
           }
           break
       } //switch
@@ -1392,11 +1463,12 @@ function rw_redirect(x, mark) {
 }
 
 //script
-function getJsInfo(x, regx) {
-  if (regx.test(x)) {
+function getJsInfo(x, regex) {
+  let parserRegex = /script-name\s*=/.test(x) ? panelRegex : jsRegex
+  if (regex.test(x)) {
     return x
-      .split(regx)[1]
-      .split(jsRegx)[0]
+      .split(regex)[1]
+      .split(parserRegex)[0]
   } else {
     return ''
   }

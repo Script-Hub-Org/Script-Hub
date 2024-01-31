@@ -111,6 +111,7 @@ let name,
   scriptname,
   jsurl,
   jsname,
+  img,
   jsfrom,
   jstype,
   eventname,
@@ -477,6 +478,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         : /,\s*tag\s*=\s*/.test(x)
         ? getJsInfo(x, /,\s*tag\s*=\s*/)
         : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.'))
+      img = getJsInfo(x, /[,\s]\s*img-url\s*=\s*/)
       jsfrom = 'surge'
       jsurl = toJsc(jsurl, jscStatus, jsc2Status, jsfrom)
       jstype = /[=,]\s*type\s*=\s*/.test(x) ? getJsInfo(x, /[=,]\s*type\s*=\s*/) : x.split(/\s+/)[0].replace(/^#/, '')
@@ -504,6 +506,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         mark,
         noteK,
         jsname,
+        img,
         jstype,
         jsptn,
         jsurl,
@@ -571,7 +574,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         .replace(cronexp, '')
         .split(/\s*,\s*/)[0]
         .trim()
-      jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.'))
+      jsname = /,\s*tag\s*=/.test(x) ? getJsInfo(x, /[,\s]\s*tag\s*=\s*/) : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.'))
+      img = getJsInfo(x, /[,\s]\s*img-url\s*=\s*/)
       jsfrom = 'qx'
       jsurl = toJsc(jsurl, jscStatus, jsc2Status, jsfrom)
       jsarg = ''
@@ -579,6 +583,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         mark,
         noteK,
         jsname,
+        img,
         jstype: 'cron',
         jsptn: '',
         cronexp,
@@ -636,6 +641,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   rwBox = rwBox.reduce((curr, next) => {
     /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
     obj[next.rwptn] ? '' : (obj[next.rwptn] = curr.push(next))
+    return curr
+  }, [])
+
+  panelBox = panelBox.reduce((curr, next) => {
+    /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
+    obj[next.scriptname] ? '' : (obj[next.scriptname] = curr.push(next))
     return curr
   }, [])
 
@@ -978,6 +989,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       if (/,/.test(jsptn) && isSurgeiOS) jsptn = '"' + jsptn + '"'
       if ((isSurgeiOS || isShadowrocket) && jsptn != '') jsptn = ', pattern=' + jsptn
       jsname = jsBox[i].jsname
+      img = jsBox[i].img ? ', img-url=' + jsBox[i].img : ''
       eventname = jsBox[i].eventname ? ', event-name=' + jsBox[i].eventname : ', event-name=network-changed'
       jstype =
         isLooniOS && /event/.test(jstype)
@@ -1031,6 +1043,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 timeout +
                 ', tag=' +
                 jsname +
+                img +
                 jsarg
             )
           } else if (/request|response|generic/.test(jstype) && (isSurgeiOS || isShadowrocket)) {
@@ -1096,6 +1109,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 timeout +
                 ', tag=' +
                 jsname +
+                img +
                 jsarg
             )
           } else if (/dns|rule/.test(jstype) && (isSurgeiOS || isShadowrocket)) {
