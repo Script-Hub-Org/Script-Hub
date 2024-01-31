@@ -751,6 +751,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     rulesni = ruleBox[i].rulesni ? ruleBox[i].rulesni : ''
     rulesni = isLooniOS || isStashiOS ? '' : rulesni
     modistatus = ruleBox[i].modistatus
+    ori = ruleBox[i].ori
     if (/de?st-port/i.test(ruletype)) {
       ruletype = isSurgeiOS ? 'DEST-PORT' : 'DST-PORT'
     }
@@ -771,11 +772,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
 
     if (rulevalue == '' || rulepolicy == '') {
-      otherRule.push(ruleBox[i].ori)
+      otherRule.push(ori)
     } else if (/proxy/i.test(rulepolicy) && modistatus == 'no' && (isSurgeiOS || isStashiOS || isShadowrocket)) {
-      otherRule.push(ruleBox[i].ori)
+      otherRule.push(ori)
     } else if (!/direct|reject|proxy/i.test(rulepolicy) && modistatus == 'no') {
-      otherRule.push(ruleBox[i].ori)
+      otherRule.push(ori)
     } else if (/^(?:and|or|not|protocol|domain-set|rule-set)$/i.test(ruletype) && isSurgeiOS) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni)
     } else if (/^(?:and|or|not|domain-set|rule-set)$/i.test(ruletype) && isShadowrocket) {
@@ -803,7 +804,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       URLRewrite.push(mark + noteK4 + '- >-' + noteKn6 + rulevalue + ' - reject' + Urx2Reject)
     } else {
-      otherRule.push(ruleBox[i].ori)
+      otherRule.push(ori)
     }
   } //for rule输出结束
 
@@ -923,10 +924,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     mark = hostBox[i].mark ? hostBox[i].mark : ''
     hostdomain = hostBox[i].hostdomain
     hostvalue = hostBox[i].hostvalue
+    ori = hostBox[i].ori
     if (isStashiOS) {
-      otherRule.push(hostBox[i].ori)
+      otherRule.push(ori)
     } else if (isLooniOS && /script\s*:\s*/.test(hostvalue)) {
-      otherRule.push(hostBox[i].ori)
+      otherRule.push(ori)
     } else if (isSurgeiOS || isShadowrocket || isLooniOS) {
       host.push(mark + noteK + hostdomain + ' = ' + hostvalue)
     }
@@ -1029,9 +1031,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           if (jsarg != '' && (!/,/.test(jsarg) || /^".+"$/.test(jsarg))) jsarg = ', argument=' + jsarg
 
           if (/generic/.test(jstype) && isShadowrocket) {
-            otherRule.push(jsBox[i].ori)
+            otherRule.push(ori)
           } else if (/request|response|network-changed|generic/.test(jstype) && isLooniOS) {
-            script.push(
+            /[=,]\s*type\s*=\s*generic/.test(ori) ? otherRule.push(ori) : script.push(
               mark +
                 noteK +
                 jstype +
@@ -1047,7 +1049,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 jsarg
             )
           } else if (/request|response|generic/.test(jstype) && (isSurgeiOS || isShadowrocket)) {
-            script.push(
+            /^generic\s/.test(ori) ? otherRule.push(ori) : script.push(
               mark +
                 noteK +
                 jsname +
@@ -1117,7 +1119,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
               mark + noteK + jsname + ' = type=' + jstype + ', script-path=' + jsurl + updatetime + timeout + jsarg
             )
           } else {
-            otherRule.push(jsBox[i].ori)
+            otherRule.push(ori)
           }
           break
       } //switch
@@ -1211,13 +1213,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
       if (jstype == 'generic') {
-        tiles.push(
+        /^generic\s/.test(ori) ? otherRule.push(ori) : tiles.push(
           mark +
             `${noteK2}- name: "${jsname}"${noteKn4}interval: 3600${noteKn4}title: "${jsname}"${noteKn4}icon: "${tilesicon}"${noteKn4}backgroundColor: "${tilescolor}"${noteKn4}timeout: 30${jsarg}`
         )
-        providers.push(`${noteK2}"${jsname}":${noteKn4}url: ${jsurl}${noteKn4}interval: 86400`)
+        ;/^generic\s/.test(ori) ? '' : providers.push(`${noteK2}"${jsname}":${noteKn4}url: ${jsurl}${noteKn4}interval: 86400`)
       }
-      ;/event|rule|dns/i.test(jstype) && otherRule.push(jsBox[i].ori)
+      ;/network-changed|event|rule|dns/i.test(jstype) && otherRule.push(ori)
     } //for循环
   } //是Stash的脚本输出
 
