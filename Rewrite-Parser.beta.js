@@ -1164,7 +1164,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       proto = jsBox[i].proto ? noteKn6 + 'binary-mode: ' + istrue(jsBox[i].proto) : ''
       size = jsBox[i].size ? noteKn6 + 'max-size: ' + jsBox[i].size : ''
       cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g,"") : ""
-      timeout = jsBox[i].timeout ? noteKn6 + 'timeout: ' + jsBox[i].timeout : ''
+      timeout = jsBox[i].timeout ? jsBox[i].timeout : ''
       jsarg = jsBox[i].jsarg ? jsBox[i].jsarg.replace(/^"(.+)"$/,"$1") : ''
       tilesicon = jsBox[i].tilesicon ? jsBox[i].tilesicon : ''
       tilescolor = jsBox[i].tilescolor ? jsBox[i].tilescolor : ''
@@ -1185,6 +1185,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           ? noteKn4 + 'argument: |-' + noteKn6 + jsarg
           : jsarg && jstype != 'generic'
           ? noteKn6 + 'argument: |-' + noteKn8 + jsarg
+          : ''
+
+      timeout =
+        timeout && jstype == 'generic'
+          ? noteKn4 + 'timeout: ' + timeout
+          : timeout && jstype != 'generic'
+          ? noteKn6 + 'timeout: ' + timeout
           : ''
 
       if (/request|response/.test(jstype)) {
@@ -1215,7 +1222,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       if (jstype == 'generic') {
         /^generic\s/.test(ori) ? otherRule.push(ori) : tiles.push(
           mark +
-            `${noteK2}- name: "${jsname}"${noteKn4}interval: 3600${noteKn4}title: "${jsname}"${noteKn4}icon: "${tilesicon}"${noteKn4}backgroundColor: "${tilescolor}"${noteKn4}timeout: 30${jsarg}`
+            `${noteK2}- name: "${jsname}"${noteKn4}interval: 3600${noteKn4}title: "${jsname}"${noteKn4}icon: "${tilesicon}"${noteKn4}backgroundColor: "${tilescolor}"${timeout}${jsarg}`
         )
         ;/^generic\s/.test(ori) ? '' : providers.push(`${noteK2}"${jsname}":${noteKn4}url: ${jsurl}${noteKn4}interval: 86400`)
       }
