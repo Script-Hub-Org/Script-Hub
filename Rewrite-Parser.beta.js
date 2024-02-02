@@ -1514,7 +1514,7 @@ function getQxReInfo(x, y, mark) {
   let rearg2 = x
     .split(breakpoint)[2]
     .trim()
-  let jsarg = encodeURIComponent(rearg1) + '->' + encodeURIComponent(rearg2)
+  let jsarg = encodeURIComponent(rearg1 + '->' + rearg2)
   let rebody = /body/.test(hdorbd) ? 'true' : ''
   let size = /body/.test(hdorbd) ? '-1' : ''
   jsBox.push({ mark, noteK, jsname, jstype, jsptn, jsurl, rebody, size, timeout: '30', jsarg, ori: x, num: y })
