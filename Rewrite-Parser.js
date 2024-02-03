@@ -228,6 +228,8 @@ const jsRegex =
 const panelRegex =
   /\s*[=,]\s*(?:title|content|style|script-name|update-interval)\s*=\s*/
 
+const policyRegex = /^(direct|reject-?(img|video|dict|array|drop|200|tinygif)?(-no-drop)?)$/i
+
 //查询js binarymode相关
 let binaryInfo = $.getval('Parser_binary_info')
 if (binaryInfo != null && binaryInfo.length > 0) {
@@ -241,10 +243,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     body = localText
   } else {
     for (let i = 0; i < reqArr.length; i++) {
-      let bodyobj = await $.http.get(reqArr[i])
-      let bodystatus = bodyobj.status
-      body = bodystatus == 200 ? bodyobj.body : bodystatus == 404 ? '#!error=404: Not Found' : ''
-      bodystatus == 404 && $.msg(JS_NAME, '来源链接已失效', '404: Not Found ---> ' + reqArr[i], '')
+      let res = await $.http.get(reqArr[i])
+      let reStatus = res.status
+      body = reStatus == 200 ? res.body : reStatus == 404 ? '#!error=404: Not Found' : ''
+      reStatus == 404 && $.msg(JS_NAME, '来源链接已失效', '404: Not Found ---> ' + reqArr[i], '')
 
       if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)) {
         body = body.match(/^(?:\n|\r)*\/\*([\s\S]*?)(?:\r|\n)\s*\*+\//)[1]
@@ -424,7 +426,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         rulepolicy = ''
       }
 
-      if (nPolicy != null && !/direct|reject/.test(rulepolicy)) {
+      if (nPolicy != null && !policyRegex.test(rulepolicy)) {
         rulepolicy = nPolicy
         modistatus = 'yes'
       } else {
@@ -746,7 +748,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     ruletype = ruleBox[i].ruletype.toUpperCase()
     rulevalue = ruleBox[i].rulevalue ? ruleBox[i].rulevalue : ''
     rulepolicy = ruleBox[i].rulepolicy ? ruleBox[i].rulepolicy : ''
-    rulepolicy = /direct|reject/i.test(rulepolicy) ? rulepolicy.toUpperCase() : rulepolicy
+    rulepolicy = policyRegex.test(rulepolicy) ? rulepolicy.toUpperCase() : rulepolicy
     rulenore = ruleBox[i].rulenore ? ruleBox[i].rulenore : ''
     rulesni = ruleBox[i].rulesni ? ruleBox[i].rulesni : ''
     rulesni = isLooniOS || isStashiOS ? '' : rulesni
@@ -773,9 +775,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     if (rulevalue == '' || rulepolicy == '') {
       otherRule.push(ori)
-    } else if (/proxy/i.test(rulepolicy) && modistatus == 'no' && (isSurgeiOS || isStashiOS || isShadowrocket)) {
+    } else if (/^proxy$/i.test(rulepolicy) && modistatus == 'no' && (isSurgeiOS || isStashiOS)) {
       otherRule.push(ori)
-    } else if (!/direct|reject|proxy/i.test(rulepolicy) && modistatus == 'no') {
+    } else if (!policyRegex.test(rulepolicy) && !/^proxy$/i.test(rulepolicy) && modistatus == 'no') {
       otherRule.push(ori)
     } else if (/^(?:and|or|not|protocol|domain-set|rule-set)$/i.test(ruletype) && isSurgeiOS) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni)
