@@ -27,9 +27,9 @@ let arg
 let url
 if (typeof $argument != 'undefined') {
   let argument = $argument ?? ''
-  // try {
-  //   argument = decodeURIComponent(argument)
-  // } catch (e) {}
+  try {
+    argument = decodeURIComponent(argument)
+  } catch (e) {}
   // const urlMatch = argument.match(/(^|&)(url=(.*?))$/)
   // url = urlMatch?.[3]
   // if (url) {
