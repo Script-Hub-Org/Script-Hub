@@ -44,11 +44,9 @@ let noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false //默认开启
 let localsetNtf = $.getdata('ScriptHub通知')
 noNtf = localsetNtf == '开启通知' ? false : localsetNtf == '关闭通知' ? true : noNtf
 
-let openInBoxHtml = istrue(queryObject.openInBoxHtml)
-let openOutBoxHtml = istrue(queryObject.openOutBoxHtml)
-let openOtherRuleHtml = istrue(queryObject.openOtherRuleHtml)
+let openMsgHtml = istrue(queryObject.openMsgHtml)
 
-noNtf = openInBoxHtml || openOutBoxHtml || openOtherRuleHtml ? true : noNtf
+noNtf = openMsgHtml ? true : noNtf
 
 let nName = queryObject.n != undefined ? queryObject.n.split('+') : null //名字简介
 let Pin0 = queryObject.y != undefined ? queryObject.y.split('+') : null //保留
@@ -182,6 +180,7 @@ if (nName === null) {
 //信息中转站
 let bodyBox = [] //存储待转换的内容
 let otherRule = [] //不支持的规则&脚本
+let notBuildInPolicy = [] //不是内置策略的规则
 let inBox = [] //被释放的重写或规则
 let outBox = [] //被排除的重写或规则
 let modInfoBox = [] //模块简介等信息
@@ -669,12 +668,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   inBox = (inBox[0] || '') && `已根据关键词保留以下内容:\n${inBox.join('\n\n')}`
   outBox = (outBox[0] || '') && `已根据关键词排除以下内容:\n${outBox.join('\n')}`
 
-  inBox.length > 0 &&
-    noNtf == false &&
-    $.msg(JS_NAME, notifyName + ' 点击通知查看详情', `${inBox}`, { url: url + '&openInBoxHtml=true' })
-  outBox.length > 0 &&
-    noNtf == false &&
-    $.msg(JS_NAME, notifyName + ' 点击通知查看详情', `${outBox}`, { url: url + '&openOutBoxHtml=true' })
+  shNotify(inBox)
+  shNotify(outBox)
 
   //mitm删除主机名
   if (hnDel != null && hnBox.length > 0) hnBox = hnBox.filter(item => hnDel.indexOf(item) == -1)
@@ -774,11 +769,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
 
     if (rulevalue == '' || rulepolicy == '') {
-      otherRule.push(ori)
+      notBuildInPolicy.push(ori)
     } else if (/^proxy$/i.test(rulepolicy) && modistatus == 'no' && (isSurgeiOS || isStashiOS)) {
-      otherRule.push(ori)
+      notBuildInPolicy.push(ori)
     } else if (!policyRegex.test(rulepolicy) && !/^proxy$/i.test(rulepolicy) && modistatus == 'no') {
-      otherRule.push(ori)
+      notBuildInPolicy.push(ori)
     } else if (/^(?:and|or|not|protocol|domain-set|rule-set)$/i.test(ruletype) && isSurgeiOS) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni)
     } else if (/^(?:and|or|not|domain-set|rule-set)$/i.test(ruletype) && isShadowrocket) {
@@ -1376,14 +1371,15 @@ ${providers}
   eval(evUrlmodi)
 
   otherRule = (otherRule[0] || '') && `${app}不支持以下内容:\n${otherRule.join('\n')}`
+  
+  notBuildInPolicy = (notBuildInPolicy[0] || '') && `不是${app}内置策略且未指定策略的规则:\n${notBuildInPolicy.join('\n')}`
 
-  noNtf == false &&
-    otherRule.length > 0 &&
-    $.msg(JS_NAME, `${notifyName} 点击通知查看详情`, `${otherRule}`, { url: url + '&openOtherRuleHtml=true' })
+  shNotify(otherRule)
+  shNotify(notBuildInPolicy)
 
-  if (openInBoxHtml || openOutBoxHtml || openOtherRuleHtml) {
+  if (openMsgHtml) {
     result = {
-      body: inBox + '\n\n' + outBox + '\n\n' + otherRule,
+      body: (inBox + '\n\n' + outBox + '\n\n' + otherRule + '\n\n' + notBuildInPolicy).replace(/\n{2,}/g,"\n\n"),
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     }
     $.isQuanX() ? (result.status = 'HTTP/1.1 200') : (result.status = 200)
@@ -1665,6 +1661,12 @@ function toJsc(jsurl, jscStatus, jsc2Status, jsfrom) {
   } else {
     return jsurl
   }
+}
+
+function shNotify (box) {
+  noNtf == false &&
+  box.length > 0 &&
+    $.msg(JS_NAME, notifyName + ' 点击通知查看详情', box, { url: url + '&openMsgHtml=true' })
 }
 
 function parseArguments (str) {
