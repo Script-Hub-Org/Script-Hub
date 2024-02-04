@@ -14,8 +14,14 @@
 https://github.com/Script-Hub-Org/Script-Hub
 ***************************/
 const JS_NAME = 'Script Hub: 重写转换'
-
 const $ = new Env(JS_NAME)
+
+let arg
+if (typeof $argument != 'undefined') {
+  arg = Object.fromEntries($argument.split('&').map(item => item.split('=')))
+} else {
+  arg = {}
+}
 
 const url = $request.url
 const req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0]
@@ -41,7 +47,8 @@ const evUrlori = queryObject.evalUrlori
 const evUrlmodi = queryObject.evalUrlmodi
 
 let noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false //默认开启通知
-let localsetNtf = $.getdata('ScriptHub通知')
+
+let localsetNtf = $.lodash_get(arg, 'Notify') || $.getval('ScriptHub通知') || ''
 noNtf = localsetNtf == '开启通知' ? false : localsetNtf == '关闭通知' ? true : noNtf
 
 let openMsgHtml = istrue(queryObject.openMsgHtml)
@@ -227,7 +234,7 @@ const jsRegex =
 const panelRegex =
   /\s*[=,]\s*(?:title|content|style|script-name|update-interval)\s*=\s*/
 
-const policyRegex = /^(direct|reject-?(img|video|dict|array|drop|200|tinygif)?(-no-drop)?)$/i
+const policyRegex = /^(direct|reject-?(img|video|dict|array|drop|200|tinygif)?(-no-drop)?|\{\{\{[^,]+\}\}\})$/i
 
 //查询js binarymode相关
 let binaryInfo = $.getval('Parser_binary_info')
@@ -411,19 +418,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       )
     ) {
       mark = getMark(y, body)
-      x = x.replace(/\s/g, '')
       noteK = isNoteK(x)
       ruletype = x.split(/\s*,\s*/)[0].replace(/^#/, '')
-      rulenore = /,no-resolve/.test(x) ? ',no-resolve' : ''
-      rulesni = /,extended-matching/.test(x) ? ',extended-matching' : ''
-      rulePandV = x.replace(/^#/, '').replace(ruletype, '').replace(rulenore, '').replace(rulesni, '').replace(/^,/, '')
-      rulepolicy = rulePandV.substring(rulePandV.lastIndexOf(',') + 1)
-      rulepolicy = /\)|\}/.test(rulepolicy) ? '' : rulepolicy
-      rulevalue = rulePandV.replace(rulepolicy, '').replace(/,$/, '').replace(/"/g, '')
-      if (rulepolicy != '' && rulevalue == '') {
-        rulevalue = rulepolicy
-        rulepolicy = ''
-      }
+      rulenore = /,\s*no-resolve/.test(x) ? ',no-resolve' : ''
+      rulesni = /,\s*extended-matching/.test(x) ? ',extended-matching' : ''
+      rulePandV = x.replace(/^#/, '').replace(ruletype, '').replace(/\s*,\s*no-resolve/, '').replace(/\s*,\s*extended-matching/, '').replace(/^\s*,\s*/, '')
+      rulepolicy = getPolicy(rulePandV)
+      rulevalue = rulePandV.replace(rulepolicy, '').replace(/\s*,\s*$/, '').replace(/"/g, '')
 
       if (nPolicy != null && !policyRegex.test(rulepolicy)) {
         rulepolicy = nPolicy
@@ -743,7 +744,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     ruletype = ruleBox[i].ruletype.toUpperCase()
     rulevalue = ruleBox[i].rulevalue ? ruleBox[i].rulevalue : ''
     rulepolicy = ruleBox[i].rulepolicy ? ruleBox[i].rulepolicy : ''
-    rulepolicy = policyRegex.test(rulepolicy) ? rulepolicy.toUpperCase() : rulepolicy
+    rulepolicy = (policyRegex.test(rulepolicy) && !/\{\{\{[^,]+\}\}\}/.test(rulepolicy)) ? rulepolicy.toUpperCase() : rulepolicy
     rulenore = ruleBox[i].rulenore ? ruleBox[i].rulenore : ''
     rulesni = ruleBox[i].rulesni ? ruleBox[i].rulesni : ''
     rulesni = isLooniOS || isStashiOS ? '' : rulesni
@@ -768,7 +769,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rulepolicy = rulepolicy.replace(/-no-drop/i, '')
     }
 
-    if (rulevalue == '' || rulepolicy == '') {
+    if (rulepolicy == '') {
       notBuildInPolicy.push(ori)
     } else if (/^proxy$/i.test(rulepolicy) && modistatus == 'no' && (isSurgeiOS || isStashiOS)) {
       notBuildInPolicy.push(ori)
@@ -1379,7 +1380,7 @@ ${providers}
 
   if (openMsgHtml) {
     result = {
-      body: (inBox + '\n\n' + outBox + '\n\n' + otherRule + '\n\n' + notBuildInPolicy).replace(/\n{2,}/g,"\n\n"),
+      body: (JS_NAME + '\n\n' + inBox + '\n\n' + outBox + '\n\n' + otherRule + '\n\n' + notBuildInPolicy).replace(/\n{2,}/g,"\n\n"),
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     }
     $.isQuanX() ? (result.status = 'HTTP/1.1 200') : (result.status = 200)
@@ -1667,6 +1668,19 @@ function shNotify (box) {
   noNtf == false &&
   box.length > 0 &&
     $.msg(JS_NAME, notifyName + ' 点击通知查看详情', box, { url: url + '&openMsgHtml=true' })
+}
+
+function getPolicy (str) {
+	let commaNum = str.lastIndexOf(',')
+	let bracesNum = str.lastIndexOf('}')
+	let roundNum = str.lastIndexOf(')')
+	if (/,\s*\{\{\{[^,]+\}\}\}$/.test(str)) {
+    return str.match(/\{\{\{[^,]+\}\}\}$/)[0]
+  } else if (commaNum > bracesNum && commaNum > roundNum) {
+		return (str.substring(str.lastIndexOf(',') + 1)).trim()
+	} else {
+		return ''
+	}
 }
 
 function parseArguments (str) {

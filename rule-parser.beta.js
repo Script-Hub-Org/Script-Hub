@@ -3,8 +3,14 @@
    适用app: Surge Shadowrocket Stash Loon
 ***************************/
 const JS_NAME = 'Script Hub: 规则集转换'
-
 const $ = new Env(JS_NAME)
+
+let arg
+if (typeof $argument != 'undefined') {
+  arg = Object.fromEntries($argument.split('&').map(item => item.split('=')))
+} else {
+  arg = {}
+}
 
 //目标app
 const isEgern = 'object' == typeof egern
@@ -39,10 +45,12 @@ const isSurgedomainset2 = queryObject.target == 'surge-domain-set2'
 const isStashdomainset = queryObject.target == 'stash-domain-set'
 const isStashdomainset2 = queryObject.target == 'stash-domain-set2'
 
-var localText = queryObject.localtext != undefined ? '\n' + queryObject.localtext : '' //纯文本输入
+let localText = queryObject.localtext != undefined ? '\n' + queryObject.localtext : '' //纯文本输入
 
-var noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false //默认开启通知
-var localsetNtf = $.getdata('ScriptHub通知')
+let noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false //默认开启通知
+
+let localsetNtf = $.lodash_get(arg, 'Notify') || $.getval('ScriptHub通知') || ''
+
 noNtf = localsetNtf == '开启通知' ? false : localsetNtf == '关闭通知' ? true : noNtf
 
 let bodyBox = []
