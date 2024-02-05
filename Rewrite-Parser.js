@@ -87,7 +87,7 @@ let sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '' //用于开启jsDeliv
 
 //插件图标区域
 const iconStatus = $.getval('启用插件随机图标') ?? '启用'
-const iconReplace = $.getval('替换原始插件图标')
+const iconReplace = $.getval('替换原始插件图标') ?? '禁用'
 const iconLibrary1 = $.getval('插件随机图标合集') ?? 'Doraemon(100P)'
 const iconLibrary2 = iconLibrary1.split('(')[0]
 const iconFormat = iconLibrary2.search(/gif/i) == -1 ? '.png' : '.gif'
@@ -190,7 +190,7 @@ let modInfoObj = {
   name: name,
   desc: desc,
   author: '',
-  icon: icon,
+  icon: randomicon,
   category: ''
 }
 
