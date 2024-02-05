@@ -187,8 +187,8 @@ if (nName === null) {
 }
 
 let modInfoObj = {
-  name: '',
-  desc: '',
+  name: name,
+  desc: desc,
   author: '',
   icon: icon,
   category: ''
