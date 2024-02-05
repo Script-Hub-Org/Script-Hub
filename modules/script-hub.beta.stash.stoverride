@@ -1,6 +1,7 @@
 name: "Script Hub(β): 重写 & 规则集转换"
 desc: "https://script.hub"
 author: "@小白脸 @xream @keywos @ckyb"
+icon: "https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/assets/icon-dark.png"
 
 http:
   force-http-engine:

@@ -56,6 +56,8 @@ let openMsgHtml = istrue(queryObject.openMsgHtml)
 noNtf = openMsgHtml ? true : noNtf
 
 let nName = queryObject.n != undefined ? queryObject.n.split('+') : null //名字简介
+let category = queryObject.category ?? null
+let icon = queryObject.icon ?? null
 let Pin0 = queryObject.y != undefined ? queryObject.y.split('+') : null //保留
 let Pout0 = queryObject.x != undefined ? queryObject.x.split('+') : null //排除
 let hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/\s*,\s*/) : null //加
@@ -93,6 +95,7 @@ const iconFormat = iconLibrary2.search(/gif/i) == -1 ? '.png' : '.gif'
 //统一前置声明变量
 let name,
   desc,
+  randomicon,
   body,
   jscStatus,
   jsc2Status,
@@ -145,16 +148,15 @@ let name,
   MITM,
   force,
   result
-let icon = ''
+
 let Rewrite = isLooniOS ? '[Rewrite]' : '[URL Rewrite]'
 
 //随机插件图标
-if (isLooniOS && iconStatus == '启用') {
+if (iconStatus == '启用') {
   const stickerStartNum = 1001
   const stickerSum = iconLibrary1.split('(')[1].split('P')[0]
   let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).toString()
-  icon =
-    '#!icon=' +
+  randomicon =
     'https://github.com/Toperlock/Quantumult/raw/main/icon/' +
     iconLibrary2 +
     '/' +
@@ -182,6 +184,14 @@ if (nName === null) {
 } else {
   name = nName[0] != '' ? nName[0] : rewriteName
   desc = nName[1] != undefined ? nName[1] : name
+}
+
+let modInfoObj = {
+  name: '',
+  desc: '',
+  author: '',
+  icon: icon,
+  category: ''
 }
 
 //信息中转站
@@ -360,9 +370,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     //模块信息
     if (/^#!.+?=\s*$/.test(x)) {
     } else if (isLooniOS && /^#!(?:select|input)\s*=\s*.+/.test(x)) {
-      getModInfo(x, modInputBox)
+      getInputInfo(x, modInputBox)
     } else if (/^#!.+?=.+/.test(x) && !/^#!(?:select|input)\s*=\s*.+/.test(x)) {
-      getModInfo(x, modInfoBox)
+      getModInfo(x)
     }
     
     //#!arguments参数
@@ -622,12 +632,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   ruleBox = [...new Set(ruleBox)]
 
-  modInfoBox = modInfoBox.reduce((curr, next) => {
-    /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
-    obj[next.a] ? '' : (obj[next.a] = curr.push(next))
-    return curr
-  }, [])
-
   modInputBox = modInputBox.reduce((curr, next) => {
     /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
     obj[next.a + next.b] ? '' : (obj[next.a + next.b] = curr.push(next))
@@ -693,34 +697,30 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     case 'surge-module':
     case 'shadowrocket-module':
     case 'loon-plugin':
-      for (let i = 0; i < modInfoBox.length; i++) {
-        info = '#!' + modInfoBox[i].a + modInfoBox[i].b
-        if (nName != null && /#!name\s*=/.test(info)) info = '#!name=' + name
-        if (nName != null && /#!desc\s*=/.test(info)) info = '#!desc=' + desc
-        if (isLooniOS && iconReplace == '启用' && /#!icon\s*=.+/.test(info)) info = icon
-        modInfo.push(info)
-      } //for
+    case 'stash-stoverride':
+      modInfoObj['name'] = nName == null ? modInfoObj['name'] : name
+      modInfoObj['desc'] = nName == null ? modInfoObj['desc'] : desc
+      modInfoObj['category'] = category == null ? modInfoObj['category'] : category
+      if (icon == null) {
+        modInfoObj['icon'] = iconReplace == '禁用' ? modInfoObj['icon'] : randomicon
+      } else {
+        modInfoObj['icon'] =
+        /\//.test(icon) ?
+        icon :
+        await getIcon(icon)
+      }
+      
+      for (let key in modInfoObj) {
+        if (modInfoObj[key]){
+          let info = !isStashiOS ? ('#!' + key + '=' + modInfoObj[key]) : (key + ': |-\n  ' + modInfoObj[key])
+          modInfo.push(info)
+        }
+      }
 
       for (let i = 0; i < modInputBox.length; i++) {
-        info = '#!' + modInputBox[i].a + modInputBox[i].b
+        let info = '#!' + modInputBox[i].a + modInputBox[i].b
         modInfo.push(info)
       } //for
-
-      if ($.toStr(modInfo).search(/#!name=/) == -1) modInfo.push('#!name=' + name)
-      if ($.toStr(modInfo).search(/#!desc=/) == -1) modInfo.push('#!desc=' + desc)
-      if (isLooniOS && modInfo.length > 0 && $.toStr(modInfo).search(/#!icon=/) == -1) modInfo.push(icon)
-      break
-
-    case 'stash-stoverride':
-      for (let i = 0; i < modInfoBox.length; i++) {
-        info = modInfoBox[i].a.replace(/\s*=\s*/, '') + ': ' + modInfoBox[i].b
-        if (nName != null && /^name:\s*"/.test(info)) info = 'name: ' + name
-        if (nName != null && /^desc:\s*"/.test(info)) info = 'desc: ' + desc
-        modInfo.push(info)
-      } //for
-      if ($.toStr(modInfo).search(/name:\s/) == -1) modInfo.push('name: ' + name)
-      if ($.toStr(modInfo).search(/desc:\s/) == -1) modInfo.push('desc: ' + desc)
-
       break
   } //模块信息输出结束
 
@@ -1233,12 +1233,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     case 'surge-module':
     case 'shadowrocket-module':
     case 'loon-plugin':
-      modInfo =
-        (modInfo[0] || '') &&
-        `${modInfo.join('\n')}`
-          .replace(/([\s\S]*)(#!desc=.+\n?)([\s\S]*)/, '$2\n$1\n$3')
-          .replace(/([\s\S]*)(#!name=.+\n?)([\s\S]*)/, '$2\n$1\n$3')
-          .replace(/\n{2,}/g, '\n')
+      modInfo = (modInfo[0] || '') && `${modInfo.join('\n')}`
 
       rules = (rules[0] || '') && `[Rule]\n${rules.join('\n')}`
 
@@ -1295,13 +1290,7 @@ ${MITM}
       break
 
     case 'stash-stoverride':
-      modInfo =
-        (modInfo[0] || '') &&
-        `${modInfo.join('\n')}`
-          .replace(/([\s\S]*)(^desc: .+\n?)([\s\S]*)/m, '$2\n$1\n$3')
-          .replace(/([\s\S]*)(^name: .+\n?)([\s\S]*)/m, '$2\n$1\n$3')
-          .replace(/^([^:]+: )/mg,"$1|-\n  ")
-          .replace(/\n{2,}/g, '\n')
+      modInfo = (modInfo[0] || '') && `${modInfo.join('\n')}`
 
       tiles = (tiles[0] || '') && `tiles:\n${tiles.join('\n\n')}`
 
@@ -1422,12 +1411,39 @@ function getMark(index, obj) {
   return mark
 }
 
-//名字简介解析
-function getModInfo(x, box) {
+//loon的input select互动按钮解析
+function getInputInfo(x, box) {
   x = x.replace(/\s*=\s*/, '=')
   ;/^#!.+=.+/.test(x) ? (a = x.replace(/^#!/, '').match(/.+?=/)[0]) : ''
   ;/^#!.+=.+/.test(x) ? (b = x.replace(/^#!/, '').replace(a, '')) : ''
   box.push({ a, b })
+}
+
+//名字简介解析
+function getModInfo (x) {
+  const regex = /^#!\s*([^\s]+?)\s*=\s*(.+)/
+  let key = x.match(regex)[1]
+  let value = x.match(regex)[2]
+  modInfoObj[key] = value
+}
+
+//获取可莉图标集
+async function getIcon (icon) {
+  let url = 'https://gitlab.com/lodepuly/iconlibrary/-/raw/main/KeLee_icon.json'
+  let kicon = $.getjson('Parser_Kelee_icon')
+  if (!kicon) {
+    kicon = $.toObj((await $.http.get(url)).body)['icons']
+    $.setjson(kicon, 'Parser_Kelee_icon')
+  }
+  for (let i = 0; i < kicon.length; i++) {
+    if (kicon[i].name == icon) return kicon[i].url
+  }
+    kicon = $.toObj((await $.http.get(url)).body)['icons']
+    $.setjson(kicon, 'Parser_Kelee_icon')
+  for (let i = 0; i < kicon.length; i++) {
+    if (kicon[i].name == icon) return kicon[i].url
+  }
+  return 'icon not found'
 }
 
 //reject
