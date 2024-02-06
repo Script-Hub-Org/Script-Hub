@@ -955,7 +955,7 @@ const htmls = `
 
       <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>名称 简介</summary>
-        <span>名字+简介 ，名字和简介以 <code>+</code> 相连，可缺省名字或简介</span>
+        <span>名字+简介 ，名字和简介以 <code>+</code> 相连，可缺省名字或简介. 名字或简介中想使用 <code>+</code> 请用 <code>➕</code> 代替</span>
         <textarea id="n" v-model.lazy="n" placeholder=""></textarea>
       </details>
       
@@ -1064,7 +1064,7 @@ const htmls = `
         <summary>修改定时任务</summary>
         <details>
           <summary>修改定时任务(cron)</summary>
-          <span>根据关键词锁定 <code>cron</code> 脚本配合参数 <code>cronexp</code> 修改定时任务的cron表达式 多关键词用 <code>+</code> 分隔, <code>cron</code> 传入了几项, <code>cronexp</code> 也必须对应传入几项。 cron 表达式中空格可用 "." 或 "%20" 替代</span>
+          <span>根据关键词锁定 <code>cron</code> 脚本配合参数 <code>cronexp</code> 修改定时任务的cron表达式 多关键词用 <code>+</code> 分隔, <code>cron</code> 传入了几项, <code>cronexp</code> 也必须对应传入几项。 cron 表达式中空格可用 "." 替代</span>
           <textarea id="cron" v-model.lazy="cron" placeholder=""></textarea>
         </details>
         <details>
