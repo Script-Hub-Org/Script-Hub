@@ -75,7 +75,7 @@ if (queryObject.target == 'rule-set') {
 }
 
 var Rin0 = queryObject.y != undefined ? getArgArr(queryObject.y) : null
-var Rout0 = queryObject.x != undefined ? getArgArr(queryObject) : null
+var Rout0 = queryObject.x != undefined ? getArgArr(queryObject.x) : null
 var ipNoResolve = istrue(queryObject.nore)
 var sni = queryObject.sni != undefined ? getArgArr(queryObject.sni) : null
 
