@@ -74,10 +74,10 @@ if (queryObject.target == 'rule-set') {
   isShadowrocket = isRockettarget
 }
 
-var Rin0 = queryObject.y != undefined ? queryObject.y.split('+') : null
-var Rout0 = queryObject.x != undefined ? queryObject.x.split('+') : null
+var Rin0 = queryObject.y != undefined ? getArgArr(queryObject.y) : null
+var Rout0 = queryObject.x != undefined ? getArgArr(queryObject) : null
 var ipNoResolve = istrue(queryObject.nore)
-var sni = queryObject.sni != undefined ? queryObject.sni.split('+') : null
+var sni = queryObject.sni != undefined ? getArgArr(queryObject.sni) : null
 
 var evJsori = queryObject.evalScriptori
 var evJsmodi = queryObject.evalScriptmodi
@@ -370,6 +370,11 @@ function istrue(str) {
   } else {
     return false
   }
+}
+
+function getArgArr(str) {
+  let arr = str.split('+')
+  return arr.map((a) => a.replace(/➕/g,'+'))
 }
 
 function parseQueryString(url) {

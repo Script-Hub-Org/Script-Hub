@@ -55,33 +55,33 @@ let openMsgHtml = istrue(queryObject.openMsgHtml)
 
 noNtf = openMsgHtml ? true : noNtf
 
-let nName = queryObject.n != undefined ? queryObject.n.split('+') : null //名字简介
+let nName = queryObject.n != undefined ? getArgArr(queryObject.n) : null //名字简介
 let category = queryObject.category ?? null
 let icon = queryObject.icon ?? null
-let Pin0 = queryObject.y != undefined ? queryObject.y.split('+') : null //保留
-let Pout0 = queryObject.x != undefined ? queryObject.x.split('+') : null //排除
+let Pin0 = queryObject.y != undefined ? getArgArr(queryObject.y) : null //保留
+let Pout0 = queryObject.x != undefined ? getArgArr(queryObject.x) : null //排除
 let hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/\s*,\s*/) : null //加
 let hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/\s*,\s*/) : null //减
 let hnRegDel = queryObject.hnregdel != undefined ? new RegExp(queryObject.hnregdel) : null //正则删除hostname
 let synMitm = istrue(queryObject.synMitm) //将force与mitm同步
 let delNoteSc = istrue(queryObject.del)
-let nCron = queryObject.cron != undefined ? queryObject.cron.split('+') : null //替换cron目标
+let nCron = queryObject.cron != undefined ? getArgArr(queryObject.cron) : null //替换cron目标
 let ncronexp = queryObject.cronexp != undefined ? queryObject.cronexp.replace(/\./g, ' ').split('+') : null //新cronexp
-let nArgTarget = queryObject.arg != undefined ? queryObject.arg.split('+') : null //arg目标
-let nArg = queryObject.argv != undefined ? queryObject.argv.split('+') : null //arg参数
-let nTilesTarget = queryObject.tiles != undefined ? queryObject.tiles.split('+') : null
-let ntilescolor = queryObject.tcolor != undefined ? queryObject.tcolor.split('+') : null
+let nArgTarget = queryObject.arg != undefined ? getArgArr(queryObject.arg) : null //arg目标
+let nArg = queryObject.argv != undefined ? getArgArr(queryObject.argv) : null //arg参数
+let nTilesTarget = queryObject.tiles != undefined ? getArgArr(queryObject.tiles) : null
+let ntilescolor = queryObject.tcolor != undefined ? getArgArr(queryObject.tcolor) : null
 let nPolicy = queryObject.policy != undefined ? queryObject.policy : null
-let njsnametarget = queryObject.njsnametarget != undefined ? queryObject.njsnametarget.split('+') : null //修改脚本名目标
-let njsname = queryObject.njsname != undefined ? queryObject.njsname.split('+') : null //修改脚本名
-let jsConverter = queryObject.jsc != undefined ? queryObject.jsc.split('+') : null //脚本转换1
-let jsConverter2 = queryObject.jsc2 != undefined ? queryObject.jsc2.split('+') : null //脚本转换2
+let njsnametarget = queryObject.njsnametarget != undefined ? getArgArr(queryObject.njsnametarget) : null //修改脚本名目标
+let njsname = queryObject.njsname != undefined ? getArgArr(queryObject.njsname) : null //修改脚本名
+let jsConverter = queryObject.jsc != undefined ? getArgArr(queryObject.jsc) : null //脚本转换1
+let jsConverter2 = queryObject.jsc2 != undefined ? getArgArr(queryObject.jsc2) : null //脚本转换2
 let compatibilityOnly = istrue(queryObject.compatibilityOnly) //兼容转换
 let keepHeader = istrue(queryObject.keepHeader) //保留mock header
 let jsDelivr = istrue(queryObject.jsDelivr) //开启jsDelivr
 let localText = queryObject.localtext != undefined ? '\n' + queryObject.localtext : '' //纯文本输入
 let ipNoResolve = istrue(queryObject.nore) //ip规则不解析域名
-let sni = queryObject.sni != undefined ? queryObject.sni.split('+') : null //sni嗅探
+let sni = queryObject.sni != undefined ? getArgArr(queryObject.sni) : null //sni嗅探
 let sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '' //用于保留header的后缀
 let sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '' //用于开启jsDeliver的后缀
 
@@ -1285,8 +1285,7 @@ ${script}
 
 ${MITM}
 
-`.replace(/\n{2,}/g, '\n\n')
-
+`
       break
 
     case 'stash-stoverride':
@@ -1344,11 +1343,10 @@ ${cron}
 
 ${providers}
 
-`.replace(/\n{2,}/g, '\n\n')
-
+`
       break
   } //输出内容结束
-
+  body = body.replace(/\n{2,}/g, '\n\n')
   if (sgArg.length > 0) {
     for (let i = 0 ;i<sgArg.length; i++) {
       let e = "{{{" + sgArg[i].key + "}}}"
@@ -1409,6 +1407,11 @@ function getMark(index, obj) {
   let mark = obj[index - 1]?.match(/^#(?!!)/) ? obj[index - 1] + '\n': ''
   
   return mark
+}
+
+function getArgArr(str) {
+  let arr = str.split('+')
+  return arr.map((a) => a.replace(/➕/g,'+'))
 }
 
 //loon的input select互动按钮解析
