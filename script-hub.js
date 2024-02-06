@@ -1253,7 +1253,7 @@ const htmls = `
     if (endArray) {
       const src = endArray[0]
       if(src) {
-        init.src = src
+        init.src = decodeURIComponent(src)
       }
       const filenameStr = endArray[1]
       if(filenameStr) {
