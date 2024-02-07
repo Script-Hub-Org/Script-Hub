@@ -906,8 +906,14 @@ const htmls = `
           <br/>
           <small>&#9432; 将此链接中的 <code>file</code> 或 <code>convert</code> 改为 <code>edit</code> 即可在浏览器中再次对当前内容进行编辑</small>
         </template>
-        <textarea id="result" :value="result" placeholder="结果(请输入来源链接并选择类型)" readonly></textarea>
-        
+        <textarea v-if="frontendConvert" id="frontendConvertResult" :value="frontendConvertResult" placeholder="结果" readonly></textarea>
+        <textarea v-else id="result" :value="result" placeholder="结果(请输入来源链接并选择类型)" readonly></textarea>
+        <div>
+          <input type="checkbox" id="frontendConvert" v-model.lazy="frontendConvert" :disabled="frontendConvertDisabled"/>
+          <label class="button-over" for="frontendConvert">开启纯前端转换</label>
+          <br/>
+          <small>使用限制: 1. 使用网页部署前端 2. 使用 <code>本地文本内容</code> 3. 转换类型为 <code>重写/模块/覆写/插件 </code> 4. 不会进行内部的 <code>脚本转换</code> 5. 不会进行网络请求 例: 无法使用 <code>可莉图标订阅</code> 但是可以使用完整图标文件链接</small>
+        </div>
         <button v-if="copyInfo">{{copyInfo}}</button>
         <button v-else @click="copy" :disabled="!result">复制</button>
             <!-- <button v-else @click="copy">全选{{isHttps ? "&复制" : ""}}</button> -->
@@ -1170,7 +1176,7 @@ const htmls = `
 
     </div>
     <footer>
-      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.14.8</a></p>
+      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.14.9</a></p>
     </footer>
     <script>
       const openAllDetails = () => document.querySelectorAll('details').forEach(i => i.setAttribute('open', ""))
@@ -1218,10 +1224,12 @@ const htmls = `
     evalScriptmodi: '',
     evalUrlori: '',
     evalUrlmodi: '',
+    frontendConvertResult: '',
     keepHeader: false,
     nore: false,
     synMitm: false,
     noNtf: false,
+    frontendConvert: false,
     sni: '',
     wrap_response: false,
     jsDelivr: false,
@@ -1323,7 +1331,7 @@ const htmls = `
         }, 1000)
       },
       copy(){
-        const copyText = document.getElementById("result");
+        const copyText = document.getElementById(this.frontendConvert ? "frontendConvertResult" : "result");
         copyText.select();
         copyText.setSelectionRange(0, 99999); // For mobile devices
         // navigator.clipboard.writeText(copyText.value);
@@ -1338,6 +1346,28 @@ const htmls = `
       }
     },
     watch: {
+      async result(v) {
+        try {
+          const { scriptMap, rewriteParser, ruleParser } = "__SCRIPT__"
+          let $request = {
+            method: 'GET',
+            headers: {},
+            url: v,
+          }
+          const $notification = {
+            post: (...arg) => {
+              console.log(...arg)
+            }
+          }
+          const $done = res => {
+            console.log(res.response.body)
+            this.frontendConvertResult = res.response.body
+          }
+          eval(rewriteParser)
+        } catch (e) {
+          console.error(e)
+        }
+      },
       type(v) {
         if(v === 'rule-set' && !this.target.endsWith('rule-set')){
           // this.target='rule-set'
@@ -1397,6 +1427,9 @@ const htmls = `
       }
   },
     computed: {
+      frontendConvertDisabled: function () {
+        return !/^Node\.js/i.test(init.env)
+      },
       result: function () {
         if (this.src && this.src.startsWith('https://quantumult.app/x/open-app/add-resource')) {
           return '⚠️⚠️⚠️ 你填入的是 QX 一键导入链接. 请安装 https://t.me/h5683577/211 然后在浏览器中预览资源 分别转换规则集和重写'
