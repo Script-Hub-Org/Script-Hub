@@ -2,6 +2,7 @@ const _ = require('lodash')
 const fs = require('fs')
 const path = require('path')
 const Koa = require('koa')
+const { scriptMap, scriptMapBeta } = require('./scriptMap.js')
 const workspace = path.join(__dirname, './tmp')
 fs.mkdirSync(workspace, { recursive: true })
 
@@ -10,21 +11,6 @@ const BETA_PORT = process.env.BETA_PORT || 9101
 const HOST = process.env.HOST || '0.0.0.0'
 const BASE_URL = process.env.BASE_URL || `http://127.0.0.1:${PORT}`
 const BETA_BASE_URL = process.env.BETA_BASE_URL || `http://127.0.0.1:${BETA_PORT}`
-
-const scriptMap = {
-  './script-hub.js': /^https?:\/\/script\.hub\/($|edit\/|reload)/,
-  './Rewrite-Parser.js':
-    /^https?:\/\/script\.hub\/file\/_start_\/.+type=(qx-rewrite|loon-plugin|surge-module|all-module)/,
-  './rule-parser.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set/,
-  './script-converter.js': /^https?:\/\/script\.hub\/convert\//,
-}
-const scriptMapBeta = {
-  './script-hub.beta.js': /^https?:\/\/script\.hub\/($|edit\/|reload)/,
-  './Rewrite-Parser.beta.js':
-    /^https?:\/\/script\.hub\/file\/_start_\/.+type=(qx-rewrite|loon-plugin|surge-module|all-module)/,
-  './rule-parser.beta.js': /^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set/,
-  './script-converter.beta.js': /^https?:\/\/script\.hub\/convert\//,
-}
 
 const { NodeVM } = require('vm2')
 const vmconfigs = {
