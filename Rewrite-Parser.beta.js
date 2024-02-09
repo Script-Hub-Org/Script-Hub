@@ -90,7 +90,7 @@ const iconStatus = $.getval('启用插件随机图标') ?? '启用'
 const iconReplace = $.getval('替换原始插件图标') ?? '禁用'
 const iconLibrary1 = $.getval('插件随机图标合集') ?? 'Doraemon(100P)'
 const iconLibrary2 = iconLibrary1.split('(')[0]
-const iconFormat = iconLibrary2.search(/gif/i) == -1 ? '.png' : '.gif'
+const iconFormat = /gif/i.test(iconLibrary2) ? '.gif' : '.png'
 
 //统一前置声明变量
 let name,
@@ -152,7 +152,7 @@ let name,
 let Rewrite = isLooniOS ? '[Rewrite]' : '[URL Rewrite]'
 
 //随机插件图标
-if (iconStatus == '启用') {
+if ((isStashiOS || isLooniOS) && iconStatus == '启用') {
   const stickerStartNum = 1001
   const stickerSum = iconLibrary1.split('(')[1].split('P')[0]
   let randomStickerNum = parseInt(stickerStartNum + Math.random() * stickerSum).toString()
@@ -309,7 +309,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         const elem = Pout0[i].trim()
         if (
           x.indexOf(elem) != -1 &&
-          x.search(/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip)\s*=/) == -1 &&
+          !/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip)\s*=/.test(x) &&
           !/^#/.test(x)
         ) {
           x = '#' + x
@@ -1411,7 +1411,7 @@ function getMark(index, obj) {
 
 function getArgArr(str) {
   let arr = str.split('+')
-  return arr.map((a) => a.replace(/➕/g,'+'))
+  return arr.map(item => item.replace(/➕/g,'+'))
 }
 
 //loon的input select互动按钮解析
