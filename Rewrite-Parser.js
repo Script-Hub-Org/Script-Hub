@@ -74,6 +74,8 @@ let ntilescolor = queryObject.tcolor != undefined ? getArgArr(queryObject.tcolor
 let nPolicy = queryObject.policy != undefined ? queryObject.policy : null
 let njsnametarget = queryObject.njsnametarget != undefined ? getArgArr(queryObject.njsnametarget) : null //修改脚本名目标
 let njsname = queryObject.njsname != undefined ? getArgArr(queryObject.njsname) : null //修改脚本名
+let timeoutt = queryObject.timeoutt != undefined ? getArgArr(queryObject.timeoutt) : null //修改超时目标
+let timeoutv = queryObject.timeoutv!= undefined ? getArgArr(queryObject.timeoutv) : null //修改超时的值
 let jsConverter = queryObject.jsc != undefined ? getArgArr(queryObject.jsc) : null //脚本转换1
 let jsConverter2 = queryObject.jsc2 != undefined ? getArgArr(queryObject.jsc2) : null //脚本转换2
 let compatibilityOnly = istrue(queryObject.compatibilityOnly) //兼容转换
@@ -1017,6 +1019,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       jsname = reJsValue(njsnametarget || 'null', njsname, jsname, ori, jsname)
 
+      timeout = reJsValue(timeoutt || 'null', timeoutv, jsname, ori, timeout)
+
       switch (targetApp) {
         case 'surge-module':
         case 'shadowrocket-module':
@@ -1177,6 +1181,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       cronexp = reJsValue(nCron || 'null', ncronexp, jsname, ori, cronexp)
 
       jsname = reJsValue(njsnametarget || 'null', njsname, jsname, ori, jsname)
+
+      timeout = reJsValue(timeoutt || 'null', timeoutv, jsname, ori, timeout)
 
       jsarg =
         jsarg && jstype == 'generic'
