@@ -1059,6 +1059,19 @@ const htmls = `
           <textarea id="njsname" v-model.lazy="njsname" placeholder=""></textarea>
         </details>
       </details>
+      <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
+        <summary>修改脚本超时</summary>
+        <details>
+          <summary>关键词锁定脚本(timeoutt)</summary>
+          <span>根据关键词锁定脚本, 配合参数 <code>timeoutv</code> 修改脚本超时. 多关键词用 <code>+</code> 分隔, <code>timeoutt</code> 传入了几项,  <code>timeoutv</code> 也必须对应传入几项</span>
+          <textarea id="timeoutt" v-model.lazy="timeoutt" placeholder=""></textarea>
+        </details>
+        <details>
+          <summary>超时(timeoutv)</summary>
+          <span>见 <code>timeoutt</code> 参数说明</span>
+          <textarea id="timeoutv" v-model.lazy="timeoutv" placeholder=""></textarea>
+        </details>
+      </details>
 
       <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改定时任务</summary>
@@ -1205,6 +1218,8 @@ const htmls = `
     cronexp: '',
     njsname: '',
     njsnametarget: '',
+    timeoutt: '',
+    timeoutv: '',
     policy: '',
     arg: '',
     argv: '',
@@ -1240,7 +1255,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'policy', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext', 'icon', 'category']
+  const params = [ 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'timeoutt', 'timeoutv', 'policy', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext', 'icon', 'category']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
