@@ -31,14 +31,12 @@ let url
 
 !(async () => {
   if (!$.isRequest()) throw new Error('不是 request')
-
   let req = $request.url.split(/convert\/_start_\//)[1].split(/\/_end_\//)[0]
   // console.log(req)
   let urlArg = $request.url.split(/\/_end_\//)[1]
   // console.log(urlArg)
   let filename = urlArg.split('?')[0]
   // console.log(filename)
-
   const queryObject = parseQueryString(urlArg)
   console.log('参数:' + JSON.stringify(queryObject))
 
@@ -158,10 +156,15 @@ var $prefs = {
       result = $persistentStore.write('', key)
     } catch (e) {
     }
+    if ($persistentStore.read(key) == null) return result
     try {
       result = $persistentStore.write(null, key)
     } catch (e) {
     }
+    if ($persistentStore.read(key) == null) return result
+    const err = '无法模拟 removeValueForKey 删除 key: ' + key
+    console.log(err)
+    $notification.post('Script Hub: 脚本转换', '❌ ${filename ?? ''}', err)
     return result
   },
   valueForKey: key => {
@@ -533,9 +536,11 @@ async function http(url, opts = {}, type) {
   //   $.lodash_set(opts, 'binary-mode', true)
   // }
   try {
+    let timeout = HTTP_TIMEOUT + 1 * 1000
+    timeout = $.isSurge() ? timeout / 1000 : timeout
     res = await Promise.race([
       $.http.get({
-        timeout: HTTP_TIMEOUT + 1 * 1000,
+        timeout,
         url,
         // headers: {
         //   'Cache-Control': 'no-cache',
