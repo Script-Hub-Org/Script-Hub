@@ -575,7 +575,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     } //qx脚本解析结束
 
     //qx cron脚本解析
-    if (/^(?!.*(?:#!arguments-desc|#!desc=))[^\s]+\s+[^u\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+)?(https?|ftp|file):\/\//.test(x)) {
+    if (/^(?!^(?:#!arguments-desc=|#!desc=))[^\s]+\s+[^u\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+)?(https?|ftp|file):\/\//.test(x)) {
       mark = getMark(y, body)
       noteK = isNoteK(x)
       cronexp = x
