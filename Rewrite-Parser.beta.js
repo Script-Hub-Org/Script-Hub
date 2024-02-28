@@ -80,6 +80,8 @@ let njsnametarget = queryObject.njsnametarget != undefined ? getArgArr(queryObje
 let njsname = queryObject.njsname != undefined ? getArgArr(queryObject.njsname) : null //修改脚本名
 let timeoutt = queryObject.timeoutt != undefined ? getArgArr(queryObject.timeoutt) : null //修改超时目标
 let timeoutv = queryObject.timeoutv != undefined ? getArgArr(queryObject.timeoutv) : null //修改超时的值
+let enginet = queryObject.enginet != undefined ? getArgArr(queryObject.enginet) : null //修改引擎目标
+let enginev = queryObject.enginev != undefined ? getArgArr(queryObject.enginev) : null //修改引擎的值
 let jsConverter = queryObject.jsc != undefined ? getArgArr(queryObject.jsc) : null //脚本转换1
 let jsConverter2 = queryObject.jsc2 != undefined ? getArgArr(queryObject.jsc2) : null //脚本转换2
 let compatibilityOnly = istrue(queryObject.compatibilityOnly) //兼容转换
@@ -1001,7 +1003,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       jsurl = jsBox[i].jsurl
       rebody = jsBox[i].rebody ? istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? istrue(jsBox[i].proto) : ''
-      engine = jsBox[i].engine && isSurgeiOS ? ', engine=' + jsBox[i].engine : ''
+      engine = jsBox[i].engine ? jsBox[i].engine : ''
       size = jsBox[i].size ? jsBox[i].size : ''
       ability = jsBox[i].ability ? ', ability=' + jsBox[i].ability : ''
       updatetime = jsBox[i].updatetime ? ', script-update-interval=' + jsBox[i].updatetime : ''
@@ -1021,6 +1023,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       timeout = reJsValue(timeoutt || 'null', timeoutv, jsname, ori, timeout)
 
+      engine = reJsValue(enginet || 'null', enginev, jsname, ori, engine)
+
       switch (targetApp) {
         case 'surge-module':
         case 'shadowrocket-module':
@@ -1029,6 +1033,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           proto = proto ? ', binary-body-mode=' + proto : ''
           size = size ? ', max-size=' + size : ''
           timeout = timeout ? ', timeout=' + timeout : ''
+          engine = engine && isSurgeiOS ? ', engine=' + engine : ''
           if (jsarg != '' && /,/.test(jsarg) && !/^".+"$/.test(jsarg)) jsarg = ', argument="' + jsarg + '"'
           if (jsarg != '' && (!/,/.test(jsarg) || /^".+"$/.test(jsarg))) jsarg = ', argument=' + jsarg
 
@@ -1200,6 +1205,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       jsname = reJsValue(njsnametarget || 'null', njsname, jsname, ori, jsname)
 
       timeout = reJsValue(timeoutt || 'null', timeoutv, jsname, ori, timeout)
+
+      engine = reJsValue(enginet || 'null', enginev, jsname, ori, engine)
 
       jsarg =
         jsarg && jstype == 'generic'
