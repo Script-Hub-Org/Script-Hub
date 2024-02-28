@@ -127,6 +127,7 @@ let name,
   eventname,
   size,
   proto,
+  engine,
   jsptn,
   jsarg,
   rebody,
@@ -241,7 +242,7 @@ let providers = []
 hnBox = hnAdd != null ? hnAdd : []
 
 const jsRegex =
-  /\s*[=,]\s*(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|tag|type|img-url|debug|event-name|desc)\s*=\s*/
+  /\s*[=,]\s*(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|engine|tag|type|img-url|debug|event-name|desc)\s*=\s*/
 
 const panelRegex =
   /\s*[=,]\s*(?:title|content|style|script-name|update-interval)\s*=\s*/
@@ -512,6 +513,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         ? x.split('"')[1]
         : ''
       ability = getJsInfo(x, /[=,\s]\s*ability\s*=\s*/)
+      engine = getJsInfo(x, /[=,\s]\s*engine\s*=\s*/)
       updatetime = getJsInfo(x, /[=,\s]\s*script-update-interval\s*=\s*/)
       timeout = getJsInfo(x, /[=,\s]\s*timeout\s*=\s*/)
       tilesicon = jstype == 'generic' && /icon=/.test(x) ? x.split('icon=')[1].split('&')[0] : ''
@@ -536,6 +538,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         tilesicon,
         tilescolor,
         eventname,
+        engine,
         ori: x,
         num: y,
       })
@@ -575,7 +578,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     } //qx脚本解析结束
 
     //qx cron脚本解析
-    if (/^(?!^(?:#!arguments-desc=|#!desc=))[^\s]+\s+[^u\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+)?(https?|ftp|file):\/\//.test(x)) {
+    if (/^(?!^(?:#!arguments-desc\s*=|#!desc\s*=))[^\s]+\s+[^u\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+)?(https?|ftp|file):\/\//.test(x)) {
       mark = getMark(y, body)
       noteK = isNoteK(x)
       cronexp = x
@@ -1002,6 +1005,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       jsurl = jsBox[i].jsurl
       rebody = jsBox[i].rebody ? istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? istrue(jsBox[i].proto) : ''
+      engine = (jsBox[i].engine && isSurgeiOS) ? ', engine=' + jsBox[i].engine : ''
       size = jsBox[i].size ? jsBox[i].size : ''
       ability = jsBox[i].ability ? ', ability=' + jsBox[i].ability : ''
       updatetime = jsBox[i].updatetime ? ', script-update-interval=' + jsBox[i].updatetime : ''
@@ -1062,6 +1066,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 jsurl +
                 rebody +
                 proto +
+                engine +
                 size +
                 ability +
                 updatetime +
@@ -1079,6 +1084,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 ', script-path=' +
                 jsurl +
                 ability +
+                engine +
                 updatetime +
                 timeout +
                 jsarg
@@ -1096,6 +1102,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 ', script-path=' +
                 jsurl +
                 updatetime +
+                engine +
                 timeout +
                 wakesys +
                 jsarg
@@ -1118,7 +1125,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             )
           } else if (/dns|rule/.test(jstype) && (isSurgeiOS || isShadowrocket)) {
             script.push(
-              mark + noteK + jsname + ' = type=' + jstype + ', script-path=' + jsurl + updatetime + timeout + jsarg
+              mark + noteK + jsname + ' = type=' + jstype + ', script-path=' + jsurl + updatetime + engine + timeout + jsarg
             )
           } else {
             otherRule.push(ori)
