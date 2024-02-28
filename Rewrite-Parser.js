@@ -13,6 +13,8 @@
 项目地址:
 https://github.com/Script-Hub-Org/Script-Hub
 ***************************/
+
+const script_start = Date.now()
 const JS_NAME = 'Script Hub: 重写转换'
 const $ = new Env(JS_NAME)
 
@@ -22,6 +24,8 @@ if (typeof $argument != 'undefined') {
 } else {
   arg = {}
 }
+// 超时设置 与 script-converter.js 相同
+const HTTP_TIMEOUT = ($.getval('Parser_http_timeout') ?? 20) * 1000
 
 const url = $request.url
 const req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0]
@@ -75,7 +79,7 @@ let nPolicy = queryObject.policy != undefined ? queryObject.policy : null
 let njsnametarget = queryObject.njsnametarget != undefined ? getArgArr(queryObject.njsnametarget) : null //修改脚本名目标
 let njsname = queryObject.njsname != undefined ? getArgArr(queryObject.njsname) : null //修改脚本名
 let timeoutt = queryObject.timeoutt != undefined ? getArgArr(queryObject.timeoutt) : null //修改超时目标
-let timeoutv = queryObject.timeoutv!= undefined ? getArgArr(queryObject.timeoutv) : null //修改超时的值
+let timeoutv = queryObject.timeoutv != undefined ? getArgArr(queryObject.timeoutv) : null //修改超时的值
 let jsConverter = queryObject.jsc != undefined ? getArgArr(queryObject.jsc) : null //脚本转换1
 let jsConverter2 = queryObject.jsc2 != undefined ? getArgArr(queryObject.jsc2) : null //脚本转换2
 let compatibilityOnly = istrue(queryObject.compatibilityOnly) //兼容转换
@@ -194,7 +198,7 @@ let modInfoObj = {
   desc: desc,
   author: '',
   icon: randomicon,
-  category: ''
+  category: '',
 }
 
 //信息中转站
@@ -244,8 +248,7 @@ hnBox = hnAdd != null ? hnAdd : []
 const jsRegex =
   /\s*[=,]\s*(?:script-path|pattern|timeout|argument|script-update-interval|requires-body|max-size|ability|binary-body-mode|cronexpr?|wake-system|enabled?|engine|tag|type|img-url|debug|event-name|desc)\s*=\s*/
 
-const panelRegex =
-  /\s*[=,]\s*(?:title|content|style|script-name|update-interval)\s*=\s*/
+const panelRegex = /\s*[=,]\s*(?:title|content|style|script-name|update-interval)\s*=\s*/
 
 const policyRegex = /^(direct|reject-?(img|video|dict|array|drop|200|tinygif)?(-no-drop)?|\{\{\{[^,]+\}\}\})$/i
 
@@ -262,7 +265,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     body = localText
   } else {
     for (let i = 0; i < reqArr.length; i++) {
-      let res = await $.http.get(reqArr[i])
+      let res = await http(reqArr[i])
       let reStatus = res.status
       body = reStatus == 200 ? res.body : reStatus == 404 ? '#!error=404: Not Found' : ''
       reStatus == 404 && $.msg(JS_NAME, '来源链接已失效', '404: Not Found ---> ' + reqArr[i], '')
@@ -377,11 +380,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     } else if (/^#!.+?=.+/.test(x) && !/^#!(?:select|input)\s*=\s*.+/.test(x)) {
       getModInfo(x)
     }
-    
+
     //#!arguments参数
     if (!isSurgeiOS && /^#!arguments\s*=\s*.+/.test(x)) {
       parseArguments(x)
-    } 
+    }
 
     //hostname
     if (/^hostname\s*=.+/.test(x)) hnaddMethod = getHn(x, hnBox, hnaddMethod)
@@ -435,9 +438,17 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       ruletype = x.split(/\s*,\s*/)[0].replace(/^#/, '')
       rulenore = /,\s*no-resolve/.test(x) ? ',no-resolve' : ''
       rulesni = /,\s*extended-matching/.test(x) ? ',extended-matching' : ''
-      rulePandV = x.replace(/^#/, '').replace(ruletype, '').replace(/\s*,\s*no-resolve/, '').replace(/\s*,\s*extended-matching/, '').replace(/^\s*,\s*/, '')
+      rulePandV = x
+        .replace(/^#/, '')
+        .replace(ruletype, '')
+        .replace(/\s*,\s*no-resolve/, '')
+        .replace(/\s*,\s*extended-matching/, '')
+        .replace(/^\s*,\s*/, '')
       rulepolicy = getPolicy(rulePandV)
-      rulevalue = rulePandV.replace(rulepolicy, '').replace(/\s*,\s*$/, '').replace(/"/g, '')
+      rulevalue = rulePandV
+        .replace(rulepolicy, '')
+        .replace(/\s*,\s*$/, '')
+        .replace(/"/g, '')
 
       if (nPolicy != null && !policyRegex.test(rulepolicy)) {
         rulepolicy = nPolicy
@@ -458,7 +469,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       hostvalue = x.split(/\s*=\s*/)[1]
       hostBox.push({ mark, noteK, hostdomain, hostvalue, ori: x })
     }
-    
+
     //Panel信息
     if (/[=,]\s*script-name\s*=.+/.test(x)) {
       mark = getMark(y, body)
@@ -480,8 +491,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         updatetime,
         ori: x,
         num: y,
-      })  
-    }//Panel信息解析结束
+      })
+    } //Panel信息解析结束
 
     //脚本解析
     if (/script-path\s*=.+/.test(x)) {
@@ -578,7 +589,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     } //qx脚本解析结束
 
     //qx cron脚本解析
-    if (/^(?!^(?:#!arguments-desc\s*=|#!desc\s*=))[^\s]+\s+[^u\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+)?(https?|ftp|file):\/\//.test(x)) {
+    if (
+      /^(?!^(?:#!arguments-desc\s*=|#!desc\s*=))[^\s]+\s+[^u\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+([^\s]+\s+)?(https?|ftp|file):\/\//.test(
+        x
+      )
+    ) {
       mark = getMark(y, body)
       noteK = isNoteK(x)
       cronexp = x
@@ -591,7 +606,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         .replace(cronexp, '')
         .split(/\s*,\s*/)[0]
         .trim()
-      jsname = /,\s*tag\s*=/.test(x) ? getJsInfo(x, /[,\s]\s*tag\s*=\s*/) : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.'))
+      jsname = /,\s*tag\s*=/.test(x)
+        ? getJsInfo(x, /[,\s]\s*tag\s*=\s*/)
+        : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.'))
       img = getJsInfo(x, /[,\s]\s*img-url\s*=\s*/)
       jsfrom = 'qx'
       jsurl = toJsc(jsurl, jscStatus, jsc2Status, jsfrom)
@@ -709,15 +726,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       if (icon == null) {
         modInfoObj['icon'] = iconReplace == '禁用' ? modInfoObj['icon'] : randomicon
       } else {
-        modInfoObj['icon'] =
-        /\//.test(icon) ?
-        icon :
-        await getIcon(icon)
+        modInfoObj['icon'] = /\//.test(icon) ? icon : await getIcon(icon)
       }
-      
+
       for (let key in modInfoObj) {
-        if (modInfoObj[key]){
-          let info = !isStashiOS ? ('#!' + key + '=' + modInfoObj[key]) : (key + ': |-\n  ' + modInfoObj[key])
+        if (modInfoObj[key]) {
+          let info = !isStashiOS ? '#!' + key + '=' + modInfoObj[key] : key + ': |-\n  ' + modInfoObj[key]
           modInfo.push(info)
         }
       }
@@ -749,7 +763,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     ruletype = ruleBox[i].ruletype.toUpperCase()
     rulevalue = ruleBox[i].rulevalue ? ruleBox[i].rulevalue : ''
     rulepolicy = ruleBox[i].rulepolicy ? ruleBox[i].rulepolicy : ''
-    rulepolicy = (policyRegex.test(rulepolicy) && !/\{\{\{[^,]+\}\}\}/.test(rulepolicy)) ? rulepolicy.toUpperCase() : rulepolicy
+    rulepolicy =
+      policyRegex.test(rulepolicy) && !/\{\{\{[^,]+\}\}\}/.test(rulepolicy) ? rulepolicy.toUpperCase() : rulepolicy
     rulenore = ruleBox[i].rulenore ? ruleBox[i].rulenore : ''
     rulesni = ruleBox[i].rulesni ? ruleBox[i].rulesni : ''
     rulesni = isLooniOS || isStashiOS ? '' : rulesni
@@ -846,15 +861,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           noteK2 = '#  '
         }
         URLRewrite.push(
-          mark +
-            noteK4 +
-            '- >-' +
-            noteKn6 +
-            rwptn +
-            ' ' +
-            rwvalue +
-            ' ' +
-            rwtype.replace(/-video|-tinygif/, '-img')
+          mark + noteK4 + '- >-' + noteKn6 + rwptn + ' ' + rwvalue + ' ' + rwtype.replace(/-video|-tinygif/, '-img')
         )
         break
 
@@ -968,20 +975,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       updatetime = panelBox[i].updatetime ? ', update-interval=' + panelBox[i].updatetime : ''
       ori = panelBox[i].ori
       scriptname = reJsValue(njsnametarget || 'null', njsname, scriptname, ori, scriptname)
-      Panel.push(
-              mark +
-                noteK +
-                panelname +
-                ' = ' +
-                'script-name=' +
-                scriptname +
-                title +
-                content +
-                style +
-                updatetime
-            )
-    }//for
-  }//panel输出结束
+      Panel.push(mark + noteK + panelname + ' = ' + 'script-name=' + scriptname + title + content + style + updatetime)
+    } //for
+  } //panel输出结束
 
   //脚本输出
   if (!isStashiOS && jsBox.length > 0) {
@@ -1005,11 +1001,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       jsurl = jsBox[i].jsurl
       rebody = jsBox[i].rebody ? istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? istrue(jsBox[i].proto) : ''
-      engine = (jsBox[i].engine && isSurgeiOS) ? ', engine=' + jsBox[i].engine : ''
+      engine = jsBox[i].engine && isSurgeiOS ? ', engine=' + jsBox[i].engine : ''
       size = jsBox[i].size ? jsBox[i].size : ''
       ability = jsBox[i].ability ? ', ability=' + jsBox[i].ability : ''
       updatetime = jsBox[i].updatetime ? ', script-update-interval=' + jsBox[i].updatetime : ''
-      cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g,"") : ""
+      cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g, '') : ''
       wakesys = jsBox[i].wakesys ? ', wake-system=' + jsBox[i].wakesys : ''
       timeout = jsBox[i].timeout ? jsBox[i].timeout : ''
       jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : ''
@@ -1039,40 +1035,44 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           if (/generic/.test(jstype) && isShadowrocket) {
             otherRule.push(ori)
           } else if (/request|response|network-changed|generic/.test(jstype) && isLooniOS) {
-            /[=,]\s*type\s*=\s*generic/.test(ori) ? otherRule.push(ori) : script.push(
-              mark +
-                noteK +
-                jstype +
-                jsptn +
-                ' script-path=' +
-                jsurl +
-                rebody +
-                proto +
-                timeout +
-                ', tag=' +
-                jsname +
-                img +
-                jsarg
-            )
+            ;/[=,]\s*type\s*=\s*generic/.test(ori)
+              ? otherRule.push(ori)
+              : script.push(
+                  mark +
+                    noteK +
+                    jstype +
+                    jsptn +
+                    ' script-path=' +
+                    jsurl +
+                    rebody +
+                    proto +
+                    timeout +
+                    ', tag=' +
+                    jsname +
+                    img +
+                    jsarg
+                )
           } else if (/request|response|generic/.test(jstype) && (isSurgeiOS || isShadowrocket)) {
-            /^generic\s/.test(ori) ? otherRule.push(ori) : script.push(
-              mark +
-                noteK +
-                jsname +
-                ' = type=' +
-                jstype +
-                jsptn +
-                ', script-path=' +
-                jsurl +
-                rebody +
-                proto +
-                engine +
-                size +
-                ability +
-                updatetime +
-                timeout +
-                jsarg
-            )
+            ;/^generic\s/.test(ori)
+              ? otherRule.push(ori)
+              : script.push(
+                  mark +
+                    noteK +
+                    jsname +
+                    ' = type=' +
+                    jstype +
+                    jsptn +
+                    ', script-path=' +
+                    jsurl +
+                    rebody +
+                    proto +
+                    engine +
+                    size +
+                    ability +
+                    updatetime +
+                    timeout +
+                    jsarg
+                )
           } else if (jstype == 'event' && (isSurgeiOS || isShadowrocket)) {
             script.push(
               mark +
@@ -1125,7 +1125,17 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             )
           } else if (/dns|rule/.test(jstype) && (isSurgeiOS || isShadowrocket)) {
             script.push(
-              mark + noteK + jsname + ' = type=' + jstype + ', script-path=' + jsurl + updatetime + engine + timeout + jsarg
+              mark +
+                noteK +
+                jsname +
+                ' = type=' +
+                jstype +
+                ', script-path=' +
+                jsurl +
+                updatetime +
+                engine +
+                timeout +
+                jsarg
             )
           } else {
             otherRule.push(ori)
@@ -1172,9 +1182,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rebody = jsBox[i].rebody ? noteKn6 + 'require-body: ' + istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? noteKn6 + 'binary-mode: ' + istrue(jsBox[i].proto) : ''
       size = jsBox[i].size ? noteKn6 + 'max-size: ' + jsBox[i].size : ''
-      cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g,"") : ""
+      cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g, '') : ''
       timeout = jsBox[i].timeout ? jsBox[i].timeout : ''
-      jsarg = jsBox[i].jsarg ? jsBox[i].jsarg.replace(/^"(.+)"$/,"$1") : ''
+      jsarg = jsBox[i].jsarg ? jsBox[i].jsarg.replace(/^"(.+)"$/, '$1') : ''
       tilesicon = jsBox[i].tilesicon ? jsBox[i].tilesicon : ''
       tilescolor = jsBox[i].tilescolor ? jsBox[i].tilescolor : ''
       ori = jsBox[i].ori
@@ -1231,11 +1241,15 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
       if (jstype == 'generic') {
-        /^generic\s/.test(ori) ? otherRule.push(ori) : tiles.push(
-          mark +
-            `${noteK2}- name: "${jsname}"${noteKn4}interval: 3600${noteKn4}title: "${jsname}"${noteKn4}icon: "${tilesicon}"${noteKn4}backgroundColor: "${tilescolor}"${timeout}${jsarg}`
-        )
-        ;/^generic\s/.test(ori) ? '' : providers.push(`${noteK2}"${jsname}":${noteKn4}url: ${jsurl}${noteKn4}interval: 86400`)
+        ;/^generic\s/.test(ori)
+          ? otherRule.push(ori)
+          : tiles.push(
+              mark +
+                `${noteK2}- name: "${jsname}"${noteKn4}interval: 3600${noteKn4}title: "${jsname}"${noteKn4}icon: "${tilesicon}"${noteKn4}backgroundColor: "${tilescolor}"${timeout}${jsarg}`
+            )
+        ;/^generic\s/.test(ori)
+          ? ''
+          : providers.push(`${noteK2}"${jsname}":${noteKn4}url: ${jsurl}${noteKn4}interval: 86400`)
       }
       ;/network-changed|event|rule|dns/i.test(jstype) && otherRule.push(ori)
     } //for循环
@@ -1361,37 +1375,41 @@ ${providers}
   } //输出内容结束
   body = body.replace(/\n{2,}/g, '\n\n')
   if (sgArg.length > 0) {
-    for (let i = 0 ;i<sgArg.length; i++) {
-      let e = "{{{" + sgArg[i].key + "}}}"
+    for (let i = 0; i < sgArg.length; i++) {
+      let e = '{{{' + sgArg[i].key + '}}}'
       let r = sgArg[i].value
-      body = body.replaceAll(e,r)
-}//for
-}
+      body = body.replaceAll(e, r)
+    } //for
+  }
 
   eval(evJsmodi)
   eval(evUrlmodi)
 
   otherRule = (otherRule[0] || '') && `${app}不支持以下内容:\n${otherRule.join('\n')}`
-  
-  notBuildInPolicy = (notBuildInPolicy[0] || '') && `不是${app}内置策略且未指定策略的规则:\n${notBuildInPolicy.join('\n')}`
+
+  notBuildInPolicy =
+    (notBuildInPolicy[0] || '') && `不是${app}内置策略且未指定策略的规则:\n${notBuildInPolicy.join('\n')}`
 
   shNotify(otherRule)
   shNotify(notBuildInPolicy)
 
   if (openMsgHtml) {
     result = {
-      body: (JS_NAME + '\n\n' + inBox + '\n\n' + outBox + '\n\n' + otherRule + '\n\n' + notBuildInPolicy).replace(/\n{2,}/g,"\n\n"),
+      body: (JS_NAME + '\n\n' + inBox + '\n\n' + outBox + '\n\n' + otherRule + '\n\n' + notBuildInPolicy).replace(
+        /\n{2,}/g,
+        '\n\n'
+      ),
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     }
     $.isQuanX() ? (result.status = 'HTTP/1.1 200') : (result.status = 200)
-    $.done($.isQuanX() ? result : { response: result })
+    done($.isQuanX() ? result : { response: result })
   } else {
     result = {
       body: body,
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     }
     $.isQuanX() ? (result.status = 'HTTP/1.1 200') : (result.status = 200)
-    $.done($.isQuanX() ? result : { response: result })
+    done($.isQuanX() ? result : { response: result })
   }
 })().catch(e => {
   noNtf == false ? $.msg(JS_NAME, `${notifyName}：${e}\n${url}`, '', 'https://t.me/zhetengsha_group') : $.log(e)
@@ -1407,7 +1425,7 @@ ${providers}
     },
   }
   $.isQuanX() ? (result.status = 'HTTP/1.1 500') : (result.status = 500)
-  $.done($.isQuanX() ? result : { response: result })
+  done($.isQuanX() ? result : { response: result })
 })
 
 //判断是否被注释
@@ -1417,14 +1435,14 @@ function isNoteK(x) {
 
 //获取当前内容的注释
 function getMark(index, obj) {
-  let mark = obj[index - 1]?.match(/^#(?!!)/) ? obj[index - 1] + '\n': ''
-  
+  let mark = obj[index - 1]?.match(/^#(?!!)/) ? obj[index - 1] + '\n' : ''
+
   return mark
 }
 
 function getArgArr(str) {
   let arr = str.split('+')
-  return arr.map(item => item.replace(/➕/g,'+'))
+  return arr.map(item => item.replace(/➕/g, '+'))
 }
 
 //loon的input select互动按钮解析
@@ -1436,7 +1454,7 @@ function getInputInfo(x, box) {
 }
 
 //名字简介解析
-function getModInfo (x) {
+function getModInfo(x) {
   const regex = /^#!\s*([^\s]+?)\s*=\s*(.+)/
   let key = x.match(regex)[1]
   let value = x.match(regex)[2]
@@ -1444,18 +1462,18 @@ function getModInfo (x) {
 }
 
 //获取可莉图标集
-async function getIcon (icon) {
+async function getIcon(icon) {
   let url = 'https://gitlab.com/lodepuly/iconlibrary/-/raw/main/KeLee_icon.json'
   let kicon = $.getjson('Parser_Kelee_icon')
   if (!kicon) {
-    kicon = $.toObj((await $.http.get(url)).body)['icons']
+    kicon = $.toObj((await http(url)).body)['icons']
     $.setjson(kicon, 'Parser_Kelee_icon')
   }
   for (let i = 0; i < kicon.length; i++) {
     if (kicon[i].name == icon) return kicon[i].url
   }
-    kicon = $.toObj((await $.http.get(url)).body)['icons']
-    $.setjson(kicon, 'Parser_Kelee_icon')
+  kicon = $.toObj((await http(url)).body)['icons']
+  $.setjson(kicon, 'Parser_Kelee_icon')
   for (let i = 0; i < kicon.length; i++) {
     if (kicon[i].name == icon) return kicon[i].url
   }
@@ -1506,9 +1524,7 @@ function rw_redirect(x, mark) {
 function getJsInfo(x, regex) {
   let parserRegex = /script-name\s*=/.test(x) ? panelRegex : jsRegex
   if (regex.test(x)) {
-    return x
-      .split(regex)[1]
-      .split(parserRegex)[0]
+    return x.split(regex)[1].split(parserRegex)[0]
   } else {
     return ''
   }
@@ -1539,12 +1555,8 @@ function getQxReInfo(x, y, mark) {
   let jsurl = /header/.test(hdorbd)
     ? 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-header.js'
     : 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/replace-body.js'
-  let rearg1 = x
-    .split(breakpoint)[1]
-    .trim()
-  let rearg2 = x
-    .split(breakpoint)[2]
-    .trim()
+  let rearg1 = x.split(breakpoint)[1].trim()
+  let rearg2 = x.split(breakpoint)[2].trim()
   let jsarg = encodeURIComponent(rearg1 + '->' + rearg2)
   let rebody = /body/.test(hdorbd) ? 'true' : ''
   let size = /body/.test(hdorbd) ? '-1' : ''
@@ -1582,7 +1594,7 @@ async function isBinaryMode(url, name) {
         }
       }
     } else {
-      const res = (await $.http.get(url)).body
+      const res = (await http(url)).body
       if (res == undefined || res == null) {
         //$.log(JS_NAME);
         return ''
@@ -1696,34 +1708,34 @@ function toJsc(jsurl, jscStatus, jsc2Status, jsfrom) {
   }
 }
 
-function shNotify (box) {
+function shNotify(box) {
   noNtf == false &&
-  box.length > 0 &&
+    box.length > 0 &&
     $.msg(JS_NAME, notifyName + ' 点击通知查看详情', box, { url: url + '&openMsgHtml=true' })
 }
 
-function getPolicy (str) {
-	let commaNum = str.lastIndexOf(',')
-	let bracesNum = str.lastIndexOf('}')
-	let roundNum = str.lastIndexOf(')')
-	if (/,\s*\{\{\{[^,]+\}\}\}$/.test(str)) {
+function getPolicy(str) {
+  let commaNum = str.lastIndexOf(',')
+  let bracesNum = str.lastIndexOf('}')
+  let roundNum = str.lastIndexOf(')')
+  if (/,\s*\{\{\{[^,]+\}\}\}$/.test(str)) {
     return str.match(/\{\{\{[^,]+\}\}\}$/)[0]
   } else if (commaNum > bracesNum && commaNum > roundNum) {
-		return (str.substring(str.lastIndexOf(',') + 1)).trim()
-	} else {
-		return ''
-	}
+    return str.substring(str.lastIndexOf(',') + 1).trim()
+  } else {
+    return ''
+  }
 }
 
-function parseArguments (str) {
+function parseArguments(str) {
   const queryString = str.split(/#!arguments\s*=\s*/)[1] //获取查询字符串部分
   const regex = /([^:,]+):(\s*".+?"|[^,]*)/g //匹配键值对的正则表达式
   let match
 
   while ((match = regex.exec(queryString))) {
-    const key = match[1].trim().replace(/^"(.+)"$/,"$1") //去除头尾空白符和引号
-    const value = match[2].trim().replace(/^"(.+)"$/,"$1") //去除头尾空白符和引号
-    sgArg.push({key,value}) //将键值对添加到对象中
+    const key = match[1].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
+    const value = match[2].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
+    sgArg.push({ key, value }) //将键值对添加到对象中
   }
 }
 
@@ -1741,6 +1753,38 @@ function parseQueryString(url) {
 
   return params
 }
-
+// 请求
+async function http(url, opts = {}) {
+  const http_start = Date.now()
+  let timeout = HTTP_TIMEOUT + 1 * 1000
+  timeout = $.isSurge() ? timeout / 1000 : timeout
+  const reqOpts = {
+    timeout,
+    url,
+    ...opts,
+  }
+  try {
+    const res = await Promise.race([
+      $.http.get(reqOpts),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), HTTP_TIMEOUT)),
+    ])
+    $.log(`⏱ 请求耗时：${Math.round(((Date.now() - http_start) / 1000) * 100) / 100} 秒\n  └ ${reqOpts.url}`)
+    return res
+  } catch (e) {
+    $.logErr(e)
+    let msg = String($.lodash_get(e, 'message') || e)
+    let info
+    if (msg.includes('timeout')) {
+      info = `请求超时(${Math.round((HTTP_TIMEOUT / 1000) * 100) / 100} 秒)`
+    } else {
+      throw new Error(e)
+    }
+    throw new Error(info)
+  }
+}
+function done(...args) {
+  $.log(`⏱ 总耗时：${Math.round(((Date.now() - script_start) / 1000) * 100) / 100} 秒`)
+  $.done(...args)
+}
 // prettier-ignore
 function Env(t,e){class s{constructor(t){this.env=t}send(t,e="GET"){t="string"==typeof t?{url:t}:t;let s=this.get;return"POST"===e&&(s=this.post),new Promise(((e,r)=>{s.call(this,t,((t,s,a)=>{t?r(t):e(s)}))}))}get(t){return this.send.call(this.env,t)}post(t){return this.send.call(this.env,t,"POST")}}return new class{constructor(t,e){this.name=t,this.http=new s(this),this.data=null,this.dataFile="box.dat",this.logs=[],this.isMute=!1,this.isNeedRewrite=!1,this.logSeparator="\n",this.encoding="utf-8",Object.assign(this,e)}getEnv(){return"undefined"!=typeof $environment&&$environment["surge-version"]?"Surge":"undefined"!=typeof $environment&&$environment["stash-version"]?"Stash":"undefined"!=typeof module&&module.exports?"Node.js":"undefined"!=typeof $task?"Quantumult X":"undefined"!=typeof $loon?"Loon":"undefined"!=typeof $rocket?"Shadowrocket":void 0}isNode(){return"Node.js"===this.getEnv()}isQuanX(){return"Quantumult X"===this.getEnv()}isSurge(){return"Surge"===this.getEnv()}isLoon(){return"Loon"===this.getEnv()}isShadowrocket(){return"Shadowrocket"===this.getEnv()}isStash(){return"Stash"===this.getEnv()}toObj(t,e=null){try{return JSON.parse(t)}catch{return e}}toStr(t,e=null){try{return JSON.stringify(t)}catch{return e}}getjson(t,e){let s=e;const r=this.getdata(t);if(r)try{s=JSON.parse(this.getdata(t))}catch{}return s}setjson(t,e){try{return this.setdata(JSON.stringify(t),e)}catch{return!1}}getScript(t){return new Promise((e=>{this.get({url:t},((t,s,r)=>e(r)))}))}runScript(t,e){return new Promise((s=>{let r=this.getdata("@chavy_boxjs_userCfgs.httpapi");r=r?r.replace(/\n/g,"").trim():r;let a=this.getdata("@chavy_boxjs_userCfgs.httpapi_timeout");a=a?1*a:20,a=e&&e.timeout?e.timeout:a;const[o,i]=r.split("@"),n={url:`http://${i}/v1/scripting/evaluate`,body:{script_text:t,mock_type:"cron",timeout:a},headers:{"X-Key":o,Accept:"*/*"},timeout:a};this.post(n,((t,e,r)=>s(r)))})).catch((t=>this.logErr(t)))}loaddata(){if(!this.isNode())return{};{this.fs=this.fs?this.fs:require("fs"),this.path=this.path?this.path:require("path");const t=this.path.resolve(this.dataFile),e=this.path.resolve(process.cwd(),this.dataFile),s=this.fs.existsSync(t),r=!s&&this.fs.existsSync(e);if(!s&&!r)return{};{const r=s?t:e;try{return JSON.parse(this.fs.readFileSync(r))}catch(t){return{}}}}}writedata(){if(this.isNode()){this.fs=this.fs?this.fs:require("fs"),this.path=this.path?this.path:require("path");const t=this.path.resolve(this.dataFile),e=this.path.resolve(process.cwd(),this.dataFile),s=this.fs.existsSync(t),r=!s&&this.fs.existsSync(e),a=JSON.stringify(this.data);s?this.fs.writeFileSync(t,a):r?this.fs.writeFileSync(e,a):this.fs.writeFileSync(t,a)}}lodash_get(t,e,s){const r=e.replace(/\[(\d+)\]/g,".$1").split(".");let a=t;for(const t of r)if(a=Object(a)[t],void 0===a)return s;return a}lodash_set(t,e,s){return Object(t)!==t?t:(Array.isArray(e)||(e=e.toString().match(/[^.[\]]+/g)||[]),e.slice(0,-1).reduce(((t,s,r)=>Object(t[s])===t[s]?t[s]:t[s]=Math.abs(e[r+1])>>0==+e[r+1]?[]:{}),t)[e[e.length-1]]=s,t)}getdata(t){let e=this.getval(t);if(/^@/.test(t)){const[,s,r]=/^@(.*?)\.(.*?)$/.exec(t),a=s?this.getval(s):"";if(a)try{const t=JSON.parse(a);e=t?this.lodash_get(t,r,""):e}catch(t){e=""}}return e}setdata(t,e){let s=!1;if(/^@/.test(e)){const[,r,a]=/^@(.*?)\.(.*?)$/.exec(e),o=this.getval(r),i=r?"null"===o?null:o||"{}":"{}";try{const e=JSON.parse(i);this.lodash_set(e,a,t),s=this.setval(JSON.stringify(e),r)}catch(e){const o={};this.lodash_set(o,a,t),s=this.setval(JSON.stringify(o),r)}}else s=this.setval(t,e);return s}getval(t){switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":return $persistentStore.read(t);case"Quantumult X":return $prefs.valueForKey(t);case"Node.js":return this.data=this.loaddata(),this.data[t];default:return this.data&&this.data[t]||null}}setval(t,e){switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":return $persistentStore.write(t,e);case"Quantumult X":return $prefs.setValueForKey(t,e);case"Node.js":return this.data=this.loaddata(),this.data[e]=t,this.writedata(),!0;default:return this.data&&this.data[e]||null}}initGotEnv(t){this.got=this.got?this.got:require("got"),this.cktough=this.cktough?this.cktough:require("tough-cookie"),this.ckjar=this.ckjar?this.ckjar:new this.cktough.CookieJar,t&&(t.headers=t.headers?t.headers:{},void 0===t.headers.Cookie&&void 0===t.cookieJar&&(t.cookieJar=this.ckjar))}get(t,e=(()=>{})){switch(t.headers&&(delete t.headers["Content-Type"],delete t.headers["Content-Length"],delete t.headers["content-type"],delete t.headers["content-length"]),t.params&&(t.url+="?"+this.queryStr(t.params)),this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":default:this.isSurge()&&this.isNeedRewrite&&(t.headers=t.headers||{},Object.assign(t.headers,{"X-Surge-Skip-Scripting":!1})),$httpClient.get(t,((t,s,r)=>{!t&&s&&(s.body=r,s.statusCode=s.status?s.status:s.statusCode,s.status=s.statusCode),e(t,s,r)}));break;case"Quantumult X":this.isNeedRewrite&&(t.opts=t.opts||{},Object.assign(t.opts,{hints:!1})),$task.fetch(t).then((t=>{const{statusCode:s,statusCode:r,headers:a,body:o,bodyBytes:i}=t;e(null,{status:s,statusCode:r,headers:a,body:o,bodyBytes:i},o,i)}),(t=>e(t&&t.error||"UndefinedError")));break;case"Node.js":let s=require("iconv-lite");this.initGotEnv(t),this.got(t).on("redirect",((t,e)=>{try{if(t.headers["set-cookie"]){const s=t.headers["set-cookie"].map(this.cktough.Cookie.parse).toString();s&&this.ckjar.setCookieSync(s,null),e.cookieJar=this.ckjar}}catch(t){this.logErr(t)}})).then((t=>{const{statusCode:r,statusCode:a,headers:o,rawBody:i}=t,n=s.decode(i,this.encoding);e(null,{status:r,statusCode:a,headers:o,rawBody:i,body:n},n)}),(t=>{const{message:r,response:a}=t;e(r,a,a&&s.decode(a.rawBody,this.encoding))}))}}post(t,e=(()=>{})){const s=t.method?t.method.toLocaleLowerCase():"post";switch(t.body&&t.headers&&!t.headers["Content-Type"]&&!t.headers["content-type"]&&(t.headers["content-type"]="application/x-www-form-urlencoded"),t.headers&&(delete t.headers["Content-Length"],delete t.headers["content-length"]),this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":default:this.isSurge()&&this.isNeedRewrite&&(t.headers=t.headers||{},Object.assign(t.headers,{"X-Surge-Skip-Scripting":!1})),$httpClient[s](t,((t,s,r)=>{!t&&s&&(s.body=r,s.statusCode=s.status?s.status:s.statusCode,s.status=s.statusCode),e(t,s,r)}));break;case"Quantumult X":;t.method=s,this.isNeedRewrite&&(t.opts=t.opts||{},Object.assign(t.opts,{hints:!1})),$task.fetch(t).then((t=>{const{statusCode:s,statusCode:r,headers:a,body:o,bodyBytes:i}=t;e(null,{status:s,statusCode:r,headers:a,body:o,bodyBytes:i},o,i)}),(t=>e(t&&t.error||"UndefinedError")));break;case"Node.js":let r=require("iconv-lite");this.initGotEnv(t);const{url:a,...o}=t;this.got[s](a,o).then((t=>{const{statusCode:s,statusCode:a,headers:o,rawBody:i}=t,n=r.decode(i,this.encoding);e(null,{status:s,statusCode:a,headers:o,rawBody:i,body:n},n)}),(t=>{const{message:s,response:a}=t;e(s,a,a&&r.decode(a.rawBody,this.encoding))}))}}time(t,e=null){const s=e?new Date(e):new Date;let r={"M+":s.getMonth()+1,"d+":s.getDate(),"H+":s.getHours(),"m+":s.getMinutes(),"s+":s.getSeconds(),"q+":Math.floor((s.getMonth()+3)/3),S:s.getMilliseconds()};/(y+)/.test(t)&&(t=t.replace(RegExp.$1,(s.getFullYear()+"").substr(4-RegExp.$1.length)));for(let e in r)new RegExp("("+e+")").test(t)&&(t=t.replace(RegExp.$1,1==RegExp.$1.length?r[e]:("00"+r[e]).substr((""+r[e]).length)));return t}queryStr(t){let e="";for(const s in t){let r=t[s];null!=r&&""!==r&&("object"==typeof r&&(r=JSON.stringify(r)),e+=`${s}=${r}&`)}return e=e.substring(0,e.length-1),e}msg(e=t,s="",r="",a){const o=t=>{switch(typeof t){case void 0:return t;case"string":switch(this.getEnv()){case"Surge":case"Stash":default:return{url:t};case"Loon":case"Shadowrocket":return t;case"Quantumult X":return{"open-url":t};case"Node.js":return}case"object":switch(this.getEnv()){case"Surge":case"Stash":case"Shadowrocket":default:{let e=t.url||t.openUrl||t["open-url"];return{url:e}}case"Loon":{let e=t.openUrl||t.url||t["open-url"],s=t.mediaUrl||t["media-url"];return{openUrl:e,mediaUrl:s}}case"Quantumult X":{let e=t["open-url"]||t.url||t.openUrl,s=t["media-url"]||t.mediaUrl,r=t["update-pasteboard"]||t.updatePasteboard;return{"open-url":e,"media-url":s,"update-pasteboard":r}}case"Node.js":return}default:return}};if(!this.isMute)switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":default:$notification.post(e,s,r,o(a));break;case"Quantumult X":$notify(e,s,r,o(a));break;case"Node.js":}if(!this.isMuteLog){let t=["","==============📣系统通知📣=============="];t.push(e),s&&t.push(s),r&&t.push(r),console.log(t.join("\n")),this.logs=this.logs.concat(t)}}log(...t){t.length>0&&(this.logs=[...this.logs,...t]),console.log(t.join(this.logSeparator))}logErr(t,e){switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":case"Quantumult X":default:this.log("",`❗️${this.name}, 错误!`,t);break;case"Node.js":this.log("",`❗️${this.name}, 错误!`,t.stack)}}wait(t){return new Promise((e=>setTimeout(e,t)))}done(t={}){switch(this.getEnv()){case"Surge":case"Loon":case"Stash":case"Shadowrocket":case"Quantumult X":default:$done(t);break;case"Node.js":process.exit(1)}}}(t,e)}

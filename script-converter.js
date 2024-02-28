@@ -524,7 +524,18 @@ function redirect(url) {
 }
 // 请求
 async function http(url, opts = {}, type) {
-  $.log(`🔗 链接`, url)
+  const start = Date.now()
+  let timeout = HTTP_TIMEOUT + 1 * 1000
+  timeout = $.isSurge() ? timeout / 1000 : timeout
+  let reqOpts = {
+    url,
+    // headers: {
+    //   'Cache-Control': 'no-cache',
+    //   Pragma: 'no-cache',
+    // },
+    ...opts,
+  }
+  $.log(`🔗 链接`, reqOpts.url)
   let isBinary = $.lodash_get(opts, 'binary-mode')
   if (isBinary) {
     $.log(`二进制模式`)
@@ -536,18 +547,8 @@ async function http(url, opts = {}, type) {
   //   $.lodash_set(opts, 'binary-mode', true)
   // }
   try {
-    let timeout = HTTP_TIMEOUT + 1 * 1000
-    timeout = $.isSurge() ? timeout / 1000 : timeout
     res = await Promise.race([
-      $.http.get({
-        timeout,
-        url,
-        // headers: {
-        //   'Cache-Control': 'no-cache',
-        //   Pragma: 'no-cache',
-        // },
-        ...opts,
-      }),
+      $.http.get(reqOpts),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), HTTP_TIMEOUT)),
     ])
     // $.log('ℹ️ res', res)
@@ -574,9 +575,10 @@ async function http(url, opts = {}, type) {
       $.log(`ℹ️ req body type`, typeof body)
       // $.log(`ℹ️ req body constructor`, body.constructor)
     } catch (e) {}
+    $.log(`⏱ 请求耗时：${Math.round(((Date.now() - start) / 1000) * 100) / 100} 秒\n  └ ${reqOpts.url}`)
     bodyLength = body?.length
     $.log('ℹ️ res body length', bodyLength)
-    if (bodyLength > MAX_BODY_LENGTH) {
+    if (type === 'mock' && bodyLength > MAX_BODY_LENGTH) {
       throw new Error('too large')
     }
     return { body, contentType, status, headers, shouldCache: typeof body === 'string' }
@@ -592,9 +594,9 @@ async function http(url, opts = {}, type) {
       throw new Error(e)
     }
     if (type === 'mock') {
-      notify(TITLE, `⚠️ ${info} 将启用 302 跳转`, `无法使用自定义 content-type/header\n${url}`, url)
+      notify(TITLE, `⚠️ ${info} 将启用 302 跳转`, `无法使用自定义 content-type/header\n${reqOpts.url}`, reqOpts.url)
       shouldRedirect = true
-      return redirect(url)
+      return redirect(reqOpts.url)
     } else {
       throw new Error(info)
     }
