@@ -3,7 +3,7 @@
 // icon-color: blue; icon-glyph: cloud-download-alt;
 
 // prettier-ignore
-let ToolVersion = "2.01";
+let ToolVersion = "2.03";
 
 async function delay(milliseconds) {
   var before = Date.now()
@@ -183,6 +183,7 @@ for await (const [index, file] of files.entries()) {
       if (!desc) {
         res = `#!desc=\n${res}`
       }
+      res = res.replace(/^(#SUBSCRIBED|# 🔗 模块链接)(.*?)(\n|$)/gim, '')
       // console.log(res);
       res = addLineAfterLastOccurrence(res, `\n\n# 🔗 模块链接\n${subscribed.replace(/\n/g, '')}\n`)
       content = `${res}`.replace(/^#\!desc\s*?=\s*/im, `#!desc=🔗 [${new Date().toLocaleString()}] `)
