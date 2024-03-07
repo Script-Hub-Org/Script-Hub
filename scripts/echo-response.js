@@ -14,6 +14,9 @@ hostname = %APPEND% restore-access.indream.app
 指定 type 时, 下载并设置 type
 
 新参数 header=Content-Type: image/png|field2: value2
+status-code=200
+text=encodeURIComponent过的文本
+base64=base64内容
 */
 
 const NAME = 'echo-response'
@@ -45,11 +48,29 @@ if (typeof $argument != 'undefined') {
 
 let result = {}
 !(async () => {
+  let statusCode = $.lodash_get(arg, 'status-code')
+  let base64 = $.lodash_get(arg, 'base64') || ''
+  let text = $.lodash_get(arg, 'text')
   let url = $.lodash_get(arg, 'url') || ''
-  try {
-    url = decodeURIComponent(url)
-  } catch (e) {}
-  let type = $.lodash_get(arg, 'type') || ''
+  let content = ''
+  if (text != null) {
+    try {
+      content = decodeURIComponent(text)
+    } catch (e) {}
+  } else if (base64) {
+    try {
+      content = decodeURIComponent(base64)
+    } catch (e) {}
+  } else {
+    try {
+      url = decodeURIComponent(url)
+    } catch (e) {}
+    if (!url || !/^(https?|ftp|file):\/\/.*/.test(url)) {
+      throw new Error('不支持的 url')
+    }
+  }
+
+  let type = decodeURIComponent($.lodash_get(arg, 'type') || '')
   let header = $.lodash_get(arg, 'header') || ''
   // let cachExp = $.lodash_get(arg, 'cachexp')
   // let noCache = istrue($.lodash_get(arg, 'nocache'))
@@ -161,7 +182,7 @@ let result = {}
   } else if (type) {
     $.log('指定 Content-Type', type)
   }
-  if (/^(https?|ftp|file):\/\/.*/.test(url)) {
+  if (url) {
     if (type || Object.keys(newHeaders).length > 0) {
       const getRes = async () => {
         $.log('需下载', url)
@@ -242,7 +263,7 @@ let result = {}
 
       result = {
         response: {
-          status,
+          status: statusCode ? Number.parseInt(statusCode, 10) : status,
           headers: respHeaders,
           body,
         },
@@ -260,7 +281,44 @@ let result = {}
       }
     }
   } else {
-    $.log('不支持此 url')
+    const newTypeHeaders = {
+      'Content-Type': base64 ? 'application/octet-stream' : 'text/plain',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+    }
+    if (type) {
+      if (newTypeHeaders['Content-Type']) {
+        newTypeHeaders['Content-Type'] = type
+      } else {
+        newTypeHeaders['content-type'] = type
+      }
+    }
+    if (
+      shouldFixLoonRedirectBody &&
+      /^3\d{2}$/.test(statusCode) &&
+      $.isLoon() &&
+      (body == null || body == '' || body.length === 0)
+    ) {
+      body = 'loon'
+    }
+    const respHeaders = Object.keys(newHeaders).length > 0 ? newHeaders : newTypeHeaders
+
+    if (respHeaders['Content-Type']) {
+      respHeaders['Content-Type'] = utf8ContentType(respHeaders['Content-Type'])
+    } else if (respHeaders['content-type']) {
+      respHeaders['content-type'] = utf8ContentType(respHeaders['content-type'])
+    }
+
+    $.log('response', $.toStr(respHeaders))
+
+    result = {
+      response: {
+        status: statusCode ? Number.parseInt(statusCode, 10) : 200,
+        headers: respHeaders,
+        body: content,
+      },
+    }
   }
 })()
   .catch(async e => {
@@ -269,7 +327,7 @@ let result = {}
     await notify(TITLE, '❌', `${$.lodash_get(e, 'message') || $.lodash_get(e, 'error') || e}`)
   })
   .finally(async () => {
-    // $.log($.toStr(result))
+    $.log($.toStr(result))
     $.done(result)
   })
 
