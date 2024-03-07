@@ -254,6 +254,8 @@ const panelRegex = /\s*[=,]\s*(?:title|content|style|script-name|update-interval
 
 const policyRegex = /^(direct|reject-?(img|video|dict|array|drop|200|tinygif)?(-no-drop)?|\{\{\{[^,]+\}\}\})$/i
 
+const mockRegex = /\s+(?:data-type|status-code|header|data)\s*=/
+
 //查询js binarymode相关
 let binaryInfo = $.getval('Parser_binary_info')
 if (binaryInfo != null && binaryInfo.length > 0) {
@@ -633,7 +635,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     } //qx cron 脚本解析结束
 
     //mock 解析
-    if (/url\s+echo-response\s|\sdata\s*=\s*"/.test(x)) {
+    if (/url\s+echo-response\s|\sdata\s*=\s*"|\sdata-type\s*=/.test(x)) {
       mark = getMark(y, body)
       getMockInfo(x, mark, y)
     }
@@ -951,7 +953,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     noteK = mockBox[i].noteK ? '#' : ''
     mark = mockBox[i].mark ? mockBox[i].mark : ''
     mockptn = mockBox[i].mockptn
-    mockurl = mockBox[i].mockurl
+    mockurl = mockBox[i].mockurl ? ' data="' + mockBox[i].mockurl + '"' : ''
+    mockstatus = mockBox[i].mockstatus ? ' status-code=' + mockBox[i].mockstatus : ''
+    mocktype = mockBox[i].mocktype ? ' data-type=' + mockBox[i].mocktype : ''
+    
 
     switch (targetApp) {
       case 'surge-module':
@@ -959,7 +964,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           keepHeader == true && mockBox[i].mockheader && !/&contentType=/.test(mockBox[i].mockheader)
             ? ' header="' + mockBox[i].mockheader + '"'
             : ''
-        MapLocal.push(mark + noteK + mockptn + ' data="' + mockurl + '"' + mockheader)
+        MapLocal.push(mark + noteK + mockptn + mocktype + mockurl + mockstatus + mockheader)
         break
     } //switch
   } //Mock输出for
@@ -1301,9 +1306,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       body = `${modInfo}
 
-# 🔗 模块链接(此字段配合 https://github.com/Script-Hub-Org/Script-Hub/wiki/%E7%9B%B8%E5%85%B3%E7%94%9F%E6%80%81:-Surge-%E6%A8%A1%E5%9D%97%E5%B7%A5%E5%85%B7 使用)
-#SUBSCRIBED ${url}
-
 ${General}
 
 ${rules}
@@ -1532,7 +1534,7 @@ function rw_redirect(x, mark) {
 
 //script
 function getJsInfo(x, regex) {
-  let parserRegex = /script-name\s*=/.test(x) ? panelRegex : jsRegex
+  let parserRegex = /script-name\s*=/.test(x) ? panelRegex : /script-path\s*=/.test(x) ? jsRegex : mockRegex
   if (regex.test(x)) {
     return x.split(regex)[1].split(parserRegex)[0]
   } else {
@@ -1627,42 +1629,46 @@ async function isBinaryMode(url, name) {
 //获取mock参数
 function getMockInfo(x, mark, y) {
   let noteK = isNoteK(x)
-  let mockptn, mockurl, mockheader
+  let mockptn, mockurl, mockheader, mocktype, mockstatus
   if (/url\s+echo-response\s/.test(x)) {
     mockptn = x.split(/\s+url\s+/)[0]
     mockurl = x.split(/\s+echo-response\s+/)[2]
+    mocktype = 'file'
     mockheader = '&contentType=' + encodeURIComponent(x.split(/\s+echo-response\s+/)[1])
   }
 
-  if (/\sdata\s*=\s*"/.test(x)) {
+  if (/\sdata\s*=\s*"|\sdata-type=/.test(x)) {
     mockptn = x
-      .split(/\s+data=/)[0]
+      .split(/\s+/)[0]
       .replace(/^#/g, '')
       .replace(/^"(.+)"$/, '$1')
-    mockurl = x.split(/\sdata\s*=\s*"/)[1].split('"')[0]
-    ;/\sheader\s*=\s*"/.test(x) ? (mockheader = x.split(/\sheader\s*=\s*"/)[1].split('"')[0]) : (mockheader = '')
+    mockurl = getJsInfo(x, /\s+data\s*=\s*/).replace(/^"(.+)"$/, '$1')
+    mocktype = getJsInfo(x, /\s+data-type\s*=\s*/)
+    mockstatus = getJsInfo(x, /\s+status-code\s*=\s*/)
+    mockheader = getJsInfo(x, /\s+header\s*=\s*/).replace(/^"(.+)"$/, '$1')
   }
 
   switch (targetApp) {
     case 'surge-module':
-      mockBox.push({ mark, noteK, mockptn, mockurl, mockheader, ori: x, mocknum: y })
+      mockBox.push({ mark, noteK, mockptn, mockurl, mockheader, mockstatus, mocktype, ori: x, mocknum: y })
       break
 
     case 'shadowrocket-module':
     case 'loon-plugin':
     case 'stash-stoverride':
-      let mfile = mockurl.substring(mockurl.lastIndexOf('/') + 1)
+    
+      let mfile = mocktype == 'file' ? mockurl.substring(mockurl.lastIndexOf('/') + 1) : mockurl
       let m2rType
-      if (/dict/i.test(mfile)) m2rType = 'reject-dict'
-      else if (/array/i.test(mfile)) m2rType = 'reject-array'
+      if (/dict|^\{\}$/i.test(mfile)) m2rType = 'reject-dict'
+      else if (/array|^\[\]$/i.test(mfile)) m2rType = 'reject-array'
       else if (/200|blank/i.test(mfile)) m2rType = 'reject-200'
-      else if (/img|tinygif/i.test(mfile)) m2rType = 'reject-img'
+      else if (/img|tinygif/i.test(mfile) || mocktype == 'tiny-gif') m2rType = 'reject-img'
       else m2rType = null
 
-      let jsname = mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.'))
+      let jsname = mocktype == 'file' ? mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.')) : 'echoResponse'
       m2rType != null && rwBox.push({ mark, noteK, rwptn: mockptn, rwvalue: '-', rwtype: m2rType })
       let proto
-      if (m2rType == null) {
+      if (m2rType == null && mocktype == 'file') {
         proto = isStashiOS ? 'true' : ''
         mockheader =
           mockheader != '' && !/&contentType=/.test(mockheader)
@@ -1681,6 +1687,22 @@ function getMockInfo(x, mark, y) {
           jsptn: mockptn,
           jsurl: mockurl,
           proto,
+          timeout: '60',
+          ori: x,
+          num: y,
+        })
+      } else if (m2rType == null && mocktype != 'file') {
+        jsurl = 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js'
+        mockstatus = mockstatus ? '&status-code=' + mockstatus : ''
+        jsarg = `${mocktype}=` + encodeURIComponent(mockurl) + mockstatus
+        jsBox.push({
+          mark,
+          noteK,
+          jsname,
+          jstype: 'http-request',
+          jsptn: mockptn,
+          jsurl,
+          jsarg,
           timeout: '60',
           ori: x,
           num: y,
