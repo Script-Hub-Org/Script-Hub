@@ -874,19 +874,19 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           URLRewrite.push(mark + noteK + rwptn + ' ' + rwvalue + ' ' + rwtype)
         if (/reject-dict/.test(rwtype))
           MapLocal.push(
-            mark + noteK + rwptn + ' data="https://raw.githubusercontent.com/mieqq/mieqq/master/reject-dict.json"'
+            mark + noteK + rwptn + ' data-type=text data="{}" status-code=200'
           )
         if (/reject-array/.test(rwtype))
           MapLocal.push(
-            mark + noteK + rwptn + ' data="https://raw.githubusercontent.com/mieqq/mieqq/master/reject-array.json"'
+            mark + noteK + rwptn + ' data-type=text data="[]" status-code=200'
           )
         if (/reject-200/.test(rwtype))
           MapLocal.push(
-            mark + noteK + rwptn + ' data="https://raw.githubusercontent.com/mieqq/mieqq/master/reject-200.txt"'
+            mark + noteK + rwptn + ' data-type=text data=" " status-code=200'
           )
         if (/reject-(?:img|tinygif|video)/.test(rwtype))
           MapLocal.push(
-            mark + noteK + rwptn + ' data="https://raw.githubusercontent.com/mieqq/mieqq/master/reject-img.gif"'
+            mark + noteK + rwptn + ' data-type=tiny-gif status-code=200'
           )
         break
     } //switch
@@ -1661,7 +1661,7 @@ function getMockInfo(x, mark, y) {
       let m2rType
       if (/dict|^\{\}$/i.test(mfile)) m2rType = 'reject-dict'
       else if (/array|^\[\]$/i.test(mfile)) m2rType = 'reject-array'
-      else if (/200|blank/i.test(mfile)) m2rType = 'reject-200'
+      else if (/200|blank|^\s*$/i.test(mfile)) m2rType = 'reject-200'
       else if (/img|tinygif/i.test(mfile) || mocktype == 'tiny-gif') m2rType = 'reject-img'
       else m2rType = null
 
