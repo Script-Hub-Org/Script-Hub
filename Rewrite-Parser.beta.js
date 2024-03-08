@@ -1643,7 +1643,7 @@ function getMockInfo(x, mark, y) {
       .replace(/^#/g, '')
       .replace(/^"(.+)"$/, '$1')
     mockurl = getJsInfo(x, /\s+data\s*=\s*/).replace(/^"(.+)"$/, '$1')
-    mocktype = getJsInfo(x, /\s+data-type\s*=\s*/)
+    mocktype = getJsInfo(x, /\s+data-type\s*=\s*/) || 'file'
     mockstatus = getJsInfo(x, /\s+status-code\s*=\s*/)
     mockheader = getJsInfo(x, /\s+header\s*=\s*/).replace(/^"(.+)"$/, '$1')
   }
