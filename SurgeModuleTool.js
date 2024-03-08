@@ -249,8 +249,10 @@ for await (const [index, file] of files.entries()) {
 }
 if (!checkUpdate && !fromUrlScheme) {
   alert = new Alert()
+  let upErrk = report.fail.length > 0 ? `❌ 更新失败: ${report.fail.length}` : "",
+  noUrlErrk = report.noUrl > 0 ? `🈚️ 无链接: ${report.noUrl}` : "";
   alert.title = `📦 模块总数${report.success + report.fail.length + report.noUrl}`
-  alert.message = `🈚️ 无链接: ${report.noUrl}\n✅ 更新成功: ${report.success}\n❌ 更新失败: ${report.fail.length}${
+  alert.message = `${noUrlErrk}\n✅ 更新成功: ${report.success}\n${upErrk}${
     report.fail.length > 0 ? `\n${report.fail.join(', ')}` : ''
   }`
   alert.addDestructiveAction('重载 Surge')
