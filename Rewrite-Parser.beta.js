@@ -611,9 +611,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         .split(/\s*,\s*/)[0]
         .trim()
       jsname = /,\s*tag\s*=/.test(x)
-        ? getJsInfo(x, /[,\s]\s*tag\s*=\s*/)
+        ? getJsInfo(x, /[,\s]\s*tag\s*=\s*/, jsRegex)
         : jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.'))
-      img = getJsInfo(x, /[,\s]\s*img-url\s*=\s*/)
+      img = getJsInfo(x, /[,\s]\s*img-url\s*=\s*/, jsRegex)
       jsfrom = 'qx'
       jsurl = toJsc(jsurl, jscStatus, jsc2Status, jsfrom)
       jsarg = ''
@@ -1533,8 +1533,8 @@ function rw_redirect(x, mark) {
 }
 
 //script
-function getJsInfo(x, regex) {
-  let parserRegex = /script-name\s*=/.test(x) ? panelRegex : /script-path\s*=/.test(x) ? jsRegex : mockRegex
+function getJsInfo(x, regex, parserRegex) {
+  parserRegex = typeof parserRegex != 'undefined' ? parserRegex : /script-name\s*=/.test(x) ? panelRegex : /script-path\s*=/.test(x) ? jsRegex : /\s(data-type|data)\s*=/.test(x) ? mockRegex : ''
   if (regex.test(x)) {
     return x.split(regex)[1].split(parserRegex)[0]
   } else {
@@ -1661,7 +1661,7 @@ function getMockInfo(x, mark, y) {
       let m2rType
       if (/dict|^\{\}$/i.test(mfile)) m2rType = 'reject-dict'
       else if (/array|^\[\]$/i.test(mfile)) m2rType = 'reject-array'
-      else if (/200|blank|^\s*$/i.test(mfile)) m2rType = 'reject-200'
+      else if (/200|blank|^[\s\S]?$/i.test(mfile)) m2rType = 'reject-200'
       else if (/img|tinygif/i.test(mfile) || mocktype == 'tiny-gif') m2rType = 'reject-img'
       else m2rType = null
 
