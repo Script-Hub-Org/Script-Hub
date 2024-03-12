@@ -1301,9 +1301,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       body = `${modInfo}
 
-# 🔗 模块链接(此字段配合 https://github.com/Script-Hub-Org/Script-Hub/wiki/%E7%9B%B8%E5%85%B3%E7%94%9F%E6%80%81:-Surge-%E6%A8%A1%E5%9D%97%E5%B7%A5%E5%85%B7 使用)
-#SUBSCRIBED ${url}
-
 ${General}
 
 ${rules}
