@@ -1014,7 +1014,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       size = jsBox[i].size ? jsBox[i].size : ''
       ability = jsBox[i].ability ? ', ability=' + jsBox[i].ability : ''
       updatetime = jsBox[i].updatetime ? ', script-update-interval=' + jsBox[i].updatetime : ''
-      cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g, '') : ''
+      cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g, '') : null
       wakesys = jsBox[i].wakesys ? ', wake-system=' + jsBox[i].wakesys : ''
       timeout = jsBox[i].timeout ? jsBox[i].timeout : ''
       jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : ''
@@ -1043,6 +1043,46 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           engine = engine && isSurgeiOS ? ', engine=' + engine : ''
           if (jsarg != '' && /,/.test(jsarg) && !/^".+"$/.test(jsarg)) jsarg = ', argument="' + jsarg + '"'
           if (jsarg != '' && (!/,/.test(jsarg) || /^".+"$/.test(jsarg))) jsarg = ', argument=' + jsarg
+          
+          if (!/cron/.test(jstype) && cronexp != null && (isSurgeiOS || isShadowrocket)) {
+            
+            script.push(
+              mark +
+                noteK +
+                jsname +
+                ' = type=' +
+                'cron' +
+                ', cronexp="' +
+                cronexp +
+                '"' +
+                ', script-path=' +
+                jsurl +
+                updatetime +
+                engine +
+                timeout +
+                wakesys +
+                jsarg
+            )
+          }
+          
+          if (!/cron/.test(jstype) && cronexp != null && isLooniOS) {
+            
+            script.push(
+              mark +
+                noteK +
+                'cron' +
+                ' "' +
+                cronexp +
+                '"' +
+                ' script-path=' +
+                jsurl +
+                timeout +
+                ', tag=' +
+                jsname +
+                img +
+                jsarg
+            )
+          }
 
           if (/generic/.test(jstype) && isShadowrocket) {
             otherRule.push(ori)
@@ -1194,7 +1234,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rebody = jsBox[i].rebody ? noteKn6 + 'require-body: ' + istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? noteKn6 + 'binary-mode: ' + istrue(jsBox[i].proto) : ''
       size = jsBox[i].size ? noteKn6 + 'max-size: ' + jsBox[i].size : ''
-      cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g, '') : ''
+      cronexp = jsBox[i].cronexp ? jsBox[i].cronexp.replace(/"/g, '') : null
       timeout = jsBox[i].timeout ? jsBox[i].timeout : ''
       jsarg = jsBox[i].jsarg ? jsBox[i].jsarg.replace(/^"(.+)"$/, '$1') : ''
       tilesicon = jsBox[i].tilesicon ? jsBox[i].tilesicon : ''
@@ -1228,6 +1268,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           : timeout && jstype != 'generic'
           ? noteKn6 + 'timeout: ' + timeout
           : ''
+      
+      if (!/cron/.test(jstype) && cronexp != null) {
+        cron.push(mark + `${noteK4}- name: "` + jsname + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg)
+        providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
+      }
 
       if (/request|response/.test(jstype)) {
         script.push(
