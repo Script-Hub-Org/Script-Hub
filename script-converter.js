@@ -110,6 +110,22 @@ if (typeof $response !== 'undefined') {
     },
   });
 }
+Object.getOwnPropertyNames($httpClient).forEach(method => {
+  if(typeof $httpClient[method] === 'function') {
+    $httpClient[method] = new Proxy($httpClient[method], {
+      apply: (target, ctx, args) => {
+        for (let field in args?.[0]?.headers) {
+          if (['host'].includes(field.toLowerCase())) {
+            delete args[0].headers[field];
+          } else if (['number'].includes(typeof args[0].headers[field])) {
+            args[0].headers[field] = args[0].headers[field].toString();
+          }
+        }
+        return Reflect.apply(target, ctx, args);
+      }
+    });
+  }
+})
 `
   const qxMock = `
 // QX 相关
