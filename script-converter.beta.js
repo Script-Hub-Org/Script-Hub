@@ -58,6 +58,20 @@ let url
   const compatibilityOnly = queryObject.compatibilityOnly
 
   const subconverter = queryObject.subconverter
+
+  const reqHeaders = { headers: {} }
+  if (queryObject.headers) {
+    decodeURIComponent(queryObject.headers)
+      .split(/\r?\n/)
+      .map(i => {
+        if (/.+:.+/.test(i)) {
+          const [_, key, value] = i.match(/^(.*?):(.*)$/)
+          if (key?.length > 0 && value?.length > 0) {
+            reqHeaders.headers[key] = value
+          }
+        }
+      })
+  }
   // let cachExp = queryObject.cachexp != undefined ? queryObject.cachexp : null
   // let noCache = istrue(queryObject.nocache)
 
@@ -272,6 +286,7 @@ global.$done = _scriptSonverterDone
   if (subconverter) {
     body = $.lodash_get(
       await http(subconverter, {
+        ...reqHeaders,
         params: {
           insert: false,
           append_type: false,
@@ -315,13 +330,13 @@ global.$done = _scriptSonverterDone
     } else {
       if (type === 'mock') {
         if (keepHeader) {
-          res = await http(url, { 'binary-mode': true }, type)
+          res = await http(url, { ...reqHeaders, 'binary-mode': true }, type)
         } else {
           shouldRedirect = true
           res = redirect(url)
         }
       } else {
-        res = await http(url)
+        res = await http(url, { ...reqHeaders })
       }
     }
 
@@ -336,7 +351,7 @@ global.$done = _scriptSonverterDone
     eval(evJsori)
   }
   if (evUrlori) {
-    eval($.lodash_get(await http(evUrlori), 'body'))
+    eval($.lodash_get(await http(evUrlori, { ...reqHeaders }), 'body'))
   }
   if (type === 'qx-script' || compatibilityOnly) {
     body = `${prefix}\n${compatibilityOnly ? body : body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
@@ -441,7 +456,7 @@ done(result)
     eval(evJsmodi)
   }
   if (evUrlmodi) {
-    eval($.lodash_get(await http(evUrlmodi), 'body'))
+    eval($.lodash_get(await http(evUrlmodi, { ...reqHeaders }), 'body'))
   }
 
   let response = {
