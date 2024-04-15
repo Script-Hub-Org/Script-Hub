@@ -93,6 +93,28 @@ let sni = queryObject.sni != undefined ? getArgArr(queryObject.sni) : null //sni
 let sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '' //用于保留header的后缀
 let sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '' //用于开启jsDeliver的后缀
 
+//用于自定义发送请求的请求头
+//CT:Content-Type
+//UA:User-Agent
+//AL:Accept-Language
+//AZ:Authorization
+//HT:Host
+
+let CT = queryObject.CT != undefined ? {k:'Content-Type',v:queryObject.CT} : ''
+let UA = queryObject.UA != undefined ? {k:'User-Agent',v:queryObject.UA} : ''
+let AL = queryObject.AL != undefined ? {k:'Accept-Language',v:queryObject.AL} : ''
+let AZ = queryObject.AZ != undefined ? {k:'Authorization',v:queryObject.AZ} : ''
+let HT = queryObject.HT != undefined ? {k:'Host',v:queryObject.Host} : ''
+const reqHeaders = {headers:{}}
+const hdArr = [CT,UA,AL,AZ,HT]
+for (let i = 0; i < hdArr.length; i++) {
+  if (hdArr[i] != ''){
+    let key = hdArr[i].k
+    let value = hdArr[i].v
+    reqHeaders.headers[key] = value
+  }
+}
+
 //插件图标区域
 const iconStatus = $.getval('启用插件随机图标') ?? '启用'
 const iconReplace = $.getval('替换原始插件图标') ?? '禁用'
@@ -269,7 +291,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     body = localText
   } else {
     for (let i = 0; i < reqArr.length; i++) {
-      let res = await http(reqArr[i])
+      let res = await http(reqArr[i],reqHeaders)
       let reStatus = res.status
       body = reStatus == 200 ? res.body : reStatus == 404 ? '#!error=404: Not Found' : ''
       reStatus == 404 && $.msg(JS_NAME, '来源链接已失效', '404: Not Found ---> ' + reqArr[i], '')
