@@ -94,26 +94,7 @@ let sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '' //用于保留h
 let sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '' //用于开启jsDeliver的后缀
 
 //用于自定义发送请求的请求头
-//CT:Content-Type
-//UA:User-Agent
-//AL:Accept-Language
-//AZ:Authorization
-//HT:Host
-
-let CT = queryObject.CT != undefined ? { k: 'Content-Type', v: queryObject.CT } : ''
-let UA = queryObject.UA != undefined ? { k: 'User-Agent', v: queryObject.UA } : ''
-let AL = queryObject.AL != undefined ? { k: 'Accept-Language', v: queryObject.AL } : ''
-let AZ = queryObject.AZ != undefined ? { k: 'Authorization', v: queryObject.AZ } : ''
-let HT = queryObject.HT != undefined ? { k: 'Host', v: queryObject.Host } : ''
 const reqHeaders = { headers: {} }
-const hdArr = [CT, UA, AL, AZ, HT]
-for (let i = 0; i < hdArr.length; i++) {
-  if (hdArr[i] != '') {
-    let key = hdArr[i].k
-    let value = hdArr[i].v
-    reqHeaders.headers[key] = value
-  }
-}
 
 if (queryObject.headers) {
   decodeURIComponent(queryObject.headers)
@@ -332,8 +313,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       .replace(/\s+[^\s]+\s+url-and-header\s+/, ' url ')
       .replace(/(^[^#].+)\x20+\/\/.+/, '$1')
       .replace(/^#!PROFILE-VERSION-REQUIRED\s+[0-9]+\s+/i, '')
-      .replace(/^(#)?host-wildcard\s*,.+/i, '')
-      .replace(/^(#)?host(-suffix|-keyword|)?\s*,\s*/i, '$1DOMAIN$2,')
+      .replace(/^(#)?host(-suffix|-keyword|-wildcard)?\s*,\s*/i, '$1DOMAIN$2,')
       .replace(/^(#)?ip6-cidr\s*,\s*/i, '$1IP-CIDR6,')
 
     //去掉注释
@@ -468,7 +448,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     //rule解析
     if (
-      /^#?(?:domain(?:-suffix|-keyword|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent|url-regex|(de?st|in|src)-port|and|not|or|protocol)\s*,.+/i.test(
+      /^#?(?:domain(?:-suffix|-keyword|-wildcard|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent|url-regex|(de?st|in|src)-port|and|not|or|protocol)\s*,.+/i.test(
         x
       )
     ) {
@@ -834,7 +814,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       notBuildInPolicy.push(ori)
     } else if (!policyRegex.test(rulepolicy) && !/^proxy$/i.test(rulepolicy) && modistatus == 'no') {
       notBuildInPolicy.push(ori)
-    } else if (/^in-port$/i.test(ruletype) && isSurgeiOS) {
+    } else if (/^in-port|domain-wildcard$/i.test(ruletype) && isSurgeiOS) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni)
     } else if (/^protocol$/i.test(ruletype) && (isLooniOS || isSurgeiOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
@@ -1036,6 +1016,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           ? 'event'
           : jstype
       jsurl = jsBox[i].jsurl
+      let js2cron = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.')) + '-cron'
       rebody = jsBox[i].rebody ? istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? istrue(jsBox[i].proto) : ''
       engine = jsBox[i].engine ? jsBox[i].engine : ''
@@ -1076,7 +1057,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             script.push(
               mark +
                 noteK +
-                jsname +
+                js2cron +
                 ' = type=' +
                 'cron' +
                 ', cronexp="' +
@@ -1104,7 +1085,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 jsurl +
                 timeout +
                 ', tag=' +
-                jsname +
+                js2cron +
                 img +
                 jsarg
             )
@@ -1257,6 +1238,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       jsptn = jsBox[i].jsptn
       jsname = jsBox[i].jsname
       jsurl = jsBox[i].jsurl
+      let js2cron = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.')) + '-cron'
       rebody = jsBox[i].rebody ? noteKn6 + 'require-body: ' + istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? noteKn6 + 'binary-mode: ' + istrue(jsBox[i].proto) : ''
       size = jsBox[i].size ? noteKn6 + 'max-size: ' + jsBox[i].size : ''
@@ -1296,7 +1278,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           : ''
 
       if (!/cron/.test(jstype) && cronexp != null) {
-        cron.push(mark + `${noteK4}- name: "` + jsname + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg)
+        cron.push(mark + `${noteK4}- name: "` + js2cron + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg)
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
 
