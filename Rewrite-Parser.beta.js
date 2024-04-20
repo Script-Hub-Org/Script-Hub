@@ -1054,6 +1054,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           if (jsarg != '' && (!/,/.test(jsarg) || /^".+"$/.test(jsarg))) jsarg = ', argument=' + jsarg
 
           if (!/cron/.test(jstype) && cronexp != null && (isSurgeiOS || isShadowrocket)) {
+
+      js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
+            
             script.push(
               mark +
                 noteK +
@@ -1074,6 +1077,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           }
 
           if (!/cron/.test(jstype) && cronexp != null && isLooniOS) {
+
+      js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
+      
             script.push(
               mark +
                 noteK +
@@ -1278,6 +1284,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           : ''
 
       if (!/cron/.test(jstype) && cronexp != null) {
+
+      js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
+      
         cron.push(mark + `${noteK4}- name: "` + js2cron + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg)
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
