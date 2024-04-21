@@ -93,6 +93,9 @@ let sni = queryObject.sni != undefined ? getArgArr(queryObject.sni) : null //sni
 let sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '' //用于保留header的后缀
 let sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '' //用于开启jsDeliver的后缀
 
+// cron 最小超时
+let min_cron_timeout = 120
+
 //用于自定义发送请求的请求头
 const reqHeaders = { headers: {} }
 
@@ -1048,15 +1051,15 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           rebody = rebody ? ', requires-body=' + rebody : ''
           proto = proto ? ', binary-body-mode=' + proto : ''
           size = size ? ', max-size=' + size : ''
+          const cron_timeout = timeout ? ', timeout=' + Math.max(timeout, min_cron_timeout) : ''
           timeout = timeout ? ', timeout=' + timeout : ''
           engine = engine && isSurgeiOS ? ', engine=' + engine : ''
           if (jsarg != '' && /,/.test(jsarg) && !/^".+"$/.test(jsarg)) jsarg = ', argument="' + jsarg + '"'
           if (jsarg != '' && (!/,/.test(jsarg) || /^".+"$/.test(jsarg))) jsarg = ', argument=' + jsarg
 
           if (!/cron/.test(jstype) && cronexp != null && (isSurgeiOS || isShadowrocket)) {
+            js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
 
-      js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
-            
             script.push(
               mark +
                 noteK +
@@ -1070,16 +1073,15 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 jsurl +
                 updatetime +
                 engine +
-                timeout +
+                cron_timeout +
                 wakesys +
                 jsarg
             )
           }
 
           if (!/cron/.test(jstype) && cronexp != null && isLooniOS) {
+            js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
 
-      js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
-      
             script.push(
               mark +
                 noteK +
@@ -1089,7 +1091,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 '"' +
                 ' script-path=' +
                 jsurl +
-                timeout +
+                cron_timeout +
                 ', tag=' +
                 js2cron +
                 img +
@@ -1284,9 +1286,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           : ''
 
       if (!/cron/.test(jstype) && cronexp != null) {
+        js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
 
-      js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
-      
         cron.push(mark + `${noteK4}- name: "` + js2cron + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg)
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
