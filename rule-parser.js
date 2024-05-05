@@ -2,6 +2,7 @@
    支持QX & Surge & Clash 规则集解析
    适用app: Surge Shadowrocket Stash Loon
 ***************************/
+const script_start = Date.now()
 const JS_NAME = 'Script Hub: 规则集转换'
 const $ = new Env(JS_NAME)
 
@@ -11,6 +12,8 @@ if (typeof $argument != 'undefined') {
 } else {
   arg = {}
 }
+// 超时设置 与 script-converter.js 相同
+const HTTP_TIMEOUT = ($.getval('Parser_http_timeout') ?? 20) * 1000
 
 //目标app
 const isEgern = 'object' == typeof egern
@@ -20,13 +23,13 @@ if (isLanceX || isEgern) {
 }
 
 const url = $request.url
-var req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0]
-var reqArr = req.match('%F0%9F%98%82') ? req.split('%F0%9F%98%82') : [req]
+let req = url.split(/file\/_start_\//)[1].split(/\/_end_\//)[0]
+let reqArr = req.match('%F0%9F%98%82') ? req.split('%F0%9F%98%82') : [req]
 //$.log("原始链接：" + req);
-var urlArg = url.split(/\/_end_\//)[1]
+let urlArg = url.split(/\/_end_\//)[1]
 
-var resFile = urlArg.split('?')[0]
-var resFileName = resFile.substring(0, resFile.lastIndexOf('.'))
+let resFile = urlArg.split('?')[0]
+let resFileName = resFile.substring(0, resFile.lastIndexOf('.'))
 
 //通过请求头中的UA识别app
 const appUa = $request.headers['user-agent'] || $request.headers['User-Agent']
@@ -74,15 +77,40 @@ if (queryObject.target == 'rule-set') {
   isShadowrocket = isRockettarget
 }
 
-var Rin0 = queryObject.y != undefined ? getArgArr(queryObject.y) : null
-var Rout0 = queryObject.x != undefined ? getArgArr(queryObject.x) : null
-var ipNoResolve = istrue(queryObject.nore)
-var sni = queryObject.sni != undefined ? getArgArr(queryObject.sni) : null
+let Rin0 = queryObject.y != undefined ? getArgArr(queryObject.y) : null
+let Rout0 = queryObject.x != undefined ? getArgArr(queryObject.x) : null
+let ipNoResolve = istrue(queryObject.nore)
+let sni = queryObject.sni != undefined ? getArgArr(queryObject.sni) : null
 
-var evJsori = queryObject.evalScriptori
-var evJsmodi = queryObject.evalScriptmodi
-var evUrlori = queryObject.evalUrlori
-var evUrlmodi = queryObject.evalUrlmodi
+let evJsori = queryObject.evalScriptori
+let evJsmodi = queryObject.evalScriptmodi
+let evUrlori = queryObject.evalUrlori
+let evUrlmodi = queryObject.evalUrlmodi
+
+//用于自定义发送请求的请求头
+const reqHeaders = { headers: {} }
+
+if (queryObject.headers) {
+  decodeURIComponent(queryObject.headers)
+    .split(/\r?\n/)
+    .map(i => {
+      if (/.+:.+/.test(i)) {
+        const [_, key, value] = i.match(/^(.*?):(.*)$/)
+        if (key?.length > 0 && value?.length > 0) {
+          reqHeaders.headers[key] = value
+        }
+      }
+    })
+}
+
+  let other = [] //不支持的规则
+  let ruleSet = [] //解析过后的规则
+  let domainSet = [] //域名集
+  let outRules = [] //被排除的规则
+
+  let noResolve //ip规则是否开启不解析域名
+  let ruleType //规则类型
+  let ruleValue //规则
 
 !(async () => {
   if (evUrlori) {
@@ -92,16 +120,14 @@ var evUrlmodi = queryObject.evalUrlmodi
     evUrlmodi = (await $.http.get(evUrlmodi)).body
   }
 
-  //let body = (await $.http.get(req)).body;
-
   if (req == 'http://local.text') {
     body = localText
   } else {
     for (let i = 0; i < reqArr.length; i++) {
-      bodyobj = await $.http.get(reqArr[i])
-      bodystatus = bodyobj.status
-      body = bodystatus == 200 ? bodyobj.body : bodystatus == 404 ? '#!error=404: Not Found' : ''
-      bodystatus == 404 && $.msg(JS_NAME, '来源链接已失效', '404: Not Found ---> ' + reqArr[i], '')
+      let res = await http(reqArr[i], reqHeaders)
+      let reStatus = res.status
+      body = reStatus == 200 ? res.body : reStatus == 404 ? '#!error=404: Not Found' : ''
+      reStatus == 404 && $.msg(JS_NAME, '来源链接已失效', '404: Not Found ---> ' + reqArr[i], '')
 
       if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)) {
         body = body.match(/^(?:\n|\r)*\/\*([\s\S]*?)(?:\r|\n)\s*\*+\//)[1]
@@ -118,25 +144,17 @@ var evUrlmodi = queryObject.evalUrlmodi
 
   body = body.match(/[^\r\n]+/g)
 
-  let other = [] //不支持的规则
-  let ruleSet = [] //解析过后的规则
-  let domainSet = [] //域名集
-  let outRules = [] //被排除的规则
-
-  let noResolve //ip规则是否开启不解析域名
-  let ruleType //规则类型
-  let ruleValue //规则
-
-  for await (var [y, x] of body.entries()) {
+  for await (let [y, x] of body.entries()) {
     x = x
       .replace(/^payload:/, '')
       .replace(/^ *(#|;|\/\/)/, '#')
-      .replace(/ *- /, '')
+      .replace(/^ *- */, '')
       .replace(/(^[^#].+)\x20+\/\/.+/, '$1')
       .replace(/(\{[0-9]+)\,([0-9]*\})/g, '$1t&zd;$2')
       .replace(/(^[^U].*(\[|=|{|\\|\/.*\.js).*)/i, '')
       .replace(/'|"/g, '')
       .replace(/^(\.|\*|\+)\.?/, 'DOMAIN-SUFFIX,')
+      .replace(/^\[.*|^\s*$/,'')
 
     if (!x.match(/^ *#/) && !x.match(/,/) && x != '') {
       if (x.search(/[0-9]\/[0-9]/) != -1) {
@@ -347,7 +365,7 @@ var evUrlmodi = queryObject.evalUrlmodi
     headers: { 'Content-Type': 'text/plain; charset=utf-8' },
   }
   $.isQuanX() ? (result.status = 'HTTP/1.1 200') : (result.status = 200)
-  $.done($.isQuanX() ? result : { response: result })
+  done($.isQuanX() ? result : { response: result })
 })().catch(e => {
   noNtf == false ? $.msg(JS_NAME, `${resFileName}：${e}\n${url}`, '', 'https://t.me/zhetengsha_group') : $.log(e)
   result = {
@@ -361,7 +379,7 @@ var evUrlmodi = queryObject.evalUrlmodi
     },
   }
   $.isQuanX() ? (result.status = 'HTTP/1.1 500') : (result.status = 500)
-  $.done($.isQuanX() ? result : { response: result })
+  done($.isQuanX() ? result : { response: result })
 })
 
 function istrue(str) {
@@ -374,7 +392,7 @@ function istrue(str) {
 
 function getArgArr(str) {
   let arr = str.split('+')
-  return arr.map((a) => a.replace(/➕/g,'+'))
+  return arr.map(item => item.replace(/➕/g,'+'))
 }
 
 function parseQueryString(url) {
@@ -390,6 +408,40 @@ function parseQueryString(url) {
   }
 
   return params
+}
+
+// 请求
+async function http(url, opts = {}) {
+  const http_start = Date.now()
+  let timeout = HTTP_TIMEOUT + 1 * 1000
+  timeout = $.isSurge() ? timeout / 1000 : timeout
+  const reqOpts = {
+    timeout,
+    url,
+    ...opts,
+  }
+  try {
+    const res = await Promise.race([
+      $.http.get(reqOpts),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), HTTP_TIMEOUT)),
+    ])
+    $.log(`⏱ 请求耗时：${Math.round(((Date.now() - http_start) / 1000) * 100) / 100} 秒\n  └ ${reqOpts.url}`)
+    return res
+  } catch (e) {
+    $.logErr(e)
+    let msg = String($.lodash_get(e, 'message') || e)
+    let info
+    if (msg.includes('timeout')) {
+      info = `请求超时(${Math.round((HTTP_TIMEOUT / 1000) * 100) / 100} 秒)`
+    } else {
+      throw new Error(e)
+    }
+    throw new Error(info)
+  }
+}
+function done(...args) {
+  $.log(`⏱ 总耗时：${Math.round(((Date.now() - script_start) / 1000) * 100) / 100} 秒`)
+  $.done(...args)
 }
 
 // prettier-ignore

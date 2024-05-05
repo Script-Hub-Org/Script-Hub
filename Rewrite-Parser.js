@@ -281,6 +281,14 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 }
 
 !(async () => {
+
+  if (evUrlori) {
+    evUrlori = (await $.http.get(evUrlori)).body
+  }
+  if (evUrlmodi) {
+    evUrlmodi = (await $.http.get(evUrlmodi)).body
+  }
+  
   if (req == 'http://local.text') {
     body = localText
   } else {
