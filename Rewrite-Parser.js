@@ -548,6 +548,29 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       timeout = getJsInfo(x, /[=,\s]\s*timeout\s*=\s*/)
       tilesicon = jstype == 'generic' && /icon=/.test(x) ? x.split('icon=')[1].split('&')[0] : ''
       tilescolor = jstype == 'generic' && /icon-color=/.test(x) ? x.split('icon-color=')[1].split('&')[0] : ''
+      if (nCron != null && jstype != 'cron') {
+        for (let i = 0; i < nCron.length; i++) {
+      let elem = nCron[i].trim()
+      if (x.indexOf(elem) != -1) {
+        let jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.')) + '-cron'
+        jsBox.push({
+        mark,
+        noteK,
+        jsname,
+        img,
+        jstype:'cron',
+        jsptn:'',
+        jsurl,
+        updatetime,
+        wakesys: '1',
+        timeout:'120',
+        ori: x,
+        num: y,
+      })
+      }
+    } //for
+      }
+      
       jsBox.push({
         mark,
         noteK,
@@ -590,6 +613,28 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       jsurl = toJsc(jsurl, jscStatus, jsc2Status, jsfrom)
       rebody = /\sscript[^\s]*(-body|-analyze)/.test(x) ? 'true' : ''
       size = rebody == 'true' ? '-1' : ''
+      
+      if (nCron != null) {
+        for (let i = 0; i < nCron.length; i++) {
+      let elem = nCron[i].trim()
+      if (x.indexOf(elem) != -1) {
+        let jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.')) + '-cron'
+        jsBox.push({
+        mark,
+        noteK,
+        jsname,
+        jstype:'cron',
+        jsptn:'',
+        jsurl,
+        wakesys: '1',
+        timeout: '120',
+        ori: x,
+        num: y,
+      })
+      }
+    } //for
+      }
+      
       jsBox.push({
         mark,
         noteK,
@@ -601,7 +646,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         proto,
         size,
         timeout: '60',
-        jsarg,
         ori: x,
         num: y,
       })
@@ -631,19 +675,17 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       img = getJsInfo(x, /[,\s]\s*img-url\s*=\s*/, jsRegex)
       jsfrom = 'qx'
       jsurl = toJsc(jsurl, jscStatus, jsc2Status, jsfrom)
-      jsarg = ''
       jsBox.push({
         mark,
         noteK,
         jsname,
         img,
         jstype: 'cron',
-        jsptn: '',
+        jsptn:'',
         cronexp,
         jsurl,
         wakesys: '1',
-        timeout: '60',
-        jsarg,
+        timeout: '120',
         ori: x,
         num: y,
       })
@@ -1016,7 +1058,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           ? 'event'
           : jstype
       jsurl = jsBox[i].jsurl
-      let js2cron = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.')) + '-cron'
       rebody = jsBox[i].rebody ? istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? istrue(jsBox[i].proto) : ''
       engine = jsBox[i].engine ? jsBox[i].engine : ''
@@ -1052,50 +1093,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           engine = engine && isSurgeiOS ? ', engine=' + engine : ''
           if (jsarg != '' && /,/.test(jsarg) && !/^".+"$/.test(jsarg)) jsarg = ', argument="' + jsarg + '"'
           if (jsarg != '' && (!/,/.test(jsarg) || /^".+"$/.test(jsarg))) jsarg = ', argument=' + jsarg
-
-          if (!/cron/.test(jstype) && cronexp != null && (isSurgeiOS || isShadowrocket)) {
-
-      js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
-            
-            script.push(
-              mark +
-                noteK +
-                js2cron +
-                ' = type=' +
-                'cron' +
-                ', cronexp="' +
-                cronexp +
-                '"' +
-                ', script-path=' +
-                jsurl +
-                updatetime +
-                engine +
-                timeout +
-                wakesys +
-                jsarg
-            )
-          }
-
-          if (!/cron/.test(jstype) && cronexp != null && isLooniOS) {
-
-      js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
-      
-            script.push(
-              mark +
-                noteK +
-                'cron' +
-                ' "' +
-                cronexp +
-                '"' +
-                ' script-path=' +
-                jsurl +
-                timeout +
-                ', tag=' +
-                js2cron +
-                img +
-                jsarg
-            )
-          }
 
           if (/generic/.test(jstype) && isShadowrocket) {
             otherRule.push(ori)
@@ -1244,7 +1241,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       jsptn = jsBox[i].jsptn
       jsname = jsBox[i].jsname
       jsurl = jsBox[i].jsurl
-      let js2cron = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.')) + '-cron'
       rebody = jsBox[i].rebody ? noteKn6 + 'require-body: ' + istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? noteKn6 + 'binary-mode: ' + istrue(jsBox[i].proto) : ''
       size = jsBox[i].size ? noteKn6 + 'max-size: ' + jsBox[i].size : ''
@@ -1282,14 +1278,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           : timeout && jstype != 'generic'
           ? noteKn6 + 'timeout: ' + timeout
           : ''
-
-      if (!/cron/.test(jstype) && cronexp != null) {
-
-      js2cron = reJsValue(njsnametarget || 'null', njsname, js2cron, ori, js2cron)
-      
-        cron.push(mark + `${noteK4}- name: "` + js2cron + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg)
-        providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
-      }
 
       if (/request|response/.test(jstype)) {
         script.push(
