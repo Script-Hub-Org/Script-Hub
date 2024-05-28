@@ -749,7 +749,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   jsBox = jsBox.reduce((curr, next) => {
     /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
-    obj[next.jstype + next.jsptn + next.jsurl] ? '' : (obj[next.jstype + next.jsptn + next.jsurl] = curr.push(next))
+    obj[next.jstype + next.jsptn + next.jsurl + next.jsarg] ? '' : (obj[next.jstype + next.jsptn + next.jsurl + next.jsarg] = curr.push(next))
     return curr
   }, [])
 
