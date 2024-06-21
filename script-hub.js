@@ -1061,6 +1061,7 @@ const htmls = `
 
       <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改脚本名</summary>
+        <div>请务必阅读 <a href="https://t.me/zhetengsha/1372" target="_blank">此示例</a> 学习如何使用</div>
         <details>
           <summary>关键词锁定脚本(njsnametarget)</summary>
           <span>根据关键词锁定脚本, 配合参数 <code>njsname</code> 修改脚本名. 多关键词用 <code>+</code> 分隔, <code>njsnametarget</code> 传入了几项,  <code>njsname</code> 也必须对应传入几项</span>
@@ -1074,6 +1075,7 @@ const htmls = `
       </details>
       <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改脚本超时</summary>
+        <div>请务必阅读 <a href="https://t.me/zhetengsha/1372" target="_blank">此示例</a> 学习如何使用</div>
         <details>
           <summary>关键词锁定脚本(timeoutt)</summary>
           <span>根据关键词锁定脚本, 配合参数 <code>timeoutv</code> 修改脚本超时. 多关键词用 <code>+</code> 分隔, <code>timeoutt</code> 传入了几项,  <code>timeoutv</code> 也必须对应传入几项</span>
@@ -1088,6 +1090,7 @@ const htmls = `
 
       <details v-if="!target || target === 'surge-module' ">
         <summary>修改脚本引擎(Surge)</summary>
+        <div>请务必阅读 <a href="https://t.me/zhetengsha/1372" target="_blank">此示例</a> 学习如何使用</div>
         <details>
           <summary>关键词锁定脚本(enginet)</summary>
           <span>根据关键词锁定脚本, 配合参数 <code>enginev</code> 修改 <a href="https://t.me/SurgeTestFlightFeed/114" target="_blank">脚本引擎</a>. 多关键词用 <code>+</code> 分隔, <code>enginet</code> 传入了几项,  <code>enginev</code> 也必须对应传入几项</span>
@@ -1102,8 +1105,9 @@ const htmls = `
 
       <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改定时任务</summary>
+        <div>请务必阅读 <a href="https://t.me/zhetengsha/1372" target="_blank">此示例</a> 学习如何使用</div>
         <details>
-          <summary>修改定时任务(cron)</summary>
+          <summary>关键词锁定定时任务(cron)</summary>
           <span>根据关键词锁定 <code>cron</code> 脚本配合参数 <code>cronexp</code> 修改定时任务的cron表达式 多关键词用 <code>+</code> 分隔, <code>cron</code> 传入了几项, <code>cronexp</code> 也必须对应传入几项。 cron 表达式中空格可用 "." 替代</span>
           <textarea id="cron" v-model.lazy="cron" placeholder=""></textarea>
         </details>
@@ -1117,6 +1121,7 @@ const htmls = `
 
       <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>修改参数</summary>
+        <div>请务必阅读 <a href="https://t.me/zhetengsha/1372" target="_blank">此示例</a> 学习如何使用</div>
         <details>
           <summary>修改参数(arg)</summary>
           <span>arg= 根据关键词锁定脚本配合参数argv= 修改argument=的值 多关键词用 <code>+</code> 分隔，arg=传入了几项，argv=也必须对应传入几项。 argument中  <code>+</code> 必须用"t;add;"替代。</span>
@@ -1131,6 +1136,7 @@ const htmls = `
 
       <details v-if="!target || target === 'stash-stoverride'">
         <summary>Stash Tiles 面板相关</summary>
+        <div>请务必阅读 <a href="https://t.me/zhetengsha/1372" target="_blank">此示例</a> 学习如何使用</div>
         <details>
           <summary>根据关键词锁定 Surge 的 Panel 脚本(Stash 专用参数)</summary>
           <span>tiles= Stash专用参数，根据关键词锁定Surge的panel脚本，配合tcolor= 参数修改转换成tiles后的背景颜色，HEX码中的"#"必须用"@"替代</span>
