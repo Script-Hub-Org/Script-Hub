@@ -800,7 +800,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       for (let key in modInfoObj) {
         if (modInfoObj[key]) {
-          let info = !isStashiOS ? '#!' + key + '=' + modInfoObj[key] : key + ': |-\n  ' + modInfoObj[key]
+          let value = modInfoObj[key]
+          if (isLooniOS && key == 'category') {
+            key = 'keyword'
+          } else if (!isLooniOS && key == 'keyword') {
+            key = 'category'
+          }
+          let info = !isStashiOS ? '#!' + key + '=' + value : key + ': |-\n  ' + value
           modInfo.push(info)
         }
       }
@@ -1530,7 +1536,7 @@ function getInputInfo(x, box) {
 //名字简介解析
 function getModInfo(x) {
   const regex = /^#!\s*([^\s]+?)\s*=\s*(.+)/
-  let key = x.match(regex)[1]
+  let key = x.match(regex)[1] == 'keyword' ? 'category' : x.match(regex)[1]
   let value = x.match(regex)[2]
   modInfoObj[key] = value
 }
