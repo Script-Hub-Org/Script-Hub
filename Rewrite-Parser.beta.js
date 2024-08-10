@@ -801,9 +801,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       for (let key in modInfoObj) {
         if (modInfoObj[key]) {
           let value = modInfoObj[key]
-          if (isSurgeiOS && key == 'system'){
-					  value = value == 'iOS' ? 'ios' : (value == 'macOS' ? 'mac' : value);
-					} else if (isLooniOS && key == 'category') {
+          if (isSurgeiOS && key == 'system') {
+            value = { iOS: 'ios', iPadOS: 'ios', tvOS: 'ios', macOS: 'mac' } [value] || value
+          } else if (isLooniOS && key == 'category') {
             key = 'keyword'
           } else if (!isLooniOS && key == 'keyword') {
             key = 'category'
