@@ -802,7 +802,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         if (modInfoObj[key]) {
           let value = modInfoObj[key]
           if (isSurgeiOS && key == 'system') {
-            value = { iOS: 'ios', iPadOS: 'ios', tvOS: 'ios', macOS: 'mac' } [value] || value
+            value = value.toLowerCase().includes('mac') ? 'mac' : 'ios'
           } else if (isLooniOS && key == 'category') {
             key = 'keyword'
           } else if (!isLooniOS && key == 'keyword') {
