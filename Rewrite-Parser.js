@@ -800,16 +800,17 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       for (let key in modInfoObj) {
         if (modInfoObj[key]) {
-          let value = modInfoObj[key]
-          if (isSurgeiOS && key == 'system') {
-            value = value.toLowerCase().includes('mac') ? 'mac' : 'ios'
+          let value = modInfoObj[key], delsystem = false
+          if (key == 'system' && isSurgeiOS ) {
+            value = value.toLowerCase()
+            value = value.includes('mac') ? (value.includes('ios') ? (delsystem = true, 'mac') : 'mac') : 'ios'
           } else if (isLooniOS && key == 'category') {
             key = 'keyword'
           } else if (!isLooniOS && key == 'keyword') {
             key = 'category'
           }
           let info = !isStashiOS ? '#!' + key + '=' + value : key + ': |-\n  ' + value
-          modInfo.push(info)
+          !delsystem && modInfo.push(info)
         }
       }
 
