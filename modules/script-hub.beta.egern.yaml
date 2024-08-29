@@ -1,0 +1,35 @@
+name: 'Script Hub(β): 重写 & 规则集转换'
+description: https://script.hub
+compat_arguments:
+  Notify: 开启通知
+compat_arguments_desc: Notify:\nScriptHub通知设置, 可选 开启通知, 关闭通知, 跟随链接
+author: '@小白脸 @xream @keywos @ckyb'
+scriptings:
+- http_request:
+    name: 'Script Hub: 前端'
+    match: ^https?:\/\/script\.hub\/($|edit\/|reload)
+    script_url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.beta.js
+    timeout: 300
+- http_request:
+    name: 'Script Hub: 重写转换'
+    match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|loon-plugin|all-module)
+    script_url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/Rewrite-Parser.beta.js
+    arguments:
+      _compat.$argument: Notify={{{Notify}}}
+    timeout: 300
+- http_request:
+    name: 'Script Hub: 规则集转换'
+    match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set
+    script_url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/rule-parser.beta.js
+    arguments:
+      _compat.$argument: Notify={{{Notify}}}
+    timeout: 300
+- http_request:
+    name: 'Script Hub: 脚本转换'
+    match: ^https?:\/\/script\.hub\/convert\/
+    script_url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.beta.js
+    timeout: 300
+mitm:
+  hostnames:
+  - script.hub
+  - '*.script.hub'
