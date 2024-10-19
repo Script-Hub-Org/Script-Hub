@@ -360,7 +360,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     if (sni != null) {
       for (let i = 0; i < sni.length; i++) {
         const elem = sni[i].trim()
-        if (x.indexOf(elem) != -1 && /^(DOMAIN|RULE-SET)/i.test(x) && !/,\s*extended-matching/i.test(x)) {
+        // 加入对逻辑规则的判断
+        if (
+          x.indexOf(elem) != -1 &&
+          (/^(DOMAIN|RULE-SET)/i.test(x) || /AND|OR|NOT\s*\?\s*?\,\s*?\(\s*?\(.+/i.test(x)) &&
+          !/,\s*extended-matching/i.test(x)
+        ) {
           x = x + ',extended-matching'
           break
         }
