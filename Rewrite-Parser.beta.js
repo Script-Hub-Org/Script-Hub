@@ -281,14 +281,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 }
 
 !(async () => {
-
   if (evUrlori) {
     evUrlori = (await $.http.get(evUrlori)).body
   }
   if (evUrlmodi) {
     evUrlmodi = (await $.http.get(evUrlmodi)).body
   }
-  
+
   if (req == 'http://local.text') {
     body = localText
   } else {
@@ -558,27 +557,27 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       tilescolor = jstype == 'generic' && /icon-color=/.test(x) ? x.split('icon-color=')[1].split('&')[0] : ''
       if (nCron != null && jstype != 'cron') {
         for (let i = 0; i < nCron.length; i++) {
-      let elem = nCron[i].trim()
-      if (x.indexOf(elem) != -1) {
-        let jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.')) + '-cron'
-        jsBox.push({
-        mark,
-        noteK,
-        jsname,
-        img,
-        jstype:'cron',
-        jsptn:'',
-        jsurl,
-        updatetime,
-        wakesys: '1',
-        timeout:'120',
-        ori: x,
-        num: y,
-      })
+          let elem = nCron[i].trim()
+          if (x.indexOf(elem) != -1) {
+            let jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.')) + '-cron'
+            jsBox.push({
+              mark,
+              noteK,
+              jsname,
+              img,
+              jstype: 'cron',
+              jsptn: '',
+              jsurl,
+              updatetime,
+              wakesys: '1',
+              timeout: '120',
+              ori: x,
+              num: y,
+            })
+          }
+        } //for
       }
-    } //for
-      }
-      
+
       jsBox.push({
         mark,
         noteK,
@@ -621,28 +620,28 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       jsurl = toJsc(jsurl, jscStatus, jsc2Status, jsfrom)
       rebody = /\sscript[^\s]*(-body|-analyze)/.test(x) ? 'true' : ''
       size = rebody == 'true' ? '-1' : ''
-      
+
       if (nCron != null) {
         for (let i = 0; i < nCron.length; i++) {
-      let elem = nCron[i].trim()
-      if (x.indexOf(elem) != -1) {
-        let jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.')) + '-cron'
-        jsBox.push({
-        mark,
-        noteK,
-        jsname,
-        jstype:'cron',
-        jsptn:'',
-        jsurl,
-        wakesys: '1',
-        timeout: '120',
-        ori: x,
-        num: y,
-      })
+          let elem = nCron[i].trim()
+          if (x.indexOf(elem) != -1) {
+            let jsname = jsurl.substring(jsurl.lastIndexOf('/') + 1, jsurl.lastIndexOf('.')) + '-cron'
+            jsBox.push({
+              mark,
+              noteK,
+              jsname,
+              jstype: 'cron',
+              jsptn: '',
+              jsurl,
+              wakesys: '1',
+              timeout: '120',
+              ori: x,
+              num: y,
+            })
+          }
+        } //for
       }
-    } //for
-      }
-      
+
       jsBox.push({
         mark,
         noteK,
@@ -689,7 +688,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         jsname,
         img,
         jstype: 'cron',
-        jsptn:'',
+        jsptn: '',
         cronexp,
         jsurl,
         wakesys: '1',
@@ -749,7 +748,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   jsBox = jsBox.reduce((curr, next) => {
     /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
-    obj[next.jstype + next.jsptn + next.jsurl + next.jsarg] ? '' : (obj[next.jstype + next.jsptn + next.jsurl + next.jsarg] = curr.push(next))
+    obj[next.jstype + next.jsptn + next.jsurl + next.jsarg]
+      ? ''
+      : (obj[next.jstype + next.jsptn + next.jsurl + next.jsarg] = curr.push(next))
     return curr
   }, [])
 
@@ -800,10 +801,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       for (let key in modInfoObj) {
         if (modInfoObj[key]) {
-          let value = modInfoObj[key], delsystem = false
-          if (key == 'system' && isSurgeiOS ) {
+          let value = modInfoObj[key],
+            delsystem = false
+          if (key == 'system' && isSurgeiOS) {
             value = value.toLowerCase()
-            value = value.includes('mac') ? (value.includes('ios') ? (delsystem = true, 'mac') : 'mac') : 'ios'
+            value = value.includes('mac') ? (value.includes('ios') ? ((delsystem = true), 'mac') : 'mac') : 'ios'
           } else if (isLooniOS && key == 'category') {
             key = 'keyword'
           } else if (!isLooniOS && key == 'keyword') {
@@ -1026,7 +1028,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     mark = mockBox[i].mark ? mockBox[i].mark : ''
     mockptn = mockBox[i].mockptn
     mocktype = mockBox[i].mocktype ? ' data-type=' + mockBox[i].mocktype : ''
-    mockurl = mockBox[i].mockurl ? ' data="' + mockBox[i].mockurl + '"' : mocktype == ' data-type=text' ? ' data=""' : ''
+    mockurl = mockBox[i].mockurl
+      ? ' data="' + mockBox[i].mockurl + '"'
+      : mocktype == ' data-type=text'
+      ? ' data=""'
+      : ''
     mockstatus = mockBox[i].mockstatus ? ' status-code=' + mockBox[i].mockstatus : ''
 
     switch (targetApp) {

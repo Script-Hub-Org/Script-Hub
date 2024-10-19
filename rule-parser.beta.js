@@ -103,14 +103,14 @@ if (queryObject.headers) {
     })
 }
 
-  let other = [] //不支持的规则
-  let ruleSet = [] //解析过后的规则
-  let domainSet = [] //域名集
-  let outRules = [] //被排除的规则
+let other = [] //不支持的规则
+let ruleSet = [] //解析过后的规则
+let domainSet = [] //域名集
+let outRules = [] //被排除的规则
 
-  let noResolve //ip规则是否开启不解析域名
-  let ruleType //规则类型
-  let ruleValue //规则
+let noResolve //ip规则是否开启不解析域名
+let ruleType //规则类型
+let ruleValue //规则
 
 !(async () => {
   if (evUrlori) {
@@ -154,7 +154,7 @@ if (queryObject.headers) {
       .replace(/(^[^U].*(\[|=|{|\\|\/.*\.js).*)/i, '')
       .replace(/'|"/g, '')
       .replace(/^(\.|\*|\+)\.?/, 'DOMAIN-SUFFIX,')
-      .replace(/^\[.*|^\s*$/,'')
+      .replace(/^\[.*|^\s*$/, '')
 
     if (!x.match(/^ *#/) && !x.match(/,/) && x != '') {
       if (x.search(/[0-9]\/[0-9]/) != -1) {
@@ -392,7 +392,7 @@ function istrue(str) {
 
 function getArgArr(str) {
   let arr = str.split('+')
-  return arr.map(item => item.replace(/➕/g,'+'))
+  return arr.map(item => item.replace(/➕/g, '+'))
 }
 
 function parseQueryString(url) {
