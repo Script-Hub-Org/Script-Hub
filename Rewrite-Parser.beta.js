@@ -37,6 +37,8 @@ const urlArg = url.split(/\/_end_\//)[1]
 const queryObject = parseQueryString(urlArg)
 //$.log("参数:" + $.toStr(queryObject));
 
+// 来源
+const fromType = queryObject.type
 //目标app
 const targetApp = queryObject.target
 const app = targetApp.split('-')[0]
@@ -270,7 +272,7 @@ const panelRegex = /\s*[=,]\s*(?:title|content|style|script-name|update-interval
 
 const policyRegex = /^(direct|reject-?(img|video|dict|array|drop|200|tinygif)?(-no-drop)?|\{\{\{[^,]+\}\}\})$/i
 
-const mockRegex = /\s+(?:data-type|status-code|header|data)\s*=/
+const mockRegex = /\s+(?:data-type|status-code|header|data|data-path|mock-data-is-base64)\s*=/
 
 //查询js binarymode相关
 let binaryInfo = $.getval('Parser_binary_info')
@@ -445,11 +447,55 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
 
     //header rewrite 解析
-    if (/\sheader-(?:del|add|replace|replace-regex)\s/.test(x)) {
+    if (/\s(response-)?header-(?:del|add|replace|replace-regex)\s/.test(x)) {
       mark = getMark(y, body)
       noteK = isNoteK(x)
       x = x.replace(/^#/, '')
-      rwhdBox.push({ mark, noteK, x })
+      if (fromType === 'loon-plugin') {
+        let [_, __, prefix, isResponseHeaderRewrite, action, suffix] = x.match(
+          /^((.*?\s)(response-)?(header-(?:del|add|replace|replace-regex)\s))\s*(.*?)\s*$/
+        )
+        prefix = `${isResponseHeaderRewrite ? 'http-response' : 'http-request'} ${prefix}${action}`
+        const suffixArray = suffix.split(/\s+/)
+        const newSuffixArray = []
+        if (/\s(response-)?header-del\s/.test(prefix)) {
+          for (let index = 0; index < suffixArray.length; index++) {
+            const key = suffixArray[index]
+            newSuffixArray.push(`${/\\x20/.test(key) ? `"${key.replace(/\\x20/g, ' ')}"` : key}`)
+          }
+        } else if (/\s(response-)?header-replace-regex\s/.test(prefix)) {
+          for (let index = 0; index < suffixArray.length; index += 3) {
+            const key = suffixArray[index]
+            const value = `${
+              /\\x20/.test(suffixArray[index + 1])
+                ? `"${suffixArray[index + 1].replace(/\\x20/g, ' ')}"`
+                : suffixArray[index + 1]
+            } ${
+              /\\x20/.test(suffixArray[index + 2])
+                ? `"${suffixArray[index + 2].replace(/\\x20/g, ' ')}"`
+                : suffixArray[index + 2]
+            }`
+            if (value != null) {
+              newSuffixArray.push(`${key} ${value}`)
+            }
+          }
+        } else {
+          for (let index = 0; index < suffixArray.length; index += 2) {
+            const key = suffixArray[index]
+            const value = suffixArray[index + 1]
+            if (value != null) {
+              newSuffixArray.push(`${key} ${/\\x20/.test(value) ? `"${value.replace(/\\x20/g, ' ')}"` : value}`)
+            }
+          }
+        }
+        // console.log({ mark, noteK, x })
+        for (let index = 0; index < newSuffixArray.length; index++) {
+          let i = newSuffixArray[index]
+          rwhdBox.push({ mark, noteK, x: `${prefix}${i}` })
+        }
+      } else {
+        rwhdBox.push({ mark, noteK, x })
+      }
     }
 
     //(request|response)-(header|body) 解析
@@ -976,6 +1022,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     noteK = rwhdBox[i].noteK ? '#' : ''
     mark = rwhdBox[i].mark ? rwhdBox[i].mark : ''
     x = rwhdBox[i].x
+    const isResponseHeaderRewrite = /^http-response\s/.test(x)
     switch (targetApp) {
       case 'surge-module':
         HeaderRewrite.push(mark + noteK + x)
@@ -983,6 +1030,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       case 'loon-plugin':
         x = x.replace(/^http-(request|response)\s+/, '')
+        if (isResponseHeaderRewrite) {
+          x = x.replace(/\sheader-/, ' response-header-')
+        }
         URLRewrite.push(mark + noteK + x)
         break
 
@@ -1000,7 +1050,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           noteK4 = '#    '
           noteK2 = '#  '
         }
-        let hdtype = /^http-response\s/.test(x) ? ' response-' : ' request-'
+        let hdtype = isResponseHeaderRewrite ? ' response-' : ' request-'
         x = x.replace(/^http-(?:request|response)\s+/, '').replace(/\s+header-/, hdtype)
         HeaderRewrite.push(mark + `${noteK4}- >-${noteKn6}` + x)
         break
@@ -1043,10 +1093,22 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     switch (targetApp) {
       case 'surge-module':
         mockheader =
-          keepHeader == true && mockBox[i].mockheader && !/&contentType=/.test(mockBox[i].mockheader)
+          mockBox[i].mockheader && !/&contentType=/.test(mockBox[i].mockheader)
             ? ' header="' + mockBox[i].mockheader + '"'
             : ''
         MapLocal.push(mark + noteK + mockptn + mocktype + mockurl + mockstatus + mockheader)
+        break
+      case 'loon-plugin':
+        MapLocal.push(
+          mark +
+            noteK +
+            mockptn +
+            ' mock-response-body' +
+            mocktype +
+            (mockBox[i].datapath ? ` data-path=${mockBox[i].datapath}` : ` data="${mockBox[i].data}"`) +
+            mockstatus +
+            (mockBox[i].mockbase64 ? ' mock-data-is-base64=true' : '')
+        )
         break
     } //switch
   } //Mock输出for
@@ -1623,7 +1685,7 @@ function getJsInfo(x, regex, parserRegex) {
       ? panelRegex
       : /script-path\s*=/.test(x)
       ? jsRegex
-      : /\s(data-type|data)\s*=/.test(x)
+      : /\s(data-type|data|data-path)\s*=/.test(x)
       ? mockRegex
       : ''
   if (regex.test(x)) {
@@ -1720,7 +1782,7 @@ async function isBinaryMode(url, name) {
 //获取mock参数
 function getMockInfo(x, mark, y) {
   let noteK = isNoteK(x)
-  let mockptn, mockurl, mockheader, mocktype, mockstatus
+  let mockptn, mockurl, mockheader, mocktype, mockstatus, oritype, datapath, data, mockbase64
   if (/url\s+echo-response\s/.test(x)) {
     mockptn = x.split(/\s+url\s+/)[0]
     mockurl = x.split(/\s+echo-response\s+/)[2]
@@ -1733,17 +1795,78 @@ function getMockInfo(x, mark, y) {
       .split(/\s+/)[0]
       .replace(/^#/g, '')
       .replace(/^"(.+)"$/, '$1')
-    mockurl = getJsInfo(x, /\s+data\s*=\s*/).replace(/^"(.*)"$/, '$1')
+    datapath = getJsInfo(x, /\s+data-path\s*=\s*/).replace(/^"(.*)"$/, '$1')
+    data = getJsInfo(x, /\s+data\s*=\s*/).replace(/^"(.*)"$/, '$1')
+    mockurl = data || datapath
+    mockbase64 = getJsInfo(x, /\s+mock-data-is-base64\s*=\s*/)
     mocktype = getJsInfo(x, /\s+data-type\s*=\s*/) || 'file'
+    oritype = mocktype
     mockstatus = getJsInfo(x, /\s+status-code\s*=\s*/)
     mockheader = getJsInfo(x, /\s+header\s*=\s*/).replace(/^"(.+)"$/, '$1')
+    if (/\smock-response-body\s/.test(x)) {
+      // Loon data-type: body的类型，json,text,css,html,javascript,plain,png,gif,jpeg,tiff,svg,mp4,form-data 应该设置对应的 Content-Type
+      switch (mocktype) {
+        case 'css':
+          mocktype = 'file'
+          mockheader = 'Content-Type:text/css'
+          break
+        case 'html':
+          mocktype = 'file'
+          mockheader = 'Content-Type:text/html'
+          break
+        case 'javascript':
+          mocktype = 'file'
+          mockheader = 'Content-Type:text/javascript'
+          break
+        case 'plain':
+          mocktype = 'file'
+          mockheader = 'Content-Type:text/plain'
+          break
+        case 'png':
+          mocktype = 'file'
+          mockheader = 'Content-Type:image/png'
+          break
+        case 'gif':
+          mocktype = 'file'
+          mockheader = 'Content-Type:image/gif'
+          break
+        case 'jpeg':
+          mocktype = 'file'
+          mockheader = 'Content-Type:image/jpeg'
+          break
+        case 'tiff':
+          mocktype = 'file'
+          mockheader = 'Content-Type:image/tiff'
+          break
+        case 'svg':
+          mocktype = 'file'
+          mockheader = 'Content-Type:image/svg+xml'
+          break
+        case 'mp4':
+          mocktype = 'file'
+          mockheader = 'Content-Type:video/mp4'
+          break
+        case 'form-data':
+          mocktype = 'file'
+          mockheader = 'Content-Type:application/x-www-form-urlencoded'
+          break
+        default:
+          mocktype = 'file'
+          break
+      }
+      if (mockbase64) {
+        mocktype = 'base64'
+      }
+    }
+    if (oritype === 'base64') {
+      mockbase64 = true
+    }
+    console.log({ mockbase64 })
   }
-
   switch (targetApp) {
     case 'surge-module':
       mockBox.push({ mark, noteK, mockptn, mockurl, mockheader, mockstatus, mocktype, ori: x, mocknum: y })
       break
-
     case 'shadowrocket-module':
     case 'loon-plugin':
     case 'stash-stoverride':
@@ -1754,50 +1877,65 @@ function getMockInfo(x, mark, y) {
       else if (/200|blank|^[\s\S]?$/i.test(mfile)) m2rType = 'reject-200'
       else if (/img|tinygif/i.test(mfile) || mocktype == 'tiny-gif') m2rType = 'reject-img'
       else m2rType = null
-
       let jsname =
         mocktype == 'file' ? mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.')) : 'echoResponse'
       m2rType != null && rwBox.push({ mark, noteK, rwptn: mockptn, rwvalue: '-', rwtype: m2rType })
-      let proto
-      if (m2rType == null && mocktype == 'file') {
-        proto = isStashiOS ? 'true' : ''
-        mockheader =
-          mockheader != '' && !/&contentType=/.test(mockheader)
-            ? '&header=' + encodeURIComponent(mockheader)
-            : mockheader != '' && /&contentType=/.test(mockheader)
-            ? mockheader
-            : ''
-        if (keepHeader == false) mockheader = ''
+      if (targetApp === 'loon-plugin') {
+        mockBox.push({
+          mark,
+          noteK,
+          mockptn,
+          data,
+          datapath,
+          mockurl,
+          mockstatus,
+          mocktype: oritype,
+          mockbase64,
+          ori: x,
+          mocknum: y,
+        })
+      } else {
+        let proto
+        if (m2rType == null && mocktype == 'file') {
+          proto = isStashiOS ? 'true' : ''
+          mockheader =
+            mockheader != '' && !/&contentType=/.test(mockheader)
+              ? '&header=' + encodeURIComponent(mockheader)
+              : mockheader != '' && /&contentType=/.test(mockheader)
+              ? mockheader
+              : ''
+          if (keepHeader == false) mockheader = ''
 
-        mockurl = `http://script.hub/convert/_start_/${mockurl}/_end_/${mfile}?type=mock&target-app=${targetApp}${mockheader}${sufkeepHeader}${sufjsDelivr}`
-        jsBox.push({
-          mark,
-          noteK,
-          jsname,
-          jstype: 'http-request',
-          jsptn: mockptn,
-          jsurl: mockurl,
-          proto,
-          timeout: '60',
-          ori: x,
-          num: y,
-        })
-      } else if (m2rType == null && mocktype != 'file') {
-        jsurl = 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js'
-        mockstatus = mockstatus ? '&status-code=' + mockstatus : ''
-        jsarg = `${mocktype}=` + encodeURIComponent(mockurl) + mockstatus
-        jsBox.push({
-          mark,
-          noteK,
-          jsname,
-          jstype: 'http-request',
-          jsptn: mockptn,
-          jsurl,
-          jsarg,
-          timeout: '60',
-          ori: x,
-          num: y,
-        })
+          mockurl = `http://script.hub/convert/_start_/${mockurl}/_end_/${mfile}?type=mock&target-app=${targetApp}${mockheader}${sufkeepHeader}${sufjsDelivr}`
+          jsBox.push({
+            mark,
+            noteK,
+            jsname,
+            jstype: 'http-request',
+            jsptn: mockptn,
+            jsurl: mockurl,
+            proto,
+            timeout: '60',
+            ori: x,
+            num: y,
+          })
+        } else if (m2rType == null && mocktype != 'file') {
+          jsurl = 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js'
+          mockstatus = mockstatus ? '&status-code=' + mockstatus : ''
+          jsarg = `${mocktype}=` + encodeURIComponent(mockurl) + mockstatus
+          jsBox.push({
+            mark,
+            noteK,
+            jsname,
+            jstype: 'http-request',
+            jsptn: mockptn,
+            jsurl,
+            jsarg,
+            timeout: '60',
+            ori: x,
+            num: y,
+          })
+        }
       }
       break
   } //switch
