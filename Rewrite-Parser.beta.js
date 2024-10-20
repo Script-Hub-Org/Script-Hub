@@ -92,6 +92,7 @@ let jsDelivr = istrue(queryObject.jsDelivr) //开启jsDelivr
 let localText = queryObject.localtext != undefined ? '\n' + queryObject.localtext : '' //纯文本输入
 let ipNoResolve = istrue(queryObject.nore) //ip规则不解析域名
 let sni = queryObject.sni != undefined ? getArgArr(queryObject.sni) : null //sni嗅探
+let pm = queryObject.pm != undefined ? getArgArr(queryObject.pm) : null // pre-matching
 let sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '' //用于保留header的后缀
 let sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '' //用于开启jsDeliver的后缀
 
@@ -132,6 +133,7 @@ let name,
   ruletype,
   rulenore,
   rulesni,
+  rulepm,
   rulePandV,
   rulepolicy,
   rulevalue,
@@ -365,7 +367,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         // 加入对逻辑规则的判断
         if (
           x.indexOf(elem) != -1 &&
-          (/^(DOMAIN|RULE-SET)/i.test(x) || /AND|OR|NOT\s*\?\s*?\,\s*?\(\s*?\(.+/i.test(x)) &&
+          (/^(DOMAIN|RULE-SET)/i.test(x) || /(AND|OR|NOT)\s*?,\s*?\(\s*?\(\s*?.+\s*?\)/i.test(x)) &&
           !/,\s*extended-matching/i.test(x)
         ) {
           x = x + ',extended-matching'
@@ -373,6 +375,25 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         }
       } //循环结束
     } //启用sni嗅探结束
+
+    // pre-matching
+    if (pm != null) {
+      for (let i = 0; i < pm.length; i++) {
+        const elem = pm[i].trim()
+        // 加入对逻辑规则的判断
+        if (
+          x.indexOf(elem) != -1 &&
+          (/^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)\s*?,/i.test(
+            x
+          ) ||
+            /(AND|OR|NOT)\s*?,\s*?\(\s*?\(\s*?.+\s*?\)/i.test(x)) &&
+          !/,\s*pre-matching/i.test(x)
+        ) {
+          x = x + ',pre-matching'
+          break
+        }
+      } //循环结束
+    } //启用 pre-matching 结束
 
     //ip规则不解析域名
     if (ipNoResolve == true) {
@@ -506,7 +527,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     //rule解析
     if (
-      /^#?(?:domain(?:-suffix|-keyword|-wildcard|-set)?|ip-cidr6?|ip-asn|rule-set|user-agent|url-regex|(de?st|in|src)-port|and|not|or|protocol)\s*,.+/i.test(
+      /^#?(?:domain(?:-suffix|-keyword|-wildcard|-set)?|ip-cidr6?|ip-asn|geoip|rule-set|user-agent|url-regex|(de?st|in|src)-port|src-ip|and|not|or|protocol|subnet)\s*,.+/i.test(
         x
       )
     ) {
@@ -515,11 +536,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       ruletype = x.split(/\s*,\s*/)[0].replace(/^#/, '')
       rulenore = /,\s*no-resolve/.test(x) ? ',no-resolve' : ''
       rulesni = /,\s*extended-matching/.test(x) ? ',extended-matching' : ''
+      rulepm = /,\s*pre-matching/.test(x) ? ',pre-matching' : ''
       rulePandV = x
         .replace(/^#/, '')
         .replace(ruletype, '')
         .replace(/\s*,\s*no-resolve/, '')
         .replace(/\s*,\s*extended-matching/, '')
+        .replace(/\s*,\s*pre-matching/, '')
         .replace(/^\s*,\s*/, '')
       rulepolicy = getPolicy(rulePandV)
       rulevalue = rulePandV
@@ -533,7 +556,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       } else {
         modistatus = 'no'
       }
-      ruleBox.push({ mark, noteK, ruletype, rulevalue, rulepolicy, rulenore, rulesni, ori: x, modistatus })
+      ruleBox.push({ mark, noteK, ruletype, rulevalue, rulepolicy, rulenore, rulesni, rulepm, ori: x, modistatus })
     } //rule解析结束
 
     //host解析
@@ -899,6 +922,16 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     rulenore = ruleBox[i].rulenore ? ruleBox[i].rulenore : ''
     rulesni = ruleBox[i].rulesni ? ruleBox[i].rulesni : ''
     rulesni = isLooniOS || isStashiOS ? '' : rulesni
+    rulepm = ruleBox[i].rulepm ? ruleBox[i].rulepm : ''
+    rulepm = isLooniOS || isStashiOS ? '' : rulepm
+    if (
+      !/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|AND|OR|NOT|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)$/i.test(
+        ruletype
+      ) &&
+      isSurgeiOS
+    ) {
+      rulepm = ''
+    }
     modistatus = ruleBox[i].modistatus
     ori = ruleBox[i].ori
     if (/de?st-port/i.test(ruletype)) {
@@ -919,7 +952,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     if (/reject-[^-]+-no-drop/i.test(rulepolicy) && !isLooniOS) {
       rulepolicy = rulepolicy.replace(/-no-drop/i, '')
     }
-
     if (rulepolicy == '') {
       notBuildInPolicy.push(ori)
     } else if (/^proxy$/i.test(rulepolicy) && modistatus == 'no' && (isSurgeiOS || isStashiOS)) {
@@ -927,23 +959,25 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     } else if (!policyRegex.test(rulepolicy) && !/^proxy$/i.test(rulepolicy) && modistatus == 'no') {
       notBuildInPolicy.push(ori)
     } else if (/^in-port|domain-wildcard$/i.test(ruletype) && isSurgeiOS) {
-      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni)
+      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
     } else if (/^protocol$/i.test(ruletype) && (isLooniOS || isSurgeiOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
     } else if (/^(?:domain-set|rule-set)$/i.test(ruletype) && (isSurgeiOS || isShadowrocket)) {
-      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni)
+      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
     } else if (
-      /^(?:domain(-suffix|-keyword)?|ip(-asn|-cidr6?)|user-agent|url-regex|de?st-port)$/i.test(ruletype) &&
+      /^(?:domain(-suffix|-keyword)?|ip(-asn|-cidr6?)|geoip|user-agent|url-regex|de?st-port)$/i.test(ruletype) &&
       !isStashiOS
     ) {
       rulevalue = /,/.test(rulevalue) && !/[()]/.test(rulevalue) ? '"' + rulevalue + '"' : rulevalue
-      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni)
+      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
     } else if (/^(?:and|or|not)$/i.test(ruletype) && !isStashiOS) {
       rules.push(ori)
     } else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|de?st-port)/i.test(ruletype) && isStashiOS) {
       rules.push(mark + noteK2 + '- ' + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
     } else if (/src-port/i.test(ruletype) && (isSurgeiOS || isLooniOS)) {
-      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy)
+      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulepm)
+    } else if (/src-ip|subnet/i.test(ruletype) && isSurgeiOS) {
+      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulepm)
     } else if (/url-regex/i.test(ruletype) && isStashiOS && /reject/i.test(rulepolicy)) {
       let Urx2Reject
       if (/DICT/i.test(rulepolicy)) {

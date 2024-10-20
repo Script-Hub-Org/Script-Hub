@@ -1169,6 +1169,11 @@ const htmls = `
         <span>根据关键词开启 Surge 的 SNI 扩展匹配(extended-matching) 多关键词以 <code>+</code> 分隔</span>
         <textarea id="sni" v-model.lazy="sni" placeholder=""></textarea>
       </details>
+      <details v-if="!target || target.startsWith('surge') ">
+        <summary>pre-matching</summary>
+        <span>根据关键词开启 Surge 的 pre-matching 多关键词以 <code>+</code> 分隔</span>
+        <textarea id="pm" v-model.lazy="pm" placeholder=""></textarea>
+      </details>
 
       <div v-if="!target || target.endsWith('-script') ">
         <input type="checkbox" id="wrap_response" v-model.lazy="wrap_response" />
@@ -1281,6 +1286,7 @@ const htmls = `
     noNtf: false,
     frontendConvert: false,
     sni: '',
+    pm: '',
     wrap_response: false,
     jsDelivr: false,
     compatibilityOnly: false,
@@ -1298,7 +1304,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'headers', 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'timeoutt', 'timeoutv', 'enginet', 'enginev', 'policy', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'localtext', 'icon', 'category']
+  const params = [ 'headers', 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'timeoutt', 'timeoutv', 'enginet', 'enginev', 'policy', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'pm', 'localtext', 'icon', 'category']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
