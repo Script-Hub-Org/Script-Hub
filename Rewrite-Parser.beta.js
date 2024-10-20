@@ -235,6 +235,7 @@ let hostBox = [] //host
 let ruleBox = [] //规则
 let rwBox = [] //重写
 let rwhdBox = [] //HeaderRewrite
+let rwbodyBox = [] // Body Rewrite
 let panelBox = [] //Panel信息
 let jsBox = [] //脚本
 let mockBox = [] //MapLocal或echo-response
@@ -260,6 +261,7 @@ let host = []
 let rules = []
 let URLRewrite = []
 let HeaderRewrite = []
+let BodyRewrite = []
 let MapLocal = []
 let script = []
 let cron = []
@@ -313,6 +315,16 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   eval(evJsori)
   eval(evUrlori)
+
+  // [Body Rewrite] 部分 rwbodyBox
+  let bodyRewrite = body.match(/(^|\n)\[Body Rewrite\]\n([\s\S]*?)\s*(\n\[|$)/)?.[2]
+
+  if (bodyRewrite) {
+    for await (let [y, x] of bodyRewrite.match(/[^\r\n]+/g).entries()) {
+      const [_, type, regex, value] = x.match(/^(http-request|http-response)\s+?(.*?)\s+?(.*?)$/)
+      rwbodyBox.push({ type, regex, value })
+    }
+  }
 
   body = body.match(/[^\r\n]+/g)
 
@@ -465,6 +477,76 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     if (/(?:\s(?:302|307|header)(?:$|\s)|url\s+30(?:2|7)\s)/.test(x)) {
       mark = getMark(y, body)
       rw_redirect(x, mark)
+    }
+
+    // Loon body rewrite 解析 不用这个 因为需要合并到一个脚本中对一个请求/响应进行多个操作
+    // if (/\s((request|response)-body-replace-regex)\s/.test(x)) {
+    //   let [_, regex, __, type, suffix] = x.match(/^(.*?)\s+?((request|response)-body-replace-regex)\s+?(.*?)\s*$/)
+    //   type = `http-${type}`
+    //   const suffixArray = suffix.split(/\s+/)
+    //   const newSuffixArray = []
+    //   for (let index = 0; index < suffixArray.length; index += 2) {
+    //     const key = suffixArray[index]
+    //     const value = suffixArray[index + 1]
+
+    //     if (value != null) {
+    //       newSuffixArray.push(
+    //         `${/\\x20/.test(key) ? `"${key.replace(/\\x20/g, ' ')}"` : key} ${
+    //           /\\x20/.test(value) ? `"${value.replace(/\\x20/g, ' ')}"` : value
+    //         }`
+    //       )
+    //     }
+    //   }
+
+    //   rwbodyBox.push({ type, regex, value: newSuffixArray.join(' ') })
+    // }
+
+    if (/\s((request|response)-body-(json-(add|del|replace)|replace-regex))\s/.test(x)) {
+      let [_, regex, __, httpType, action, ___, suffix] = x.match(
+        /^(.*?)\s+?((request|response)-body-(json-(add|del|replace)|replace-regex))\s+?(.*?)\s*$/
+      )
+      const suffixArray = suffix.split(/\s+/)
+      let newSuffixArray = []
+      if (action === 'json-del') {
+        if (suffix) {
+          newSuffixArray = suffixArray.map(item => (/\\x20/.test(item) ? `${item.replace(/\\x20/g, ' ')}` : item))
+        }
+      } else {
+        for (let index = 0; index < suffixArray.length; index += 2) {
+          const key = suffixArray[index]
+          const value = suffixArray[index + 1]
+
+          if (value != null) {
+            newSuffixArray.push([
+              /\\x20/.test(key) ? `${key.replace(/\\x20/g, ' ')}` : key,
+              /\\x20/.test(value) ? `${value.replace(/\\x20/g, ' ')}` : value,
+            ])
+          }
+        }
+      }
+      const jsurl = 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/body-rewrite.js'
+      const jstype = `http-${httpType}`
+      const jsptn = regex
+      let args = [[action, newSuffixArray]]
+
+      const index = jsBox.findIndex(i => i.jsurl === jsurl && i.jstype === jstype && i.jsptn === jsptn)
+      if (index === -1) {
+        jsBox.push({
+          jsname: `body_rewrite_${y}`,
+          jstype,
+          jsptn,
+          jsurl,
+          rebody: true,
+          size: -1,
+          timeout: '30',
+          jsarg: encodeURIComponent(JSON.stringify(args)),
+          ori: x,
+          num: y,
+        })
+      } else {
+        let jsargs = JSON.parse(decodeURIComponent(jsBox[index].jsarg))
+        jsBox[index].jsarg = encodeURIComponent(JSON.stringify([...jsargs, args[0]]))
+      }
     }
 
     //header rewrite 解析
@@ -814,6 +896,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     return curr
   }, [])
 
+  // BodyRewrite 需不要去重 会顺序执行
+  rwbodyBox = [...new Set(rwbodyBox)]
+
   panelBox = panelBox.reduce((curr, next) => {
     /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
     obj[next.scriptname] ? '' : (obj[next.scriptname] = curr.push(next))
@@ -1050,6 +1135,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         break
     } //switch
   } //reject redirect输出for
+
+  for (let i = 0; i < rwbodyBox.length; i++) {
+    const { type, regex, value } = rwbodyBox[i]
+    BodyRewrite.push(`${type} ${regex} ${value}`)
+  }
 
   //headerRewrite输出
   for (let i = 0; i < rwhdBox.length; i++) {
@@ -1460,6 +1550,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       HeaderRewrite = (HeaderRewrite[0] || '') && `[Header Rewrite]\n${HeaderRewrite.join('\n')}`
 
+      BodyRewrite = (BodyRewrite[0] || '') && `[Body Rewrite]\n${BodyRewrite.join('\n')}`
+
       MapLocal = (MapLocal[0] || '') && `[Map Local]\n${MapLocal.join('\n\n')}`
 
       host = (host[0] || '') && `[Host]\n${host.join('\n')}`
@@ -1491,6 +1583,8 @@ ${rules}
 ${URLRewrite}
 
 ${HeaderRewrite}
+
+${BodyRewrite}
 
 ${MapLocal}
 
@@ -1895,7 +1989,6 @@ function getMockInfo(x, mark, y) {
     if (oritype === 'base64') {
       mockbase64 = true
     }
-    console.log({ mockbase64 })
   }
   switch (targetApp) {
     case 'surge-module':
