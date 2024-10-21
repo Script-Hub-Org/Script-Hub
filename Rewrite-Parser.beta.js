@@ -1934,55 +1934,49 @@ function getMockInfo(x, mark, y) {
     if (/\smock-response-body\s/.test(x)) {
       // Loon data-type: body的类型，json,text,css,html,javascript,plain,png,gif,jpeg,tiff,svg,mp4,form-data 应该设置对应的 Content-Type
       switch (mocktype) {
+        case 'json':
+          mockheader = 'Content-Type:text/json'
+          break
+        case 'text':
+          mockheader = 'Content-Type:text/plain'
+          break
         case 'css':
-          mocktype = 'file'
           mockheader = 'Content-Type:text/css'
           break
         case 'html':
-          mocktype = 'file'
           mockheader = 'Content-Type:text/html'
           break
         case 'javascript':
-          mocktype = 'file'
           mockheader = 'Content-Type:text/javascript'
           break
         case 'plain':
-          mocktype = 'file'
           mockheader = 'Content-Type:text/plain'
           break
         case 'png':
-          mocktype = 'file'
           mockheader = 'Content-Type:image/png'
           break
         case 'gif':
-          mocktype = 'file'
           mockheader = 'Content-Type:image/gif'
           break
         case 'jpeg':
-          mocktype = 'file'
           mockheader = 'Content-Type:image/jpeg'
           break
         case 'tiff':
-          mocktype = 'file'
           mockheader = 'Content-Type:image/tiff'
           break
         case 'svg':
-          mocktype = 'file'
           mockheader = 'Content-Type:image/svg+xml'
           break
         case 'mp4':
-          mocktype = 'file'
           mockheader = 'Content-Type:video/mp4'
           break
         case 'form-data':
-          mocktype = 'file'
           mockheader = 'Content-Type:application/x-www-form-urlencoded'
           break
-        default:
-          mocktype = 'file'
-          break
       }
+      mocktype = datapath ? 'file' : 'text'
       if (mockbase64) {
+        // Surge 的 base64 仅支持内容
         mocktype = 'base64'
       }
     }
@@ -1992,7 +1986,13 @@ function getMockInfo(x, mark, y) {
   }
   switch (targetApp) {
     case 'surge-module':
-      mockBox.push({ mark, noteK, mockptn, mockurl, mockheader, mockstatus, mocktype, ori: x, mocknum: y })
+      if (mockbase64 && datapath) {
+        const e = '暂不支持远程 base64'
+        console.log(e)
+        shNotify(e)
+      } else {
+        mockBox.push({ mark, noteK, mockptn, mockurl, mockheader, mockstatus, mocktype, ori: x, mocknum: y })
+      }
       break
     case 'shadowrocket-module':
     case 'loon-plugin':
