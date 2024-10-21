@@ -377,11 +377,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       for (let i = 0; i < sni.length; i++) {
         const elem = sni[i].trim()
         // 加入对逻辑规则的判断
-        if (
-          x.indexOf(elem) != -1 &&
-          (/^(DOMAIN|RULE-SET)/i.test(x) || /(AND|OR|NOT)\s*?,\s*?\(\s*?\(\s*?.+\s*?\)/i.test(x)) &&
-          !/,\s*extended-matching/i.test(x)
-        ) {
+        if (x.indexOf(elem) != -1 && /^(DOMAIN|RULE-SET)/i.test(x) && !/,\s*extended-matching/i.test(x)) {
           x = x + ',extended-matching'
           break
         }
@@ -395,10 +391,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         // 加入对逻辑规则的判断
         if (
           x.indexOf(elem) != -1 &&
-          (/^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)\s*?,/i.test(
+          /^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)\s*?,/i.test(
             x
-          ) ||
-            /(AND|OR|NOT)\s*?,\s*?\(\s*?\(\s*?.+\s*?\)/i.test(x)) &&
+          ) &&
           !/,\s*pre-matching/i.test(x)
         ) {
           x = x + ',pre-matching'
@@ -409,7 +404,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     //ip规则不解析域名
     if (ipNoResolve == true) {
-      if (/^(?:ip-[ca]|RULE-SET)/i.test(x) && !/,\s*no-resolve/.test(x)) {
+      if (/^(?:ip-[ca]|RULE-SET|geoip)/i.test(x) && !/,\s*no-resolve/.test(x)) {
         x = x + ',no-resolve'
       }
     } //增加ip规则不解析域名结束
@@ -1010,7 +1005,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     rulepm = ruleBox[i].rulepm ? ruleBox[i].rulepm : ''
     rulepm = isLooniOS || isStashiOS ? '' : rulepm
     if (
-      !/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|AND|OR|NOT|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)$/i.test(
+      !/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)$/i.test(
         ruletype
       ) &&
       isSurgeiOS
