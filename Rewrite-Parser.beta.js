@@ -400,14 +400,34 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         if (
           isSurgeiOS &&
           x.indexOf(elem) != -1 &&
-          /^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET|AND|OR|NOT)\s*?,/i.test(
-            x
-          ) &&
           !/,\s*pre-matching/i.test(x) &&
           /^REJECT(-\w+)?/i.test(getPolicy(x))
         ) {
-          x = x + ',pre-matching'
-          break
+          if (
+            /^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)\s*?,/i.test(
+              x
+            )
+          ) {
+            x = x + ',pre-matching'
+            break
+          } else if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
+            const pre_matching_regex = /\(\s*?(((?!(AND|NOT|OR))(\w|-))+?)\s*?,\s*?.+?\s*?\)/g
+            let not_matched = false
+            while ((matched = pre_matching_regex.exec(x))) {
+              if (
+                !/^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)$/i.test(
+                  matched?.[1]
+                )
+              ) {
+                not_matched = true
+                break
+              }
+            }
+            if (!not_matched) {
+              x = x + ',pre-matching'
+              break
+            }
+          }
         }
       } //循环结束
     } //启用 pre-matching 结束
