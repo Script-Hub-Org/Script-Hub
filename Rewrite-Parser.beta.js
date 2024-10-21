@@ -377,9 +377,17 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       for (let i = 0; i < sni.length; i++) {
         const elem = sni[i].trim()
         // 加入对逻辑规则的判断
-        if (x.indexOf(elem) != -1 && /^(DOMAIN|RULE-SET)/i.test(x) && !/,\s*extended-matching/i.test(x)) {
-          x = x + ',extended-matching'
-          break
+        if (isSurgeiOS && x.indexOf(elem) != -1) {
+          if (/^(DOMAIN(-\w+)?|RULE-SET)/i.test(x) && !/,\s*?extended-matching/i.test(x)) {
+            x = x + ',extended-matching'
+            break
+          } else if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
+            x = x.replace(
+              /\(\s*?((DOMAIN(-\w+)?|RULE-SET)\s*?,\s*?((?!,\s*?extended-matching\s*?(,|\))).)+?\s*?)\)/g,
+              '($1,extended-matching)'
+            )
+            break
+          }
         }
       } //循环结束
     } //启用sni嗅探结束
@@ -390,11 +398,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         const elem = pm[i].trim()
         // 加入对逻辑规则的判断
         if (
+          isSurgeiOS &&
           x.indexOf(elem) != -1 &&
-          /^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)\s*?,/i.test(
+          /^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET|AND|OR|NOT)\s*?,/i.test(
             x
           ) &&
-          !/,\s*pre-matching/i.test(x)
+          !/,\s*pre-matching/i.test(x) &&
+          /^REJECT(-\w+)?/i.test(getPolicy(x))
         ) {
           x = x + ',pre-matching'
           break
@@ -404,8 +414,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     //ip规则不解析域名
     if (ipNoResolve == true) {
-      if (/^(?:ip-[ca]|RULE-SET|geoip)/i.test(x) && !/,\s*no-resolve/.test(x)) {
+      if (/^(IP(-\w+)?|RULE-SET|GEOIP)/i.test(x) && !/,\s*?no-resolve/i.test(x)) {
         x = x + ',no-resolve'
+      } else if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
+        x = x.replace(
+          /\(\s*?((IP(-\w+)?|RULE-SET|GEOIP)\s*?,\s*?((?!,\s*?no-resolve\s*?(,|\))).)+?\s*?)\)/g,
+          '($1,no-resolve)'
+        )
       }
     } //增加ip规则不解析域名结束
 
@@ -1002,16 +1017,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     rulenore = ruleBox[i].rulenore ? ruleBox[i].rulenore : ''
     rulesni = ruleBox[i].rulesni ? ruleBox[i].rulesni : ''
     rulesni = isLooniOS || isStashiOS ? '' : rulesni
-    rulepm = ruleBox[i].rulepm ? ruleBox[i].rulepm : ''
-    rulepm = isLooniOS || isStashiOS ? '' : rulepm
-    if (
-      !/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)$/i.test(
-        ruletype
-      ) &&
-      isSurgeiOS
-    ) {
-      rulepm = ''
-    }
+
     modistatus = ruleBox[i].modistatus
     ori = ruleBox[i].ori
     if (/de?st-port/i.test(ruletype)) {
@@ -1031,6 +1037,17 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
     if (/reject-[^-]+-no-drop/i.test(rulepolicy) && !isLooniOS) {
       rulepolicy = rulepolicy.replace(/-no-drop/i, '')
+    }
+    rulepm = ruleBox[i].rulepm ? ruleBox[i].rulepm : ''
+    rulepm = isLooniOS || isStashiOS ? '' : rulepm
+    if (
+      !/^(DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)$/i.test(
+        ruletype
+      ) ||
+      !isSurgeiOS ||
+      !/^REJECT(-\w+)?/i.test(rulepolicy)
+    ) {
+      rulepm = ''
     }
     if (rulepolicy == '') {
       notBuildInPolicy.push(ori)
