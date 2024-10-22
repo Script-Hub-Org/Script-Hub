@@ -14,6 +14,8 @@
 https://github.com/Script-Hub-Org/Script-Hub
 ***************************/
 
+const { CLIENT_RENEG_WINDOW } = require('tls')
+
 const script_start = Date.now()
 const JS_NAME = 'Script Hub: 重写转换'
 const $ = new Env(JS_NAME)
@@ -397,11 +399,19 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       for (let i = 0; i < pm.length; i++) {
         const elem = pm[i].trim()
         // 加入对逻辑规则的判断
+        const _rulePandV = x
+          .replace(/^#/, '')
+          .replace(ruletype, '') // 这个此时还没有 不过不重要
+          .replace(/\s*,\s*no-resolve/, '')
+          .replace(/\s*,\s*extended-matching/, '')
+          .replace(/\s*,\s*pre-matching/, '')
+          .replace(/^\s*,\s*/, '')
+        const _rulepolicy = getPolicy(_rulePandV)
         if (
           isSurgeiOS &&
           x.indexOf(elem) != -1 &&
           !/,\s*pre-matching/i.test(x) &&
-          /^REJECT(-\w+)?/i.test(getPolicy(x))
+          /^REJECT(-\w+)?/i.test(_rulepolicy)
         ) {
           if (
             /^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)\s*?,/i.test(
@@ -431,7 +441,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         }
       } //循环结束
     } //启用 pre-matching 结束
-
     //ip规则不解析域名
     if (ipNoResolve == true) {
       if (/^(IP(-\w+)?|RULE-SET|GEOIP)/i.test(x) && !/,\s*?no-resolve/i.test(x)) {
