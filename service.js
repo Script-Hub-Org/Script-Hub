@@ -6,8 +6,8 @@ const { scriptMap, scriptMapBeta } = require('./scriptMap.js')
 const workspace = path.join(__dirname, './tmp')
 fs.mkdirSync(workspace, { recursive: true })
 
-const PORT = process.env.PORT || 9100
-const BETA_PORT = process.env.BETA_PORT || 9101
+const PORT = 8964
+const BETA_PORT = 8965
 const HOST = process.env.HOST || '0.0.0.0'
 const BASE_URL = process.env.BASE_URL || `http://127.0.0.1:${PORT}`
 const BETA_BASE_URL = process.env.BETA_BASE_URL || `http://127.0.0.1:${BETA_PORT}`
