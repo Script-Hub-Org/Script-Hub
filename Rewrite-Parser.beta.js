@@ -774,31 +774,33 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           }
         } //for
       }
-
-      jsBox.push({
-        mark,
-        noteK,
-        jsname,
-        img,
-        jstype,
-        jsptn,
-        jsurl,
-        rebody,
-        proto,
-        size,
-        ability,
-        updatetime,
-        timeout,
-        jsarg,
-        cronexp,
-        wakesys,
-        tilesicon,
-        tilescolor,
-        eventname,
-        engine,
-        ori: x,
-        num: y,
-      })
+      // 注释不加
+      if (!/^(#|;|\/\/)\s*/.test(x)) {
+        jsBox.push({
+          mark,
+          noteK,
+          jsname,
+          img,
+          jstype,
+          jsptn,
+          jsurl,
+          rebody,
+          proto,
+          size,
+          ability,
+          updatetime,
+          timeout,
+          jsarg,
+          cronexp,
+          wakesys,
+          tilesicon,
+          tilescolor,
+          eventname,
+          engine,
+          ori: x,
+          num: y,
+        })
+      }
     } //脚本解析结束
 
     //qx脚本解析
