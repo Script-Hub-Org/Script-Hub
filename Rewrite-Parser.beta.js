@@ -97,7 +97,11 @@ let sufkeepHeader = keepHeader == true ? '&keepHeader=true' : '' //用于保留h
 let sufjsDelivr = jsDelivr == true ? '&jsDelivr=true' : '' //用于开启jsDeliver的后缀
 
 //用于自定义发送请求的请求头
-const reqHeaders = { headers: {} }
+const reqHeaders = {
+  headers: {
+    'User-Agent': 'script-hub/1.0.0',
+  },
+}
 
 if (queryObject.headers) {
   decodeURIComponent(queryObject.headers)

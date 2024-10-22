@@ -1,3 +1,10 @@
+//用于自定义发送请求的请求头
+const reqHeaders = {
+  headers: {
+    'User-Agent': 'script-hub/1.0.0',
+  },
+}
+
 const https = require('https')
 const http = require('http')
 const os = require('os')
@@ -64,7 +71,7 @@ function readdir(dirPath) {
         throw new Error('无订阅链接')
       }
 
-      let res = await fetchContent(url)
+      let res = await fetchContent(url, { headers: reqHeaders.headers })
       if (!res) {
         throw new Error(`未获取到模块内容`)
       }

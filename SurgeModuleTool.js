@@ -3,7 +3,14 @@
 // icon-color: blue; icon-glyph: cloud-download-alt;
 
 // prettier-ignore
-let ToolVersion = "2.03";
+let ToolVersion = "2.04";
+
+//用于自定义发送请求的请求头
+const reqHeaders = {
+  headers: {
+    'User-Agent': 'script-hub/1.0.0',
+  },
+}
 
 async function delay(milliseconds) {
   var before = Date.now()
@@ -158,6 +165,7 @@ for await (const [index, file] of files.entries()) {
       const req = new Request(url)
       req.timeoutInterval = 10
       req.method = 'GET'
+      req.headers = reqHeaders.headers
       let res = await req.loadString()
       const statusCode = req.response.statusCode
       if (statusCode < 200 || statusCode >= 400) {
