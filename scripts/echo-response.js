@@ -18,7 +18,12 @@ status-code=200
 text=encodeURIComponent过的文本
 base64=base64内容
 */
-
+//用于自定义发送请求的请求头
+const reqHeaders = {
+  headers: {
+    'User-Agent': 'script-hub/1.0.0',
+  },
+}
 const NAME = 'echo-response'
 const TITLE = 'echo-response'
 const $ = new Env(NAME)
@@ -188,6 +193,7 @@ let result = {}
         $.log('需下载', url)
         const res = await $.http.get({
           url,
+          headers: reqHeaders.headers,
           // headers: $.lodash_get($request, 'headers'),
         })
         // $.log('ℹ️ res', $.toStr(res))
