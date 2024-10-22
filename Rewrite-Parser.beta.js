@@ -14,8 +14,6 @@
 https://github.com/Script-Hub-Org/Script-Hub
 ***************************/
 
-const { CLIENT_RENEG_WINDOW } = require('tls')
-
 const script_start = Date.now()
 const JS_NAME = 'Script Hub: 重写转换'
 const $ = new Env(JS_NAME)
