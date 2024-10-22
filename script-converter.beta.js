@@ -50,6 +50,7 @@ let url
   const keepHeader = queryObject.keepHeader
   const setHeader = queryObject.header ?? ''
   const setContentType = queryObject.contentType ?? ''
+  const prepend = queryObject.prepend ?? ''
   const evJsori = queryObject.evalScriptori ?? ''
   const evJsmodi = queryObject.evalScriptmodi ?? ''
   const evUrlori = queryObject.evalUrlori ?? ''
@@ -360,7 +361,7 @@ global.$done = _scriptSonverterDone
   }
   if (type === 'qx-script' || compatibilityOnly) {
     const content = `${prefix}\n${compatibilityOnly ? body : body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
-    body = `
+    body = `${prepend || ''}
 const _scriptSonverterCompatibilityType = typeof $response !== 'undefined' ? 'response' : typeof $request !== 'undefined' ? 'request' : ''
 const _scriptSonverterCompatibilityDone = $done
 try {

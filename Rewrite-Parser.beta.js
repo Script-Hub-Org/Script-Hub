@@ -52,6 +52,12 @@ const evJsmodi = queryObject.evalScriptmodi
 const evUrlori = queryObject.evalUrlori
 const evUrlmodi = queryObject.evalUrlmodi
 
+const prepend = queryObject.prepend
+const scEvJsori = queryObject.evJsori
+const scEvJsmodi = queryObject.evJsmodi
+const scEvUrlori = queryObject.evUrlori
+const scEvUrlmodi = queryObject.evUrlmodi
+
 let noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false //默认开启通知
 
 let localsetNtf = $.lodash_get(arg, 'Notify') || $.getval('ScriptHub通知') || ''
@@ -478,6 +484,21 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     if (compatibilityOnly == true && (jscStatus == true || jsc2Status == true)) {
       jsSuf = jsSuf + '&compatibilityOnly=true'
+    }
+    if (prepend && (jscStatus == true || jsc2Status == true)) {
+      jsSuf = jsSuf + `&prepend=${encodeURIComponent(prepend)}`
+    }
+    if (scEvJsori && (jscStatus == true || jsc2Status == true)) {
+      jsSuf = jsSuf + `&evalScriptori=${encodeURIComponent(scEvJsori)}`
+    }
+    if (scEvJsmodi && (jscStatus == true || jsc2Status == true)) {
+      jsSuf = jsSuf + `&evalScriptmodi=${encodeURIComponent(scEvJsmodi)}`
+    }
+    if (scEvUrlori && (jscStatus == true || jsc2Status == true)) {
+      jsSuf = jsSuf + `&evalUrlori=${encodeURIComponent(scEvUrlori)}`
+    }
+    if (scEvUrlmodi && (jscStatus == true || jsc2Status == true)) {
+      jsSuf = jsSuf + `&evalUrlmodi=${encodeURIComponent(scEvUrlmodi)}`
     }
 
     //模块信息

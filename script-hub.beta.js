@@ -948,6 +948,37 @@ const htmls = `
               <input type="checkbox" id="compatibilityOnly" v-model.lazy="compatibilityOnly" />
               <label class="button-over" for="compatibilityOnly">仅进行兼容性转换<small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%98%AF-%E4%BB%85%E8%BF%9B%E8%A1%8C%E5%85%BC%E5%AE%B9%E6%80%A7%E8%BD%AC%E6%8D%A2" target="_blank">什么是 <code>仅进行兼容性转换</code></a></small></label>
             </div>
+            <details>
+              <summary>在脚本开头添加代码</summary>
+              <span>下面的代码会添加到被转换的脚本的开头 可用于更复杂的操作</span>
+              <textarea id="prepend" v-model.lazy="prepend" placeholder="console.log(new Date().toLocaleString('zh'))"></textarea>
+            </details>
+            <details>
+              <summary>高级操作(使用代码处理脚本的内容)</summary>
+              <details>
+                <summary>处理原始内容(代码)</summary>
+                <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
+                <textarea id="evJsori" v-model.lazy="evJsori" placeholder="body = body.replace(/ffffoooooo/gi, 'bbbaaarrr')"></textarea>
+              </details>
+
+              <details>
+                <summary>处理转换后的内容(代码)</summary>
+                <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
+                <textarea id="evJsmodi" v-model.lazy="evJsmodi" placeholder="body = body.replace(/ffffoooooo/gi, 'bbbaaarrr')"></textarea>
+              </details>
+              
+              <details>
+                <summary>处理原始内容(链接)</summary>
+                <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
+                <textarea id="evUrlori" v-model.lazy="evUrlori" placeholder="URL 链接"></textarea>
+              </details>
+
+              <details>
+                <summary>处理转换后的内容(链接)</summary>
+                <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
+                <textarea id="evUrlmodi" v-model.lazy="evUrlmodi" placeholder="URL 链接"></textarea>
+              </details>
+            </details>
           </details>
 
           <details>
@@ -962,6 +993,37 @@ const htmls = `
               <input type="checkbox" id="compatibilityOnly" v-model.lazy="compatibilityOnly" />
               <label class="button-over" for="compatibilityOnly">仅进行兼容性转换<small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%98%AF-%E4%BB%85%E8%BF%9B%E8%A1%8C%E5%85%BC%E5%AE%B9%E6%80%A7%E8%BD%AC%E6%8D%A2" target="_blank">什么是 <code>仅进行兼容性转换</code></a></small></label>
             </div>
+            <details>
+              <summary>在脚本开头添加代码</summary>
+              <span>下面的代码会添加到被转换的脚本的开头 可用于更复杂的操作</span>
+              <textarea id="prepend" v-model.lazy="prepend" placeholder="console.log(new Date().toLocaleString('zh'))"></textarea>
+            </details>
+            <details>
+              <summary>高级操作(使用代码处理脚本的内容)</summary>
+              <details>
+                <summary>处理原始内容(代码)</summary>
+                <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
+                <textarea id="evJsori" v-model.lazy="evJsori" placeholder="body = body.replace(/ffffoooooo/gi, 'bbbaaarrr')"></textarea>
+              </details>
+
+              <details>
+                <summary>处理转换后的内容(代码)</summary>
+                <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
+                <textarea id="evJsmodi" v-model.lazy="evJsmodi" placeholder="body = body.replace(/ffffoooooo/gi, 'bbbaaarrr')"></textarea>
+              </details>
+              
+              <details>
+                <summary>处理原始内容(链接)</summary>
+                <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
+                <textarea id="evUrlori" v-model.lazy="evUrlori" placeholder="URL 链接"></textarea>
+              </details>
+
+              <details>
+                <summary>处理转换后的内容(链接)</summary>
+                <span>使用 <code>eval</code> 执行, 内容变量为 <code>body</code></span>
+                <textarea id="evUrlmodi" v-model.lazy="evUrlmodi" placeholder="URL 链接"></textarea>
+              </details>
+            </details>
           </details>
         </details>
       </template>
@@ -1188,8 +1250,8 @@ const htmls = `
 
       <details v-if="inputType !== 'local-text'">
         <summary>自定义请求的 Headers</summary>
-        <span>格式(使用英文冒号 不要加无意义的空格): <code>Field:Value</code> 可换行输入多个</span>
-        <textarea id="headers" v-model.lazy="headers" placeholder="Authorization:token xxx"></textarea>
+        <span>格式(使用英文冒号 不要加无意义的空格): <code>Field:Value</code> 可换行输入多个. <br/>默认为 <code>User-Agent:script-hub/1.0.0</code></span>
+        <textarea id="headers" v-model.lazy="headers" placeholder="User-Agent:script-hub/1.0.0\nAuthorization:token xxx"></textarea>
       </details>
       <details>
         <summary>高级操作(使用代码处理内容)</summary>
@@ -1279,6 +1341,11 @@ const htmls = `
     evalScriptmodi: '',
     evalUrlori: '',
     evalUrlmodi: '',
+    evJsori: '',
+    evJsmodi: '',
+    evUrlori: '',
+    evUrlmodi: '',
+    prepend: '',
     frontendConvertResult: '',
     keepHeader: false,
     nore: false,
@@ -1304,7 +1371,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'headers', 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'timeoutt', 'timeoutv', 'enginet', 'enginev', 'policy', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'keepHeader', 'jsDelivr', 'sni', 'pm', 'localtext', 'icon', 'category']
+  const params = [ 'headers', 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'timeoutt', 'timeoutv', 'enginet', 'enginev', 'policy', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'evJsori', 'evJsmodi', 'evUrlori', 'evUrlmodi','prepend', 'keepHeader', 'jsDelivr', 'sni', 'pm', 'localtext', 'icon', 'category']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
