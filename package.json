@@ -21,6 +21,12 @@
     "vm2": "^3.9.19"
   },
   "dependencies": {
-    "script-hub": "file:"
+    "cross-env": "^7.0.3",
+    "got": "^11.8.5",
+    "koa": "^2.14.2",
+    "lodash": "^4.17.21",
+    "script-hub": "file:",
+    "tough-cookie": "^4.0.0",
+    "vm2": "^4.0.0"
   }
 }
