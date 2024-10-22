@@ -21,5 +21,5 @@
     "tough-cookie": "^4.0.0",
     "vm2": "^3.9.19"
   },
-  "packageManager": "pnpm@^9.1.0"
+  "packageManager": "pnpm@9.1.0"
 }
