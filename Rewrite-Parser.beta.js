@@ -380,12 +380,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         const elem = sni[i].trim()
         // 加入对逻辑规则的判断
         if (isSurgeiOS && x.indexOf(elem) != -1) {
-          if (/^(DOMAIN(-\w+)?|RULE-SET)/i.test(x) && !/,\s*?extended-matching/i.test(x)) {
+          if (/^(DOMAIN(-\w+)?|RULE-SET|URL-REGEX)/i.test(x) && !/,\s*?extended-matching/i.test(x)) {
             x = x + ',extended-matching'
             break
           } else if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
             x = x.replace(
-              /\(\s*?((DOMAIN(-\w+)?|RULE-SET)\s*?,\s*?((?!,\s*?extended-matching\s*?(,|\))).)+?\s*?)\)/g,
+              /\(\s*?((DOMAIN(-\w+)?|RULE-SET|URL-REGEX)\s*?,\s*?((?!,\s*?extended-matching\s*?(,|\))).)+?\s*?)\)/g,
               '($1,extended-matching)'
             )
             break
