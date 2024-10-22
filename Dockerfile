@@ -1,17 +1,19 @@
-# 使用轻量的 Node.js Alpine 版本作为基础镜像
+
 FROM node:18-alpine AS builder
 
-# 设置工作目录
-WORKDIR /usr/src/app
+RUN corepack enable
 
-COPY package*.json ./
+WORKDIR /app
 
-# 安装所有依赖
-RUN npm install --production
-RUN npm install koa --save
+COPY package*.json pnpm-lock.yaml ./
+
+# 安装生产依赖
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
 COPY . .
 
-EXPOSE 8964 8965
+EXPOSE 9100 9101
 
-CMD ["node", "service.js"]
+
+# 使用 pnpm 启动服务
+CMD ["pnpm", "service"]

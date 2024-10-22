@@ -9,7 +9,7 @@
     "export_html": "cross-env EXPORT_HTML=true node preview.js"
   },
   "license": "GPL-3.0",
-  "devDependencies": {
+  "dependencies": {
     "cross-env": "^7.0.3",
     "crypto-js": "^4.0.0",
     "got": "^11.8.5",
@@ -17,16 +17,9 @@
     "iconv-lite": "0.6.3",
     "koa": "^2.14.2",
     "nodemon": "^3.0.0",
+    "script-hub": "file:",
     "tough-cookie": "^4.0.0",
     "vm2": "^3.9.19"
   },
-  "dependencies": {
-    "cross-env": "^7.0.3",
-    "got": "^11.8.5",
-    "koa": "^2.14.2",
-    "lodash": "^4.17.21",
-    "script-hub": "file:",
-    "tough-cookie": "^4.0.0",
-    "vm2": "^4.0.0"
-  }
+  "packageManager": "pnpm@9.1.0"
 }
