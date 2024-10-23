@@ -393,8 +393,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             break
           } else if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
             x = x.replace(
-              /\(\s*?((DOMAIN(-\w+)?|RULE-SET|URL-REGEX)\s*?,\s*?((?!,\s*?extended-matching\s*?(,|\))).)+?\s*?)\)/g,
-              '($1,extended-matching)'
+              /(\(\s*?(?:DOMAIN(?:-\w+)?|RULE-SET|URL-REGEX)\s*?,\s*?(?:(?!,\s*?extended-matching\s*?(?:,|\))).)+?\s*?)(\)\s*?,|\)\s*?\))/g,
+              '$1,extended-matching$2'
             )
             break
           }
@@ -429,7 +429,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             x = x + ',pre-matching'
             break
           } else if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
-            const pre_matching_regex = /\(\s*?(((?!(AND|NOT|OR))(\w|-))+?)\s*?,\s*?.+?\s*?\)/g
+            const pre_matching_regex = /\(\s*?(((?!(AND|NOT|OR))(\w|-))+?)\s*?,\s*?.+?\s*?(\)\s*?,|\)\s*?\))/g
             let not_matched = false
             while ((matched = pre_matching_regex.exec(x))) {
               if (
@@ -455,8 +455,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         x = x + ',no-resolve'
       } else if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
         x = x.replace(
-          /\(\s*?((IP(-\w+)?|RULE-SET|GEOIP)\s*?,\s*?((?!,\s*?no-resolve\s*?(,|\))).)+?\s*?)\)/g,
-          '($1,no-resolve)'
+          /(\(\s*?(?:IP(?:-\w+)?|RULE-SET|GEOIP)\s*?,\s*?(?:(?!,\s*?no-resolve\s*?(?:,|\))).)+?\s*?)(\)\s*?,|\)\s*?\))/g,
+          '$1,no-resolve$2'
         )
       }
     } //增加ip规则不解析域名结束
@@ -2053,7 +2053,7 @@ function getMockInfo(x, mark, y) {
   switch (targetApp) {
     case 'surge-module':
       if (mockbase64 && datapath) {
-        const e = '暂不支持远程 base64'
+        const e = `暂不支持远程 base64:\n${x}`
         console.log(e)
         shNotify(e)
       } else {
