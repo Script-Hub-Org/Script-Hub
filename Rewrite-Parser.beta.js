@@ -63,6 +63,7 @@ let noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false //默认开启
 let localsetNtf = $.lodash_get(arg, 'Notify') || $.getval('ScriptHub通知') || ''
 noNtf = localsetNtf == '开启通知' ? false : localsetNtf == '关闭通知' ? true : noNtf
 
+let jqEnabled = istrue(queryObject.jqEnabled)
 let openMsgHtml = istrue(queryObject.openMsgHtml)
 
 noNtf = openMsgHtml ? true : noNtf
@@ -587,27 +588,55 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         }
       }
       const jsurl = 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/body-rewrite.js'
-      const jstype = `http-${httpType}`
+      let jstype = `http-${httpType}`
       const jsptn = regex
       let args = [[action, newSuffixArray]]
 
-      const index = jsBox.findIndex(i => i.jsurl === jsurl && i.jstype === jstype && i.jsptn === jsptn)
-      if (index === -1) {
-        jsBox.push({
-          jsname: `body_rewrite_${y}`,
-          jstype,
-          jsptn,
-          jsurl,
-          rebody: true,
-          size: -1,
-          timeout: '30',
-          jsarg: encodeURIComponent(JSON.stringify(args)),
-          ori: x,
-          num: y,
-        })
+      if (jqEnabled && isSurgeiOS) {
+        if (action === 'json-add') {
+          newSuffixArray.forEach(item => {
+            rwbodyBox.push({ type: `${jstype}-jq`, regex: jsptn, value: `'.${item[0]} = ${JSON.stringify(item[1])}'` })
+          })
+        } else if (action === 'json-del') {
+          newSuffixArray.forEach(item => {
+            rwbodyBox.push({ type: `${jstype}-jq`, regex: jsptn, value: `'del(.${item})'` })
+          })
+        } else if (action === 'json-replace') {
+          newSuffixArray.forEach(item => {
+            const paths = parsePath(item[0])
+            const parant = [...paths]
+            const last = parant.pop()
+            rwbodyBox.push({
+              type: `${jstype}-jq`,
+              regex: jsptn,
+              value: `'if (getpath(${JSON.stringify(parant)}) | has(${
+                /^\d+$/.test(last) ? last : `"${last}"`
+              })) then (.${item[0]} = ${JSON.stringify(item[1])}) else . end'`,
+            })
+          })
+        } else {
+          newSuffixArray = newSuffixArray.map(item => item.join(' '))
+          rwbodyBox.push({ type: jstype, regex: jsptn, value: newSuffixArray.join(' ') })
+        }
       } else {
-        let jsargs = JSON.parse(decodeURIComponent(jsBox[index].jsarg))
-        jsBox[index].jsarg = encodeURIComponent(JSON.stringify([...jsargs, args[0]]))
+        const index = jsBox.findIndex(i => i.jsurl === jsurl && i.jstype === jstype && i.jsptn === jsptn)
+        if (index === -1) {
+          jsBox.push({
+            jsname: `body_rewrite_${y}`,
+            jstype,
+            jsptn,
+            jsurl,
+            rebody: true,
+            size: -1,
+            timeout: '30',
+            jsarg: encodeURIComponent(JSON.stringify(args)),
+            ori: x,
+            num: y,
+          })
+        } else {
+          let jsargs = JSON.parse(decodeURIComponent(jsBox[index].jsarg))
+          jsBox[index].jsarg = encodeURIComponent(JSON.stringify([...jsargs, args[0]]))
+        }
       }
     }
 
@@ -2235,6 +2264,33 @@ async function http(url, opts = {}) {
     }
     throw new Error(info)
   }
+}
+function parsePath(str) {
+  var regex = /(?:\.([a-zA-Z_$][a-zA-Z0-9_$]*))|\[(?:(['"])(.*?)\2|(\d+))\]/g
+
+  var matches
+  var result = []
+
+  // 提取开头的变量名
+  var initialMatch = str.trim().match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)/)
+  if (initialMatch) {
+    result.push(initialMatch[1])
+  }
+
+  // 使用正则表达式匹配每个属性访问部分
+  while ((matches = regex.exec(str)) !== null) {
+    if (matches[1]) {
+      // 点号访问，例如 .f
+      result.push(matches[1])
+    } else if (matches[3]) {
+      // 方括号字符串访问，例如 ['b'] 或 ["a-c"]
+      result.push(matches[3])
+    } else if (matches[4]) {
+      // 方括号数字索引访问，例如 [0]
+      result.push(parseInt(matches[4]))
+    }
+  }
+  return result
 }
 function done(...args) {
   $.log(`⏱ 总耗时：${Math.round(((Date.now() - script_start) / 1000) * 100) / 100} 秒`)

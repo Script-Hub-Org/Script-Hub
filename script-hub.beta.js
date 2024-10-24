@@ -1236,6 +1236,10 @@ const htmls = `
         <span>根据关键词开启 Surge 的 pre-matching 多关键词以 <code>+</code> 分隔</span>
         <textarea id="pm" v-model.lazy="pm" placeholder=""></textarea>
       </details>
+      <div v-if="!target || target.startsWith('surge') ">
+        <input type="checkbox" id="jqEnabled" v-model.lazy="jqEnabled" />
+        <label class="button-over" for="jqEnabled">开启 JQ(需新版 Surge 订阅功能)</label>
+      </div>
 
       <div v-if="!target || target.endsWith('-script') ">
         <input type="checkbox" id="wrap_response" v-model.lazy="wrap_response" />
@@ -1288,7 +1292,7 @@ const htmls = `
 
     </div>
     <footer>
-      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.14.13</a></p>
+      <p>Made With &hearts; By <a href="https://github.com/Script-Hub-Org/Script-Hub">Script Hub v1.14.14</a></p>
     </footer>
     <script>
       const openAllDetails = () => document.querySelectorAll('details').forEach(i => i.setAttribute('open', ""))
@@ -1351,6 +1355,7 @@ const htmls = `
     nore: false,
     synMitm: false,
     noNtf: false,
+    jqEnabled: false,
     frontendConvert: false,
     sni: '',
     pm: '',
@@ -1371,7 +1376,7 @@ const htmls = `
     init.target = 'shadowrocket-module'
   }
 
-  const params = [ 'headers', 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'timeoutt', 'timeoutv', 'enginet', 'enginev', 'policy', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'evJsori', 'evJsmodi', 'evUrlori', 'evUrlmodi','prepend', 'keepHeader', 'jsDelivr', 'sni', 'pm', 'localtext', 'icon', 'category']
+  const params = [ 'headers', 'n', 'type', 'target', 'x', 'y', 'hnadd', 'hndel', 'hnregdel', 'jsc', 'jsc2', 'cron', 'cronexp', 'njsname', 'njsnametarget', 'timeoutt', 'timeoutv', 'enginet', 'enginev', 'policy', 'arg', 'argv', 'tiles', 'tcolor', 'cachexp', 'nocache', 'del', 'nore', 'synMitm', 'noNtf','jqEnabled', 'wrap_response', 'compatibilityOnly', 'evalScriptori', 'evalScriptmodi', 'evalUrlmodi', 'evalUrlori', 'evJsori', 'evJsmodi', 'evUrlori', 'evUrlmodi','prepend', 'keepHeader', 'jsDelivr', 'sni', 'pm', 'localtext', 'icon', 'category']
   
   init.editMode = location.pathname.indexOf('/edit') === 0
 
