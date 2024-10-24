@@ -580,7 +580,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       if (jqEnabled && isSurgeiOS) {
         if (action === 'json-add') {
           newSuffixArray.forEach(item => {
-            rwbodyBox.push({ type: `${jstype}-jq`, regex: jsptn, value: `'.${item[0]} = ${JSON.stringify(item[1])}'` })
+            const paths = parseJsonPath(item[0])
+            rwbodyBox.push({
+              type: `${jstype}-jq`,
+              regex: jsptn,
+              value: `'setpath(${JSON.stringify(paths)}; ${JSON.stringify(item[1])})'`,
+            })
           })
         } else if (action === 'json-del') {
           newSuffixArray.forEach(item => {
@@ -597,7 +602,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
               regex: jsptn,
               value: `'if (getpath(${JSON.stringify(parant)}) | has(${
                 /^\d+$/.test(last) ? last : `"${last}"`
-              })) then (.${item[0]} = ${JSON.stringify(item[1])}) else . end'`,
+              })) then (setpath(${JSON.stringify(paths)}; ${JSON.stringify(item[1])})) else . end'`,
             })
           })
         } else {
