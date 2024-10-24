@@ -84,39 +84,32 @@ let result = {}
     // $.log($.toStr(result))
     $.done(result)
   })
-function parsePath(str) {
-  var regex = /(?:\.([a-zA-Z_$][a-zA-Z0-9_$]*))|\[(?:(['"])(.*?)\2|(\d+))\]/g
+function parseJsonPath(_path) {
+  const path = _path.trim()
+  const output = []
+  const regex = /\.?([^\.\[\]]+)|\[(['"])(.*?)\2\]|\[(\d+)\]/g
+  let match
 
-  var matches
-  var result = []
-
-  // 提取开头的变量名
-  var initialMatch = str.trim().match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)/)
-  if (initialMatch) {
-    result.push(initialMatch[1])
-  }
-
-  // 使用正则表达式匹配每个属性访问部分
-  while ((matches = regex.exec(str)) !== null) {
-    if (matches[1]) {
-      // 点号访问，例如 .f
-      result.push(matches[1])
-    } else if (matches[3]) {
-      // 方括号字符串访问，例如 ['b'] 或 ["a-c"]
-      result.push(matches[3])
-    } else if (matches[4]) {
-      // 方括号数字索引访问，例如 [0]
-      result.push(parseInt(matches[4]))
+  while ((match = regex.exec(path)) !== null) {
+    if (match[1] !== undefined) {
+      // 匹配点符号或初始键
+      output.push(match[1])
+    } else if (match[3] !== undefined) {
+      // 匹配带引号的括号表示法
+      output.push(match[3])
+    } else if (match[4] !== undefined) {
+      // 数组索引，转换为整数
+      output.push(parseInt(match[4], 10))
     }
   }
-  return result
+  return output
 }
 function unset(object, path) {
   if (object == null) {
     return true
   }
 
-  const paths = parsePath(path)
+  const paths = parseJsonPath(path)
 
   var current = object
   for (var i = 0; i < paths.length - 1; i++) {

@@ -542,27 +542,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rw_redirect(x, mark)
     }
 
-    // Loon body rewrite 解析 不用这个 因为需要合并到一个脚本中对一个请求/响应进行多个操作
-    // if (/\s((request|response)-body-replace-regex)\s/.test(x)) {
-    //   let [_, regex, __, type, suffix] = x.match(/^(.*?)\s+?((request|response)-body-replace-regex)\s+?(.*?)\s*$/)
-    //   type = `http-${type}`
-    //   const suffixArray = suffix.split(/\s+/)
-    //   const newSuffixArray = []
-    //   for (let index = 0; index < suffixArray.length; index += 2) {
-    //     const key = suffixArray[index]
-    //     const value = suffixArray[index + 1]
-
-    //     if (value != null) {
-    //       newSuffixArray.push(
-    //         `${/\\x20/.test(key) ? `"${key.replace(/\\x20/g, ' ')}"` : key} ${
-    //           /\\x20/.test(value) ? `"${value.replace(/\\x20/g, ' ')}"` : value
-    //         }`
-    //       )
-    //     }
-    //   }
-
-    //   rwbodyBox.push({ type, regex, value: newSuffixArray.join(' ') })
-    // }
+    if (/\s((request|response)-body-json-jq)\s/.test(x) && jqEnabled && isSurgeiOS) {
+      const [_, regex, type, value] = x.match(/^(.*?)\s+?(?:(request|response)-body-json-jq)\s+?(.*?)\s*$/)
+      rwbodyBox.push({ type: `http-${type}-jq`, regex, value })
+    }
 
     if (/\s((request|response)-body-(json-(add|del|replace)|replace-regex))\s/.test(x)) {
       let [_, regex, __, httpType, action, ___, suffix] = x.match(
@@ -572,17 +555,19 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       let newSuffixArray = []
       if (action === 'json-del') {
         if (suffix) {
-          newSuffixArray = suffixArray.map(item => (/\\x20/.test(item) ? `${item.replace(/\\x20/g, ' ')}` : item))
+          newSuffixArray = suffixArray.map(item => {
+            return parseLoonKey(item)
+          })
         }
       } else {
         for (let index = 0; index < suffixArray.length; index += 2) {
           const key = suffixArray[index]
-          const value = suffixArray[index + 1]
+          let value = suffixArray[index + 1]
 
           if (value != null) {
             newSuffixArray.push([
-              /\\x20/.test(key) ? `${key.replace(/\\x20/g, ' ')}` : key,
-              /\\x20/.test(value) ? `${value.replace(/\\x20/g, ' ')}` : value,
+              parseLoonKey(key),
+              ['json-add', 'json-replace'].includes(action) ? parseLoonValue(value) : parseLoonKey(value),
             ])
           }
         }
@@ -599,11 +584,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           })
         } else if (action === 'json-del') {
           newSuffixArray.forEach(item => {
-            rwbodyBox.push({ type: `${jstype}-jq`, regex: jsptn, value: `'del(.${item})'` })
+            const paths = parseJsonPath(item)
+            rwbodyBox.push({ type: `${jstype}-jq`, regex: jsptn, value: `'delpaths([${JSON.stringify(paths)}])'` })
           })
         } else if (action === 'json-replace') {
           newSuffixArray.forEach(item => {
-            const paths = parsePath(item[0])
+            const paths = parseJsonPath(item[0])
             const parant = [...paths]
             const last = parant.pop()
             rwbodyBox.push({
@@ -655,22 +641,16 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         if (/\s(response-)?header-del\s/.test(prefix)) {
           for (let index = 0; index < suffixArray.length; index++) {
             const key = suffixArray[index]
-            newSuffixArray.push(`${/\\x20/.test(key) ? `"${key.replace(/\\x20/g, ' ')}"` : key}`)
+            newSuffixArray.push(`'${parseLoonKey(key)}'`)
           }
         } else if (/\s(response-)?header-replace-regex\s/.test(prefix)) {
           for (let index = 0; index < suffixArray.length; index += 3) {
             const key = suffixArray[index]
-            const value = `${
-              /\\x20/.test(suffixArray[index + 1])
-                ? `"${suffixArray[index + 1].replace(/\\x20/g, ' ')}"`
-                : suffixArray[index + 1]
-            } ${
-              /\\x20/.test(suffixArray[index + 2])
-                ? `"${suffixArray[index + 2].replace(/\\x20/g, ' ')}"`
-                : suffixArray[index + 2]
-            }`
+            const value = `${`'${parseLoonKey(suffixArray[index + 1])}'`} ${`'${parseLoonKey(
+              suffixArray[index + 2]
+            )}'`}`
             if (value != null) {
-              newSuffixArray.push(`${key} ${value}`)
+              newSuffixArray.push(`'${parseLoonKey(key)}' ${value}`)
             }
           }
         } else {
@@ -678,7 +658,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             const key = suffixArray[index]
             const value = suffixArray[index + 1]
             if (value != null) {
-              newSuffixArray.push(`${key} ${/\\x20/.test(value) ? `"${value.replace(/\\x20/g, ' ')}"` : value}`)
+              newSuffixArray.push(`'${parseLoonKey(key)}' '${parseLoonKey(value)}'`)
             }
           }
         }
@@ -2265,32 +2245,54 @@ async function http(url, opts = {}) {
     throw new Error(info)
   }
 }
-function parsePath(str) {
-  var regex = /(?:\.([a-zA-Z_$][a-zA-Z0-9_$]*))|\[(?:(['"])(.*?)\2|(\d+))\]/g
+function parseJsonPath(_path) {
+  const path = _path.trim()
+  const output = []
+  const regex = /\.?([^\.\[\]]+)|\[(['"])(.*?)\2\]|\[(\d+)\]/g
+  let match
 
-  var matches
-  var result = []
-
-  // 提取开头的变量名
-  var initialMatch = str.trim().match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)/)
-  if (initialMatch) {
-    result.push(initialMatch[1])
-  }
-
-  // 使用正则表达式匹配每个属性访问部分
-  while ((matches = regex.exec(str)) !== null) {
-    if (matches[1]) {
-      // 点号访问，例如 .f
-      result.push(matches[1])
-    } else if (matches[3]) {
-      // 方括号字符串访问，例如 ['b'] 或 ["a-c"]
-      result.push(matches[3])
-    } else if (matches[4]) {
-      // 方括号数字索引访问，例如 [0]
-      result.push(parseInt(matches[4]))
+  while ((match = regex.exec(path)) !== null) {
+    if (match[1] !== undefined) {
+      // 匹配点符号或初始键
+      output.push(match[1])
+    } else if (match[3] !== undefined) {
+      // 匹配带引号的括号表示法
+      output.push(match[3])
+    } else if (match[4] !== undefined) {
+      // 数组索引，转换为整数
+      output.push(parseInt(match[4], 10))
     }
   }
-  return result
+  return output
+}
+
+// Surge 现在支持使用 ' 或 " 来包裹字段。当使用 ' 时，" 为合法字符，反之亦然
+
+// Loon JQ 表达式 单引号包裹
+// 1. 必须用单引号包裹
+// 2. 无脑用单引号把 jq 表达式取出来, 里面是啥就是啥
+
+// Loon json-replace 处理对象时是跟 json-add 一样的，处理数组时不一样(3K 会改)
+// 123 是 "123"
+// "123" 是 "\"123\""
+// a 是 "a"
+// "a" 是 "\"a\""
+function parseLoonKey(v) {
+  return v.replace(/\\x20/g, ' ')
+}
+// 123 是 123
+// "123" 是 "123"
+// a 是 "a"
+// "a" 是 "a"
+// 由于在解析配置是用空格分割各个参数，如果配置的参数中有空格，请使用\x20代替
+function parseLoonValue(_v) {
+  let v = _v.replace(/\\x20/g, ' ')
+  if (/^\d+$/.test(v)) {
+    v = parseInt(v)
+  } else {
+    v = v.replace(/^"(.*?)"$/, '$1')
+  }
+  return v
 }
 function done(...args) {
   $.log(`⏱ 总耗时：${Math.round(((Date.now() - script_start) / 1000) * 100) / 100} 秒`)
