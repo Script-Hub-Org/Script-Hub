@@ -52,7 +52,7 @@ let result = {}
       }
     } else if (action === 'json-replace') {
       for (let item of items) {
-        if ($.lodash_get(body, item[0]) != null) {
+        if ($.lodash_get(body, item[0]) !== undefined) {
           $.lodash_set(body, item[0], item[1])
         }
       }
