@@ -349,7 +349,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       .replace(/^#!PROFILE-VERSION-REQUIRED\s+[0-9]+\s+/i, '')
       .replace(/^(#)?host(-suffix|-keyword|-wildcard)?\s*,\s*/i, '$1DOMAIN$2,')
       .replace(/^(#)?ip6-cidr\s*,\s*/i, '$1IP-CIDR6,')
-
+    if (!/^(#|\/\/|;)/.test(x)) {
+      x = x.replace(/\s+?(?:#|\/\/|;).*?$/, '')
+    }
     //去掉注释
     if (Pin0 != null) {
       for (let i = 0; i < Pin0.length; i++) {
@@ -393,10 +395,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             x = x + ',extended-matching'
             break
           } else if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
-            x = x.replace(
-              /(\(\s*?(?:DOMAIN(?:-\w+)?|RULE-SET|URL-REGEX)\s*?,\s*?(?:(?!,\s*?extended-matching\s*?(?:,|\))).)+?\s*?)((\)\s*?)+?,)/g,
-              '$1,extended-matching$2'
-            )
+            // x = x.replace(
+            //   /(\(\s*?(?:DOMAIN(?:-\w+)?|RULE-SET|URL-REGEX)\s*?,\s*?(?:(?!,\s*?extended-matching\s*?(?:,|\))).)+?\s*?)((\)\s*?)+?,)/g,
+            //   '$1,extended-matching$2'
+            // )
+            x = modifyRule(x, 'surge', { extendedMatching: true })
             break
           }
         }
@@ -408,19 +411,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       for (let i = 0; i < pm.length; i++) {
         const elem = pm[i].trim()
         // 加入对逻辑规则的判断
-        const _rulePandV = x
-          .replace(/^#/, '')
-          .replace(ruletype, '') // 这个此时还没有 不过不重要
-          .replace(/\s*,\s*no-resolve/, '')
-          .replace(/\s*,\s*extended-matching/, '')
-          .replace(/\s*,\s*pre-matching/, '')
-          .replace(/^\s*,\s*/, '')
-        const _rulepolicy = getPolicy(_rulePandV)
+        const _rulepolicy = x.match(/,\s*([^,]+?)\s*(\s*,\s*(pre-matching|no-resolve|extended-matching)\s*)*?\s*$/)?.[1]
         if (
           isSurgeiOS &&
           x.indexOf(elem) != -1 &&
           !/,\s*pre-matching/i.test(x) &&
-          /^REJECT(-\w+)?/i.test(_rulepolicy)
+          /^REJECT(-[A-Z]+)*$/i.test(_rulepolicy)
         ) {
           if (
             /^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)\s*?,/i.test(
@@ -430,22 +426,23 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             x = x + ',pre-matching'
             break
           } else if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
-            const pre_matching_regex = /\(\s*?(((?!(AND|NOT|OR))(\w|-))+?)\s*?,\s*?.+?\s*?((\)\s*?)+?,)/g
-            let not_matched = false
-            while ((matched = pre_matching_regex.exec(x))) {
-              if (
-                !/^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)$/i.test(
-                  matched?.[1]
-                )
-              ) {
-                not_matched = true
-                break
-              }
-            }
-            if (!not_matched) {
-              x = x + ',pre-matching'
-              break
-            }
+            // const pre_matching_regex = /\(\s*?(((?!(AND|NOT|OR))(\w|-))+?)\s*?,\s*?.+?\s*?((\)\s*?)+?,)/g
+            // let not_matched = false
+            // while ((matched = pre_matching_regex.exec(x))) {
+            //   if (
+            //     !/^(DOMAIN|DOMAIN|DOMAIN-SUFFIX|DOMAIN-KEYWORD|DOMAIN-SET|DOMAIN-WILDCARD|IP-CIDR|IP-CIDR6|GEOIP|IP-ASN|SUBNET|DEST-PORT|SRC-PORT|SRC-IP|RULE-SET)$/i.test(
+            //       matched?.[1]
+            //     )
+            //   ) {
+            //     not_matched = true
+            //     break
+            //   }
+            // }
+            // if (!not_matched) {
+            //   x = x + ',pre-matching'
+            //   break
+            // }
+            x = modifyRule(x, 'surge', { preMatching: true })
           }
         }
       } //循环结束
@@ -455,10 +452,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       if (/^(IP(-\w+)?|RULE-SET|GEOIP)/i.test(x) && !/,\s*?no-resolve/i.test(x)) {
         x = x + ',no-resolve'
       } else if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
-        x = x.replace(
-          /(\(\s*?(?:IP(?:-\w+)?|RULE-SET|GEOIP)\s*?,\s*?(?:(?!,\s*?no-resolve\s*?(?:,|\))).)+?\s*?)((\)\s*?)+?,)/g,
-          '$1,no-resolve$2'
-        )
+        // x = x.replace(
+        //   /(\(\s*?(?:IP(?:-\w+)?|RULE-SET|GEOIP)\s*?,\s*?(?:(?!,\s*?no-resolve\s*?(?:,|\))).)+?\s*?)((\)\s*?)+?,)/g,
+        //   '$1,no-resolve$2'
+        // )
+        x = modifyRule(x, 'surge', { noResolve: true })
       }
     } //增加ip规则不解析域名结束
 
@@ -1800,6 +1798,17 @@ function isNoteK(x) {
 //获取当前内容的注释
 function getMark(index, obj) {
   let mark = obj[index - 1]?.match(/^#(?!!)/) ? obj[index - 1] + '\n' : ''
+  // let mark = ''
+
+  // for (let i = index - 1; i >= 0; i--) {
+  //   const line = obj[i].trim()
+
+  //   if (/(^#(?!!)|^\s*$)/.test(line)) {
+  //     mark = line + '\n' + mark
+  //   } else {
+  //     break
+  //   }
+  // }
 
   return mark
 }
@@ -2269,6 +2278,680 @@ function parseJsonPath(_path) {
     }
   }
   return output
+}
+
+// 解析规则
+function parseRule(input) {
+  // 分析器
+  class Tokenizer {
+    constructor(input) {
+      this.input = input
+      this.position = 0
+      this.tokens = []
+    }
+
+    isWhitespace(char) {
+      return /\s/.test(char)
+    }
+
+    isDelimiter(char) {
+      return ['(', ')', ','].includes(char)
+    }
+
+    tokenize() {
+      console.log('=== 开始词法分析 ===')
+      while (this.position < this.input.length) {
+        let currentChar = this.input[this.position]
+
+        if (this.isWhitespace(currentChar)) {
+          this.position++
+          continue
+        }
+
+        if (currentChar === '(') {
+          this.tokens.push({ type: 'LPAREN', value: '(' })
+          console.log(`Token: LPAREN '(' at position ${this.position}`)
+          this.position++
+          continue
+        }
+
+        if (currentChar === ')') {
+          this.tokens.push({ type: 'RPAREN', value: ')' })
+          console.log(`Token: RPAREN ')' at position ${this.position}`)
+          this.position++
+          continue
+        }
+
+        if (currentChar === ',') {
+          this.tokens.push({ type: 'COMMA', value: ',' })
+          console.log(`Token: COMMA ',' at position ${this.position}`)
+          this.position++
+          continue
+        }
+
+        // 收集单词
+        let start = this.position
+        while (
+          this.position < this.input.length &&
+          !this.isWhitespace(this.input[this.position]) &&
+          !this.isDelimiter(this.input[this.position])
+        ) {
+          this.position++
+        }
+        let value = this.input.slice(start, this.position)
+        this.tokens.push({ type: 'WORD', value })
+        console.log(`Token: WORD '${value}' from position ${start} to ${this.position}`)
+      }
+      console.log('=== 词法分析完成 ===')
+      return this.tokens
+    }
+  }
+
+  // 语法分析器
+  class Parser {
+    constructor(tokens) {
+      this.tokens = tokens
+      this.position = 0
+
+      // 定义逻辑运算符及其元数
+      this.LOGICAL_OPERATORS = {
+        AND: 'n',
+        OR: 'n',
+        NOT: 1,
+      }
+
+      // 定义值运算符
+      this.VALUE_OPERATORS = [
+        'DOMAIN',
+        'DOMAIN-SUFFIX',
+        'DOMAIN-KEYWORD',
+        'DOMAIN-SET',
+        'DOMAIN-WILDCARD',
+        'IP-CIDR',
+        'IP-CIDR6',
+        'GEOIP',
+        'IP-ASN',
+        'RULE-SET',
+        'URL-REGEX',
+        'USER-AGENT',
+        'PROCESS-NAME',
+        'SUBNET',
+        'DEST-PORT',
+        'DST-PORT',
+        'IN-PORT',
+        'SRC-PORT',
+        'SRC-IP',
+        'PROTOCOL',
+        'NETWORK',
+        'SCRIPT',
+        'CELLULAR-RADIO',
+        'DEVICE-NAME',
+        'DOMAIN-REGEX',
+        'GEOSITE',
+        'IP-SUFFIX',
+        'SRC-GEOIP',
+        'SRC-IP-ASN',
+        'SRC-IP-CIDR',
+        'SRC-IP-SUFFIX',
+        'IN-TYPE',
+        'IN-USER',
+        'IN-NAME',
+        'PROCESS-PATH',
+        'PROCESS-PATH-REGEX',
+        'PROCESS-NAME-REGEX',
+        'UID',
+        'DSCP',
+        'SUB-RULE',
+        'MATCH',
+      ]
+
+      // 路由策略
+      this.ROUTING_POLICIES = [
+        input.match(/,\s*([^,]+?)\s*(\s*,\s*(pre-matching|no-resolve|extended-matching)\s*)*?\s*$/)?.[1],
+      ]
+
+      // 规则匹配参数
+      this.MATCHING_PARAMETERS = [
+        { name: 'no-resolve', flag: 'noResolve' },
+        { name: 'extended-matching', flag: 'extendedMatching' },
+        { name: 'src', flag: 'src' },
+        { name: 'pre-matching', flag: 'preMatching' },
+      ]
+    }
+
+    peek(offset = 0) {
+      return this.tokens[this.position + offset]
+    }
+
+    consume() {
+      const token = this.tokens[this.position++]
+      console.log(`Consume: ${token.type} '${token.value}' at position ${this.position - 1}`)
+      return token
+    }
+
+    expect(type, value = null) {
+      const token = this.consume()
+      if (!token || token.type !== type || (value !== null && token.value !== value)) {
+        throw new Error(
+          `期望 ${value !== null ? `'${value}'` : type}，但得到 '${token ? token.value : 'EOF'}'，在位置 ${
+            this.position
+          }`
+        )
+      }
+      return token
+    }
+
+    parse() {
+      console.log('=== 开始语法分析 ===')
+      if (this.tokens.length === 0) {
+        throw new Error('输入为空')
+      }
+      const expr = this.parseExpression()
+
+      // 检查是否有剩余的路由策略
+      if (this.position < this.tokens.length) {
+        const remainingTokens = this.tokens.slice(this.position)
+        if (
+          remainingTokens.length >= 2 &&
+          remainingTokens[0].type === 'COMMA' &&
+          this.ROUTING_POLICIES.includes(remainingTokens[1].value.toUpperCase())
+        ) {
+          this.consume() // 消费逗号
+          const routingPolicyToken = this.consume()
+          expr.routingPolicy = routingPolicyToken.value.toUpperCase()
+        } else {
+          throw new Error(`意外的令牌 '${this.peek().value}' 在位置 ${this.position}`)
+        }
+      }
+
+      console.log('=== 语法分析完成 ===')
+      return expr
+    }
+
+    parseExpression() {
+      const token = this.peek()
+      console.log(`Parsing expression at position ${this.position}: ${token ? token.value : 'EOF'}`)
+
+      if (!token) {
+        throw new Error('意外的输入结束')
+      }
+
+      if (token.type === 'LPAREN') {
+        this.consume() // 消费 '('
+        const exprList = this.parseExpressionList()
+        this.expect('RPAREN') // 消费 ')'
+
+        // 如果表达式列表只有一个元素，返回该元素，否则返回列表
+        if (exprList.length === 1) {
+          return exprList[0]
+        } else {
+          return exprList
+        }
+      } else if (token.type === 'WORD') {
+        const operator = this.consume().value.toUpperCase()
+
+        // 检查是否是逻辑运算符
+        if (operator in this.LOGICAL_OPERATORS) {
+          const node = { operator, type: 'LOGICAL', children: [] }
+
+          // 消费逗号
+          this.expect('COMMA')
+
+          // 解析参数列表
+          while (true) {
+            const arg = this.parseExpression()
+            node.children.push(arg)
+
+            const nextToken = this.peek()
+            if (nextToken && nextToken.type === 'COMMA') {
+              // 前瞻检查逗号后是否为匹配参数或路由策略
+              if (
+                this.peek(1) &&
+                this.peek(1).type === 'WORD' &&
+                (this.ROUTING_POLICIES.includes(this.peek(1).value.toUpperCase()) ||
+                  this.isMatchingParameter(this.peek(1).value))
+              ) {
+                break
+              } else {
+                this.consume()
+              }
+            } else {
+              break
+            }
+          }
+
+          // 处理匹配参数或路由策略
+          while (this.peek() && this.peek().type === 'COMMA') {
+            this.consume()
+            const paramToken = this.consume()
+            const paramName = paramToken.value.toLowerCase()
+
+            if (this.ROUTING_POLICIES.includes(paramName.toUpperCase())) {
+              node.routingPolicy = paramName.toUpperCase()
+            } else if (this.isMatchingParameter(paramName)) {
+              const matchingParam = this.MATCHING_PARAMETERS.find(p => p.name === paramName)
+              node.flags = node.flags || {}
+              // 初始化 flags 对象
+              if (!node.flagsInitialized) {
+                this.MATCHING_PARAMETERS.forEach(param => {
+                  node.flags[param.flag] = false
+                })
+                node.flagsInitialized = true
+              }
+              // 设置对应的 flags 值为 true
+              node.flags[matchingParam.flag] = true
+            } else {
+              console.warn(`未知的规则匹配参数: ${paramName}`)
+            }
+          }
+
+          return node
+        }
+
+        // 检查是否是值运算符
+        if (this.VALUE_OPERATORS.includes(operator)) {
+          let value = null
+
+          // 初始化 flags 对象，默认包含所有匹配参数，值为 false
+          let flags = {}
+          this.MATCHING_PARAMETERS.forEach(param => {
+            flags[param.flag] = false
+          })
+
+          // 消费逗号
+          this.expect('COMMA')
+
+          value = this.collectValue()
+
+          while (this.peek() && this.peek().type === 'COMMA') {
+            // 前瞻检查逗号后是否为匹配参数或路由策略
+            if (
+              this.peek(1) &&
+              this.peek(1).type === 'WORD' &&
+              (this.ROUTING_POLICIES.includes(this.peek(1).value.toUpperCase()) ||
+                this.isMatchingParameter(this.peek(1).value))
+            ) {
+              this.consume()
+              const paramToken = this.consume()
+              const paramName = paramToken.value.toLowerCase()
+
+              if (this.ROUTING_POLICIES.includes(paramName.toUpperCase())) {
+                flags.routingPolicy = paramName.toUpperCase()
+              } else if (this.isMatchingParameter(paramName)) {
+                const matchingParam = this.MATCHING_PARAMETERS.find(p => p.name === paramName)
+                flags[matchingParam.flag] = true
+              } else {
+                console.warn(`未知的规则匹配参数: ${paramName}`)
+              }
+            } else {
+              break
+            }
+          }
+
+          const node = { operator, type: 'VALUE', value, flags }
+          console.log(`Parsed value condition: ${JSON.stringify(node)}`)
+          return node
+        }
+
+        throw new Error(`未知的操作符 '${operator}' 在位置 ${this.position}`)
+      } else {
+        throw new Error(`意外的令牌 '${token.value}' 在位置 ${this.position}`)
+      }
+    }
+
+    parseExpressionList() {
+      const expressions = []
+
+      while (true) {
+        const expr = this.parseExpression()
+        expressions.push(expr)
+
+        if (this.peek() && this.peek().type === 'COMMA') {
+          this.consume()
+          if (this.peek() && this.peek().type === 'RPAREN') {
+            break
+          }
+        } else {
+          break
+        }
+      }
+
+      return expressions
+    }
+
+    isMatchingParameter(paramName) {
+      return this.MATCHING_PARAMETERS.some(p => p.name === paramName.toLowerCase())
+    }
+
+    collectValue() {
+      let value = ''
+      let depth = 0
+      console.log(`Collecting value starting at position ${this.position}`)
+      while (this.position < this.tokens.length) {
+        const token = this.peek()
+        if (token.type === 'LPAREN') {
+          depth++
+          this.consume()
+          value += '('
+        } else if (token.type === 'RPAREN') {
+          if (depth === 0) {
+            break
+          }
+          depth--
+          this.consume()
+          value += ')'
+        } else if (token.type === 'COMMA' && depth === 0) {
+          break
+        } else {
+          value += token.value
+          this.consume()
+        }
+      }
+      console.log(`Collected value: '${value}'`)
+      return value
+    }
+  }
+
+  function checkBalancedParentheses(input) {
+    let stack = []
+    for (let i = 0; i < input.length; i++) {
+      const char = input[i]
+      if (char === '(') {
+        stack.push(i)
+      } else if (char === ')') {
+        if (stack.length === 0) {
+          return { balanced: false, position: i }
+        }
+        stack.pop()
+      }
+    }
+    if (stack.length > 0) {
+      return { balanced: false, position: stack.pop() }
+    }
+    return { balanced: true }
+  }
+  console.log('=== 开始解析规则 ===')
+  const balanceCheck = checkBalancedParentheses(input)
+  if (!balanceCheck.balanced) {
+    throw new Error(`括号不匹配，在位置 ${balanceCheck.position} 处发现错误。`)
+  }
+
+  try {
+    const tokenizer = new Tokenizer(input)
+    const tokens = tokenizer.tokenize()
+
+    const parser = new Parser(tokens)
+    const tree = parser.parse()
+    return tree
+  } catch (e) {
+    throw new Error(`解析错误: ${e.message}`)
+    return null
+  }
+}
+// 生成规则
+function generateRule(node, platform, flags = {}) {
+  // 平台特性配置（保持不变）
+  const platformFeatures = {
+    mihomo: {
+      supportsExtendedMatching: true,
+      supportsNoResolve: true,
+      supportsPreMatching: true,
+      supportsSrc: true,
+      rejectPolicyRegex: /^REJECT(-[A-Z]+)*$/,
+    },
+    surge: {
+      supportsExtendedMatching: false,
+      supportsNoResolve: true,
+      supportsPreMatching: true,
+      supportsSrc: false,
+      rejectPolicyRegex: /^REJECT(-[A-Z]+)*$/,
+    },
+    loon: {
+      supportsExtendedMatching: false,
+      supportsNoResolve: false,
+      supportsPreMatching: false,
+      supportsSrc: false,
+      rejectPolicyRegex: /^REJECT(-[A-Z]+)*$/,
+    },
+  }
+
+  const FLAG_SUPPORTED_TYPES = {
+    extendedMatching: ['RULE-SET', 'DOMAIN-SET', 'DOMAIN-KEYWORD', 'DOMAIN-SUFFIX', 'DOMAIN', 'URL-REGEX'],
+    noResolve: ['IP-CIDR', 'IP-CIDR6', 'GEOIP', 'IP-ASN', 'RULE-SET'],
+    src: ['IP-CIDR', 'IP-CIDR6', 'GEOIP', 'IP-ASN', 'IP-SUFFIX'],
+    preMatching: [
+      'DOMAIN',
+      'DOMAIN-SUFFIX',
+      'DOMAIN-KEYWORD',
+      'DOMAIN-SET',
+      'DOMAIN-WILDCARD',
+      'IP-CIDR',
+      'IP-CIDR6',
+      'GEOIP',
+      'IP-ASN',
+      'SUBNET',
+      'DEST-PORT',
+      'SRC-PORT',
+      'SRC-IP',
+      'RULE-SET',
+
+      'AND',
+      'OR',
+      'NOT',
+    ],
+  }
+
+  const LOGICAL_OPERATORS_ARITY = {
+    AND: 'n',
+    OR: 'n',
+    NOT: 1,
+  }
+
+  const LOGICAL_OPERATORS_PRECEDENCE = {
+    NOT: 3,
+    AND: 2,
+    OR: 1,
+  }
+  let hasPreMatching
+  function traverseTree(node, platform, parentOperator = null) {
+    node.flags = { ...node.flags, ...flags }
+    const features = platformFeatures[platform]
+    if (!features) {
+      throw new Error(`未知的平台：${platform}`)
+    }
+
+    if (!node || !node.type) {
+      console.log('节点缺少 type 属性或节点为 null:', node)
+      return ''
+    }
+
+    if (node.type === 'LOGICAL') {
+      const operator = node.operator
+      const arity = LOGICAL_OPERATORS_ARITY[operator]
+
+      // 检查是否有 pre-matching 标志
+      // const hasPreMatching = node.flags && node.flags.preMatching;
+      if (node.routingPolicy) {
+        hasPreMatching = node.flags && node.flags.preMatching
+      }
+      if (hasPreMatching && node.routingPolicy) {
+        // 验证 routingPolicy 是否符合 ^REJECT(-[A-Z]+)*$ 的格式
+        if (!features.rejectPolicyRegex.test(node.routingPolicy)) {
+          console.log(`pre-matching 只能与 REJECT 系列策略一起使用，当前策略为：${node.routingPolicy}`)
+          hasPreMatching = false
+        }
+      }
+
+      if (hasPreMatching) {
+        // 检查所有子规则是否属于支持 pre-matching 的类型
+        const notSupportedTypes = []
+        const allChildrenSupported = node.children.every(childArray => {
+          return Array.isArray(childArray)
+            ? childArray.every(child => {
+                const isSupported = FLAG_SUPPORTED_TYPES.preMatching.includes(child.operator)
+                if (!isSupported) {
+                  notSupportedTypes.push(child.operator)
+                }
+                return isSupported
+              })
+            : true
+        })
+
+        if (!allChildrenSupported) {
+          console.log(
+            `逻辑运算符 ${operator} 中的所有子规则必须是支持 pre-matching 的类型, 但 ${notSupportedTypes.join(
+              ', '
+            )} 不支持`
+          )
+          hasPreMatching = false
+        }
+      }
+
+      let childrenOutputs = []
+      node.children.forEach(child => {
+        flattenChildren(child).forEach(subChild => {
+          const output = traverseTree(subChild, platform, operator)
+          if (output !== '') {
+            childrenOutputs.push(output)
+          }
+        })
+      })
+
+      let result = ''
+      let modifiers = []
+
+      if (arity === 1) {
+        if (childrenOutputs.length !== 1) {
+          throw new Error(`操作符 ${operator} 期望有 1 个子节点，但得到 ${childrenOutputs.length} 个`)
+        }
+        // 仅允许添加 pre-matching 标志
+        if (node.flags) {
+          const { extendedMatching, noResolve, preMatching, src } = node.flags
+          if (extendedMatching || noResolve || src) {
+            console.log(`操作符 ${operator} 不能添加 extended-matching、no-resolve 或 src 标志`)
+          }
+        }
+        result = `${operator},(${childrenOutputs[0]})`
+      } else if (arity === 'n') {
+        const formattedChildren = childrenOutputs.map(output => {
+          return needsParentheses({ operator: output.split(',')[0] }, operator) ? `(${output})` : output
+        })
+        result = `${operator},(${formattedChildren.join(',')})`
+      } else {
+        throw new Error(`未知的运算符元数：${arity}，操作符：${operator}`)
+      }
+
+      if (node.routingPolicy) {
+        result += `,${node.routingPolicy}`
+        if (hasPreMatching) {
+          result += `,pre-matching`
+        }
+      }
+
+      if (needsParentheses(node, parentOperator)) {
+        result = `(${result})`
+      }
+
+      console.log(`Processed LOGICAL node: ${node.operator}, result: ${result}`)
+
+      return result
+    } else if (node.type === 'VALUE') {
+      let result = `${node.operator},${node.value}`
+
+      if (node.flags) {
+        let flagStrings = []
+
+        for (const [flag, isSet] of Object.entries(node.flags)) {
+          if (isSet) {
+            const supportedTypes = FLAG_SUPPORTED_TYPES[flag]
+            if (!supportedTypes.includes(node.operator)) {
+              console.log(`标志 ${flag} 不支持应用于规则类型 ${node.operator}`)
+            } else {
+              // 添加标志到 flagStrings
+              switch (flag) {
+                case 'extendedMatching':
+                  flagStrings.push('extended-matching')
+                  break
+                case 'noResolve':
+                  flagStrings.push('no-resolve')
+                  break
+                case 'preMatching':
+                  // flagStrings.push('pre-matching')
+                  break
+                case 'src':
+                  flagStrings.push('src')
+                  break
+                default:
+                  console.log(`未知的标志类型：${flag}`)
+              }
+            }
+          }
+        }
+
+        if (flagStrings.length > 0) {
+          result += `,${flagStrings.join(',')}`
+        }
+      }
+
+      // 根据标志类型决定是否包裹括号
+      // ⚠️ extended-matching、no-resolve 不能附加到逻辑运算符上，但可以附加到规则类型上
+      // pre-matching 可以附加到逻辑运算符上，已在 LOGICAL 节点处理
+      result = `(${result})`
+
+      console.log(`Processed VALUE node: ${node.operator}, result: ${result}`)
+
+      return result
+    } else {
+      console.log(`未知的节点类型: ${node.type}`)
+      return ''
+    }
+  }
+
+  function needsParentheses(node, parentOperator) {
+    if (!parentOperator) {
+      return false
+    }
+
+    const currentPrecedence = LOGICAL_OPERATORS_PRECEDENCE[node.operator]
+    const parentPrecedence = LOGICAL_OPERATORS_PRECEDENCE[parentOperator]
+
+    if (currentPrecedence === undefined) {
+      return false
+    }
+
+    if (currentPrecedence <= parentPrecedence) {
+      return true
+    }
+    if (node.operator === 'NOT') {
+      return true
+    }
+    return false
+  }
+
+  function flattenChildren(children) {
+    const result = []
+    if (Array.isArray(children)) {
+      children.forEach(child => {
+        result.push(...flattenChildren(child))
+      })
+    } else if (children) {
+      result.push(children)
+    }
+    return result
+  }
+  return traverseTree(node, platform)
+}
+
+function modifyRule(input, platform, flags) {
+  try {
+    const tree = parseRule(input)
+    if (tree) {
+      return generateRule(tree, platform, flags)
+    }
+  } catch (e) {
+    console.log(e)
+    shNotify(`修改规则发生错误 ${e.message} 请查看日志`)
+  }
 }
 
 // Surge 现在支持使用 ' 或 " 来包裹字段。当使用 ' 时，" 为合法字符，反之亦然
