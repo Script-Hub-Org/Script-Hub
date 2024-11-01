@@ -385,6 +385,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       x = ''
     }
 
+    let flags = {}
     //sni嗅探
     if (sni != null) {
       for (let i = 0; i < sni.length; i++) {
@@ -399,7 +400,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             //   /(\(\s*?(?:DOMAIN(?:-\w+)?|RULE-SET|URL-REGEX)\s*?,\s*?(?:(?!,\s*?extended-matching\s*?(?:,|\))).)+?\s*?)((\)\s*?)+?,)/g,
             //   '$1,extended-matching$2'
             // )
-            x = modifyRule(x, 'surge', { extendedMatching: true })
+            // x = modifyRule(x, 'surge', { extendedMatching: true })
+            flags.extendedMatching = true
             break
           }
         }
@@ -442,7 +444,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             //   x = x + ',pre-matching'
             //   break
             // }
-            x = modifyRule(x, 'surge', { preMatching: true })
+            // x = modifyRule(x, 'surge', { preMatching: true })
+            flags.preMatching = true
           }
         }
       } //循环结束
@@ -456,9 +459,14 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         //   /(\(\s*?(?:IP(?:-\w+)?|RULE-SET|GEOIP)\s*?,\s*?(?:(?!,\s*?no-resolve\s*?(?:,|\))).)+?\s*?)((\)\s*?)+?,)/g,
         //   '$1,no-resolve$2'
         // )
-        x = modifyRule(x, 'surge', { noResolve: true })
+        // x = modifyRule(x, 'surge', { noResolve: true })
+        flags.noResolve = true
       }
     } //增加ip规则不解析域名结束
+
+    if (/^(AND|OR|NOT)\s*?,/i.test(x)) {
+      x = modifyRule(x, 'surge', flags)
+    }
 
     if (jsConverter != null) {
       jscStatus = isJsCon(x, jsConverter)
@@ -683,7 +691,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     //rule解析
     if (
-      /^#?(?:domain(?:-suffix|-keyword|-wildcard|-set)?|ip-cidr6?|ip-asn|geoip|rule-set|user-agent|url-regex|(de?st|in|src)-port|src-ip|and|not|or|protocol|subnet)\s*,.+/i.test(
+      /^#?(?:domain|domain-suffix|domain-keyword|domain-set|domain-wildcard|ip-cidr|ip-cidr6|geoip|ip-asn|rule-set|url-regex|user-agent|process-name|subnet|dest-port|dst-port|in-port|src-port|src-ip|protocol|network|script|cellular-radio|device-name|domain-regex|geosite|ip-suffix|src-geoip|src-ip-asn|src-ip-cidr|src-ip-suffix|in-type|in-user|in-name|process-path|process-path-regex|process-name-regex|uid|dscp|sub-rule|match)\s*,.+/i.test(
         x
       )
     ) {
@@ -1132,6 +1140,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       !isStashiOS
     ) {
       rulevalue = /,/.test(rulevalue) && !/[()]/.test(rulevalue) ? '"' + rulevalue + '"' : rulevalue
+      if (ruletype === 'url-regex' && !/^['"].*['"]$/.test(rulevalue)) {
+        rulevalue = `'${rulevalue}'`
+      }
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
     } else if (/^(?:and|or|not)$/i.test(ruletype) && !isStashiOS) {
       rules.push(ori)
@@ -1139,7 +1150,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rules.push(mark + noteK2 + '- ' + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
     } else if (/src-port/i.test(ruletype) && (isSurgeiOS || isLooniOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulepm)
-    } else if (/src-ip|subnet/i.test(ruletype) && isSurgeiOS) {
+    } else if (/src-ip|subnet|protocol|network|script|cellular-radio|device-name/i.test(ruletype) && isSurgeiOS) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulepm)
     } else if (/url-regex/i.test(ruletype) && isStashiOS && /reject/i.test(rulepolicy)) {
       let Urx2Reject
@@ -2299,7 +2310,7 @@ function parseRule(input) {
     }
 
     tokenize() {
-      console.log('=== 开始词法分析 ===')
+      // console.log('=== 开始词法分析 ===')
       while (this.position < this.input.length) {
         let currentChar = this.input[this.position]
 
@@ -2310,21 +2321,21 @@ function parseRule(input) {
 
         if (currentChar === '(') {
           this.tokens.push({ type: 'LPAREN', value: '(' })
-          console.log(`Token: LPAREN '(' at position ${this.position}`)
+          // console.log(`Token: LPAREN '(' at position ${this.position}`)
           this.position++
           continue
         }
 
         if (currentChar === ')') {
           this.tokens.push({ type: 'RPAREN', value: ')' })
-          console.log(`Token: RPAREN ')' at position ${this.position}`)
+          // console.log(`Token: RPAREN ')' at position ${this.position}`)
           this.position++
           continue
         }
 
         if (currentChar === ',') {
           this.tokens.push({ type: 'COMMA', value: ',' })
-          console.log(`Token: COMMA ',' at position ${this.position}`)
+          // console.log(`Token: COMMA ',' at position ${this.position}`)
           this.position++
           continue
         }
@@ -2340,9 +2351,9 @@ function parseRule(input) {
         }
         let value = this.input.slice(start, this.position)
         this.tokens.push({ type: 'WORD', value })
-        console.log(`Token: WORD '${value}' from position ${start} to ${this.position}`)
+        // console.log(`Token: WORD '${value}' from position ${start} to ${this.position}`)
       }
-      console.log('=== 词法分析完成 ===')
+      // console.log('=== 词法分析完成 ===')
       return this.tokens
     }
   }
@@ -2425,7 +2436,7 @@ function parseRule(input) {
 
     consume() {
       const token = this.tokens[this.position++]
-      console.log(`Consume: ${token.type} '${token.value}' at position ${this.position - 1}`)
+      // console.log(`Consume: ${token.type} '${token.value}' at position ${this.position - 1}`)
       return token
     }
 
@@ -2442,7 +2453,7 @@ function parseRule(input) {
     }
 
     parse() {
-      console.log('=== 开始语法分析 ===')
+      // console.log('=== 开始语法分析 ===')
       if (this.tokens.length === 0) {
         throw new Error('输入为空')
       }
@@ -2464,13 +2475,13 @@ function parseRule(input) {
         }
       }
 
-      console.log('=== 语法分析完成 ===')
+      // console.log('=== 语法分析完成 ===')
       return expr
     }
 
     parseExpression() {
       const token = this.peek()
-      console.log(`Parsing expression at position ${this.position}: ${token ? token.value : 'EOF'}`)
+      // console.log(`Parsing expression at position ${this.position}: ${token ? token.value : 'EOF'}`)
 
       if (!token) {
         throw new Error('意外的输入结束')
@@ -2589,7 +2600,7 @@ function parseRule(input) {
           }
 
           const node = { operator, type: 'VALUE', value, flags }
-          console.log(`Parsed value condition: ${JSON.stringify(node)}`)
+          // console.log(`Parsed value condition: ${JSON.stringify(node)}`)
           return node
         }
 
@@ -2626,7 +2637,7 @@ function parseRule(input) {
     collectValue() {
       let value = ''
       let depth = 0
-      console.log(`Collecting value starting at position ${this.position}`)
+      // console.log(`Collecting value starting at position ${this.position}`)
       while (this.position < this.tokens.length) {
         const token = this.peek()
         if (token.type === 'LPAREN') {
@@ -2647,7 +2658,7 @@ function parseRule(input) {
           this.consume()
         }
       }
-      console.log(`Collected value: '${value}'`)
+      // console.log(`Collected value: '${value}'`)
       return value
     }
   }
@@ -2670,7 +2681,7 @@ function parseRule(input) {
     }
     return { balanced: true }
   }
-  console.log('=== 开始解析规则 ===')
+  // console.log('=== 开始解析规则 ===')
   const balanceCheck = checkBalancedParentheses(input)
   if (!balanceCheck.balanced) {
     throw new Error(`括号不匹配，在位置 ${balanceCheck.position} 处发现错误。`)
@@ -2852,10 +2863,13 @@ function generateRule(node, platform, flags = {}) {
         result = `(${result})`
       }
 
-      console.log(`Processed LOGICAL node: ${node.operator}, result: ${result}`)
+      // console.log(`Processed LOGICAL node: ${node.operator}, result: ${result}`)
 
       return result
     } else if (node.type === 'VALUE') {
+      if (node.operator === 'URL-REGEX' && !/^['"].*['"]$/.test(node.value)) {
+        node.value = `'${node.value}'`
+      }
       let result = `${node.operator},${node.value}`
 
       if (node.flags) {
@@ -2898,7 +2912,7 @@ function generateRule(node, platform, flags = {}) {
       // pre-matching 可以附加到逻辑运算符上，已在 LOGICAL 节点处理
       result = `(${result})`
 
-      console.log(`Processed VALUE node: ${node.operator}, result: ${result}`)
+      // console.log(`Processed VALUE node: ${node.operator}, result: ${result}`)
 
       return result
     } else {
