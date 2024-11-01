@@ -691,7 +691,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     //rule解析
     if (
-      /^#?(?:domain|domain-suffix|domain-keyword|domain-set|domain-wildcard|ip-cidr|ip-cidr6|geoip|ip-asn|rule-set|url-regex|user-agent|process-name|subnet|dest-port|dst-port|in-port|src-port|src-ip|protocol|network|script|cellular-radio|device-name|domain-regex|geosite|ip-suffix|src-geoip|src-ip-asn|src-ip-cidr|src-ip-suffix|in-type|in-user|in-name|process-path|process-path-regex|process-name-regex|uid|dscp|sub-rule|match)\s*,.+/i.test(
+      /^(#|\/\/|;)?\s*?(domain|domain-suffix|domain-keyword|domain-set|domain-wildcard|ip-cidr|ip-cidr6|geoip|ip-asn|rule-set|url-regex|user-agent|process-name|subnet|dest-port|dst-port|in-port|src-port|src-ip|protocol|network|script|cellular-radio|device-name|domain-regex|geosite|ip-suffix|src-geoip|src-ip-asn|src-ip-cidr|src-ip-suffix|in-type|in-user|in-name|process-path|process-path-regex|process-name-regex|uid|dscp|sub-rule|match|and|or|not)\s*?,.+/i.test(
         x
       )
     ) {
