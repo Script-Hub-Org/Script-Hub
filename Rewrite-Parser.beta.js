@@ -1312,7 +1312,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         MapLocal.push(mark + noteK + mockptn + mocktype + mockurl + mockstatus + mockheader)
         break
       case 'loon-plugin':
-        MapLocal.push(
+        URLRewrite.push(
           mark +
             noteK +
             mockptn +
@@ -2079,6 +2079,13 @@ function getMockInfo(x, mark, y) {
         // Surge 的 base64 仅支持内容
         mocktype = 'base64'
       }
+    } else if (/\smock-request-body\s/.test(x)) {
+      if (targetApp === 'surge-module') {
+        const e = `暂不支持 Mock Request Body:\n${x}`
+        console.log(e)
+        shNotify(e)
+        return
+      }
     }
     if (oritype === 'base64') {
       mockbase64 = true
@@ -2090,12 +2097,27 @@ function getMockInfo(x, mark, y) {
         const e = `暂不支持远程 base64:\n${x}`
         console.log(e)
         shNotify(e)
+        return
       } else {
         mockBox.push({ mark, noteK, mockptn, mockurl, mockheader, mockstatus, mocktype, ori: x, mocknum: y })
       }
       break
-    case 'shadowrocket-module':
     case 'loon-plugin':
+      mockBox.push({
+        mark,
+        noteK,
+        mockptn,
+        data,
+        datapath,
+        mockurl,
+        mockstatus,
+        mocktype: oritype,
+        mockbase64,
+        ori: x,
+        mocknum: y,
+      })
+      break
+    case 'shadowrocket-module':
     case 'stash-stoverride':
       let mfile = mocktype == 'file' ? mockurl.substring(mockurl.lastIndexOf('/') + 1) : mockurl
       let m2rType
@@ -2107,62 +2129,47 @@ function getMockInfo(x, mark, y) {
       let jsname =
         mocktype == 'file' ? mockurl.substring(mockurl.lastIndexOf('/') + 1, mockurl.lastIndexOf('.')) : 'echoResponse'
       m2rType != null && rwBox.push({ mark, noteK, rwptn: mockptn, rwvalue: '-', rwtype: m2rType })
-      if (targetApp === 'loon-plugin') {
-        mockBox.push({
+
+      let proto
+      if (m2rType == null && mocktype == 'file') {
+        proto = isStashiOS ? 'true' : ''
+        mockheader =
+          mockheader != '' && !/&contentType=/.test(mockheader)
+            ? '&header=' + encodeURIComponent(mockheader)
+            : mockheader != '' && /&contentType=/.test(mockheader)
+            ? mockheader
+            : ''
+        if (keepHeader == false) mockheader = ''
+
+        mockurl = `http://script.hub/convert/_start_/${mockurl}/_end_/${mfile}?type=mock&target-app=${targetApp}${mockheader}${sufkeepHeader}${sufjsDelivr}`
+        jsBox.push({
           mark,
           noteK,
-          mockptn,
-          data,
-          datapath,
-          mockurl,
-          mockstatus,
-          mocktype: oritype,
-          mockbase64,
+          jsname,
+          jstype: 'http-request',
+          jsptn: mockptn,
+          jsurl: mockurl,
+          proto,
+          timeout: '60',
           ori: x,
-          mocknum: y,
+          num: y,
         })
-      } else {
-        let proto
-        if (m2rType == null && mocktype == 'file') {
-          proto = isStashiOS ? 'true' : ''
-          mockheader =
-            mockheader != '' && !/&contentType=/.test(mockheader)
-              ? '&header=' + encodeURIComponent(mockheader)
-              : mockheader != '' && /&contentType=/.test(mockheader)
-              ? mockheader
-              : ''
-          if (keepHeader == false) mockheader = ''
-
-          mockurl = `http://script.hub/convert/_start_/${mockurl}/_end_/${mfile}?type=mock&target-app=${targetApp}${mockheader}${sufkeepHeader}${sufjsDelivr}`
-          jsBox.push({
-            mark,
-            noteK,
-            jsname,
-            jstype: 'http-request',
-            jsptn: mockptn,
-            jsurl: mockurl,
-            proto,
-            timeout: '60',
-            ori: x,
-            num: y,
-          })
-        } else if (m2rType == null && mocktype != 'file') {
-          jsurl = 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js'
-          mockstatus = mockstatus ? '&status-code=' + mockstatus : ''
-          jsarg = `${mocktype}=` + encodeURIComponent(mockurl) + mockstatus
-          jsBox.push({
-            mark,
-            noteK,
-            jsname,
-            jstype: 'http-request',
-            jsptn: mockptn,
-            jsurl,
-            jsarg,
-            timeout: '60',
-            ori: x,
-            num: y,
-          })
-        }
+      } else if (m2rType == null && mocktype != 'file') {
+        jsurl = 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js'
+        mockstatus = mockstatus ? '&status-code=' + mockstatus : ''
+        jsarg = `${mocktype}=` + encodeURIComponent(mockurl) + mockstatus
+        jsBox.push({
+          mark,
+          noteK,
+          jsname,
+          jstype: 'http-request',
+          jsptn: mockptn,
+          jsurl,
+          jsarg,
+          timeout: '60',
+          ori: x,
+          num: y,
+        })
       }
       break
   } //switch
