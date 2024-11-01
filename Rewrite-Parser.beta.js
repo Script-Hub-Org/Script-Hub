@@ -1141,7 +1141,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     ) {
       rulevalue = /,/.test(rulevalue) && !/[()]/.test(rulevalue) ? '"' + rulevalue + '"' : rulevalue
       if (ruletype === 'url-regex' && !/^['"].*['"]$/.test(rulevalue)) {
-        rulevalue = `'${rulevalue}'`
+        rulevalue = `"${rulevalue}"`
       }
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
     } else if (/^(?:and|or|not)$/i.test(ruletype) && !isStashiOS) {
@@ -2868,7 +2868,7 @@ function generateRule(node, platform, flags = {}) {
       return result
     } else if (node.type === 'VALUE') {
       if (node.operator === 'URL-REGEX' && !/^['"].*['"]$/.test(node.value)) {
-        node.value = `'${node.value}'`
+        node.value = `"${node.value}"`
       }
       let result = `${node.operator},${node.value}`
 
