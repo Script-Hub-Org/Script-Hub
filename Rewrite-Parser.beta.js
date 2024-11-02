@@ -616,6 +616,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           rwbodyBox.push({ type: jstype, regex: jsptn, value: newSuffixArray.join(' ') })
         }
       } else {
+        // console.log(JSON.stringify(args, null, 2))
         const index = jsBox.findIndex(i => i.jsurl === jsurl && i.jstype === jstype && i.jsptn === jsptn)
         if (index === -1) {
           jsBox.push({
@@ -2996,10 +2997,15 @@ function parseLoonKey(v) {
 // 由于在解析配置是用空格分割各个参数，如果配置的参数中有空格，请使用\x20代替
 function parseLoonValue(_v) {
   let v = _v.replace(/\\x20/g, ' ')
-  if (/^\d+$/.test(v)) {
-    v = parseInt(v)
-  } else {
+  if (/^".*"$/.test(v)) {
+    // 双引号包裹的肯定是字符串
     v = v.replace(/^"(.*?)"$/, '$1')
+  } else {
+    try {
+      v = JSON.parse(v)
+    } catch (e) {
+      console.log(`解析 Loon 值 ${v} 失败: ${e}`)
+    }
   }
   return v
 }
