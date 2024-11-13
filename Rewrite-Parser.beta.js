@@ -1705,7 +1705,24 @@ ${MITM}
       HeaderRewrite = (HeaderRewrite[0] || '') && `  header-rewrite:\n${HeaderRewrite.join('\n')}`
       script = (script[0] || '') && `  script:\n${script.join('\n\n')}`
 
+      let StashBodyRewrite = []
+      for (let i = 0; i < rwbodyBox.length; i++) {
+        const { type, regex, value } = rwbodyBox[i]
+        StashBodyRewrite.push(
+          `    - ${regex} ${type.replace(/^http-/, '').replace(/^(request|response)$/, '$1-replace-regex')} ${value
+            .replace(/^"(.+)"$/, '$1')
+            .replace(/^'(.+)'$/, '$1')
+            .split(' ')
+            .map(i => i.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1'))
+            .join(' ')}`
+        )
+      }
+      if (StashBodyRewrite.length > 0) {
+        StashBodyRewrite = `  body-rewrite:\n${StashBodyRewrite.join('\n')}`
+      }
+
       if (
+        StashBodyRewrite.length > 0 ||
         URLRewrite.length > 0 ||
         script.length > 0 ||
         HeaderRewrite.length > 0 ||
@@ -1721,6 +1738,8 @@ ${MITM}
 ${HeaderRewrite}
 
 ${URLRewrite}
+
+${StashBodyRewrite}
 
 ${script}
 `
