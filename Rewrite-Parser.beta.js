@@ -692,7 +692,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     //rule解析
     if (
-      /^(#|\/\/|;)?\s*?(domain|domain-suffix|domain-keyword|domain-set|domain-wildcard|ip-cidr|ip-cidr6|geoip|ip-asn|rule-set|url-regex|user-agent|process-name|subnet|dest-port|dst-port|in-port|src-port|src-ip|protocol|network|script|cellular-radio|device-name|domain-regex|geosite|ip-suffix|src-geoip|src-ip-asn|src-ip-cidr|src-ip-suffix|in-type|in-user|in-name|process-path|process-path-regex|process-name-regex|uid|dscp|sub-rule|match|and|or|not)\s*?,.+/i.test(
+      /^(#|\/\/|;)?\s*?(domain|domain-suffix|domain-keyword|domain-set|domain-wildcard|ip-cidr|ip-cidr6|geoip|ip-asn|rule-set|url-regex|user-agent|process-name|subnet|dest-port|dst-port|in-port|src-port|src-ip|protocol|network|script|hostname-type|cellular-radio|device-name|domain-regex|geosite|ip-suffix|src-geoip|src-ip-asn|src-ip-cidr|src-ip-suffix|in-type|in-user|in-name|process-path|process-path-regex|process-name-regex|uid|dscp|sub-rule|match|and|or|not)\s*?,.+/i.test(
         x
       )
     ) {
@@ -1151,7 +1151,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rules.push(mark + noteK2 + '- ' + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
     } else if (/src-port/i.test(ruletype) && (isSurgeiOS || isLooniOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulepm)
-    } else if (/src-ip|subnet|protocol|network|script|cellular-radio|device-name/i.test(ruletype) && isSurgeiOS) {
+    } else if (
+      /src-ip|subnet|protocol|network|script|hostname-type|cellular-radio|device-name/i.test(ruletype) &&
+      isSurgeiOS
+    ) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulepm)
     } else if (/url-regex/i.test(ruletype) && isStashiOS && /reject/i.test(rulepolicy)) {
       let Urx2Reject
@@ -2423,6 +2426,7 @@ function parseRule(input) {
         'NETWORK',
         'SCRIPT',
         'CELLULAR-RADIO',
+        'HOSTNAME-TYPE',
         'DEVICE-NAME',
         'DOMAIN-REGEX',
         'GEOSITE',
