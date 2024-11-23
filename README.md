@@ -50,6 +50,7 @@ Advanced Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and Shadowro
 [安装体验请查看文档](https://github.com/Script-Hub-Org/Script-Hub/wiki)
 
 ## 鸣谢
+
 Powered by [_@Chavy‘s_](https://github.com/chavyleung) [Env.js](https://github.com/chavyleung/scripts)  
 原脚本作者 @小白脸  
 脚本修改[_@chengkongyiban_](https://github.com/chengkongyiban)  
@@ -63,3 +64,9 @@ Powered by [_@Chavy‘s_](https://github.com/chavyleung) [Env.js](https://github
 ## 开发
 
 `pnpm preview` html 内容的本地预览
+
+## 赞助
+
+支持我们的工作
+
+[Patreon](https://www.patreon.com/scripthuborg)
