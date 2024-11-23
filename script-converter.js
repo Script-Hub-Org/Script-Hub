@@ -50,6 +50,7 @@ let url
   const keepHeader = queryObject.keepHeader
   const setHeader = queryObject.header ?? ''
   const setContentType = queryObject.contentType ?? ''
+  const prepend = queryObject.prepend ?? ''
   const evJsori = queryObject.evalScriptori ?? ''
   const evJsmodi = queryObject.evalScriptmodi ?? ''
   const evUrlori = queryObject.evalUrlori ?? ''
@@ -59,7 +60,12 @@ let url
 
   const subconverter = queryObject.subconverter
 
-  const reqHeaders = { headers: {} }
+  //用于自定义发送请求的请求头
+  const reqHeaders = {
+    headers: {
+      'User-Agent': 'script-hub/1.0.0',
+    },
+  }
   if (queryObject.headers) {
     decodeURIComponent(queryObject.headers)
       .split(/\r?\n/)
@@ -354,7 +360,26 @@ global.$done = _scriptSonverterDone
     eval($.lodash_get(await http(evUrlori, { ...reqHeaders }), 'body'))
   }
   if (type === 'qx-script' || compatibilityOnly) {
-    body = `${prefix}\n${compatibilityOnly ? body : body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
+    const content = `${prefix}\n${compatibilityOnly ? body : body.replace(/\$done\(/g, '_scriptSonverterDone(')}`
+    body = `${prepend || ''}
+const _scriptSonverterCompatibilityType = typeof $response !== 'undefined' ? 'response' : typeof $request !== 'undefined' ? 'request' : ''
+const _scriptSonverterCompatibilityDone = $done
+try {
+  ${content}
+} catch (e) {
+  console.log('❌ Script Hub 兼容层捕获到原脚本未处理的错误')
+  if (_scriptSonverterCompatibilityType) {
+    console.log('⚠️ 故不修改本次' + (_scriptSonverterCompatibilityType === 'response' ? '响应' : '请求'))
+  } else {
+    console.log('⚠️ 因类型非请求或响应, 抛出错误')
+  }
+  console.log(e)
+  if (_scriptSonverterCompatibilityType) {
+    _scriptSonverterCompatibilityDone({})
+  } else {
+    throw e
+  }
+}`
   }
 
   status = status ?? 200
