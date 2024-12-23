@@ -1046,7 +1046,7 @@ const htmls = `
 
       <details v-if="!target || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <summary>图标</summary>
-        <p>可指定 <a href="https://gitlab.com/lodepuly/iconlibrary/-/raw/main/KeLee_icon.json" target="_blank">可莉图标订阅</a> 里的图标名或图标链接</p>
+        <p>可指定 <a href="https://raw.githubusercontent.com/luestr/IconResource/main/KeLee_icon.json" target="_blank">可莉图标订阅</a> 里的图标名或图标链接</p>
         <textarea id="icon" v-model.lazy="icon" placeholder="指定 icon"></textarea>
       </details>
 

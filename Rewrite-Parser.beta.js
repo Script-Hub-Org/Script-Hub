@@ -1887,7 +1887,7 @@ function getModInfo(x) {
 
 //获取可莉图标集
 async function getIcon(icon) {
-  let url = 'https://gitlab.com/lodepuly/iconlibrary/-/raw/main/KeLee_icon.json'
+  let url = 'https://raw.githubusercontent.com/luestr/IconResource/main/KeLee_icon.json'
   let kicon = $.getjson('Parser_Kelee_icon')
   if (!kicon) {
     kicon = $.toObj((await http(url)).body)['icons']
