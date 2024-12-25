@@ -332,6 +332,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   if (bodyRewrite) {
     for await (let [y, x] of bodyRewrite.match(/[^\r\n]+/g).entries()) {
+      if (/^(#|;|\/\/)\s*/.test(x)) continue
       const [_, type, regex, value] = x.match(/^((?:http-request|http-response)(?:-jq)?)\s+?(.*?)\s+?(.*?)$/)
       rwbodyBox.push({ type, regex, value })
     }
@@ -548,9 +549,26 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rw_redirect(x, mark)
     }
 
-    if (/\s((request|response)-body-json-jq)\s/.test(x) && jqEnabled && isSurgeiOS) {
-      const [_, regex, type, value] = x.match(/^(.*?)\s+?(?:(request|response)-body-json-jq)\s+?(.*?)\s*$/)
-      rwbodyBox.push({ type: `http-${type}-jq`, regex, value })
+    if (/\s((request|response)-body-json-jq)\s/.test(x)) {
+      let [_, regex, type, value] = x.match(/^(.*?)\s+?(?:(request|response)-body-json-jq)\s+?(.*?)\s*$/)
+      if (jqEnabled && isSurgeiOS) {
+        const jqPath = value.match(/jq-path="(.+?)"/)?.[1]
+        if (jqPath) {
+          if (/^https?:\/\//.test(jqPath)) {
+            value = `'${(await $.http.get(jqPath)).body.replace(/^#.*$/gm, '').replace(/$\r?\n/gm, ' ')}'`
+          } else {
+            value = undefined
+            const e = `暂不支持本地 JQ 文件:\n${x}`
+            console.log(e)
+            shNotify(e)
+          }
+        }
+        if (value) {
+          rwbodyBox.push({ type: `http-${type}-jq`, regex, value })
+        }
+      } else if (isLooniOS) {
+        URLRewrite.push(x)
+      }
     }
 
     if (/\s((request|response)-body-(json-(add|del|replace)|replace-regex))\s/.test(x)) {

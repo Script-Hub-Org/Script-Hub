@@ -332,6 +332,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   if (bodyRewrite) {
     for await (let [y, x] of bodyRewrite.match(/[^\r\n]+/g).entries()) {
+      if (/^(#|;|\/\/)\s*/.test(x)) continue
       const [_, type, regex, value] = x.match(/^((?:http-request|http-response)(?:-jq)?)\s+?(.*?)\s+?(.*?)$/)
       rwbodyBox.push({ type, regex, value })
     }
