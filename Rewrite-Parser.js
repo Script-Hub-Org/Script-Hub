@@ -555,7 +555,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         const jqPath = value.match(/jq-path="(.+?)"/)?.[1]
         if (jqPath) {
           if (/^https?:\/\//.test(jqPath)) {
-            value = `'${(await $.http.get(jqPath)).body.replace(/^#.*$/gm, '').replace(/$\r?\n/gm, ' ')}'`
+            value = `'${(await http(jqPath, reqHeaders)).body.replace(/^#.*$/gm, '').replace(/$\r?\n/gm, ' ')}'`
           } else {
             value = undefined
             const e = `暂不支持本地 JQ 文件:\n${x}`
