@@ -1921,7 +1921,7 @@ function rw_reject(x, mark) {
 function rw_redirect(x, mark) {
   let noteK = isNoteK(x)
   x = x.replace(/\s{2,}/g, ' ')
-  let redirect_type = x.match(/\s302|\s307|\sheader$/)[0].replace(/\s/, '')
+  let redirect_type = x.match(/\s302|\s307|\sheader\s|\sheader$/)[0].replace(/\s/g, '')
   let xArr = x.split(/\s/)
   let rw_typeInNum = xArr.indexOf(redirect_type)
   let rwptn, rwvalue, rwtype
