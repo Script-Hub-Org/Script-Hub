@@ -267,6 +267,7 @@ let hn2name = 'hostname'
 
 //待输出
 let modInfo = [] //模块简介
+let loonArg = [] //[Argument]
 let httpFrame = '' //Stash的http:父框架
 let tiles = [] //磁贴覆写
 let General = []
@@ -516,12 +517,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     if (/^#!.+?=\s*$/.test(x)) {
     } else if (isLooniOS && /^#!(?:select|input)\s*=\s*.+/.test(x)) {
       getInputInfo(x, modInputBox)
-    } else if (/^#!.+?=.+/.test(x) && !/^#!(?:select|input)\s*=\s*.+/.test(x)) {
+    } else if (/^#!.+?=.+/.test(x) && !/^#!(?:select|input|arguments)\s*=\s*.+/.test(x)) {
       getModInfo(x)
     }
 
     //#!arguments参数
-    if (/^#!arguments\s*=\s*.+/.test(x)) {
+    if (/^#!arguments\s*=\s*.+/.test(x) || /=\s*input|select|switch/.test(x)) {
       parseArguments(x)
     }
 
@@ -810,6 +811,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         ? getJsInfo(x, /[=,\s]\s*cronexpr?\s*=\s*/)
         : /cron\s+"/.test(x)
         ? x.split('"')[1]
+        : /cron\s+[^\s]+?\s+/
+        ? x.split(/\s/)[1]
         : ''
       ability = getJsInfo(x, /[=,\s]\s*ability\s*=\s*/)
       engine = getJsInfo(x, /[=,\s]\s*engine\s*=\s*/)
@@ -1051,6 +1054,17 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   realBox = pieceHn(realBox)
   if (synMitm) fheBox = hnBox
 
+  if ( isSurgeiOS && sgArg.length > 0 ){
+    let sgargArr = []
+    for (let i = 0; i < sgArg.length; i++) {
+      let key = sgArg[i].key
+      let value = sgArg[i].value.split(',')[0].trim()
+      let a = key + ':' + value
+      sgargArr.push(a)
+    }
+    modInfoObj['arguments'] = (sgargArr[0] || '') && `${sgargArr.join(',')}`
+  }
+
   //模块信息输出
   switch (targetApp) {
     case 'surge-module':
@@ -1089,6 +1103,18 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       } //for
       break
   } //模块信息输出结束
+
+  //[Argument]输出
+  if ( isLooniOS && sgArg.length > 0 ){
+    for (let i = 0; i < sgArg.length; i++) {
+      let key = sgArg[i].key
+      let type = sgArg[i].type
+      let value = sgArg[i].value
+      if (type == 'switch') value = /^true/.test(value) ? 'true,false' : 'false,true'
+      let tag = sgArg[i].tag
+      loonArg.push(key + '=' + type + ',' + value + ',' + tag)
+    }
+  }
 
   //rule输出 switch不适合
   for (let i = 0; i < ruleBox.length; i++) {
@@ -1658,6 +1684,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     case 'loon-plugin':
       modInfo = (modInfo[0] || '') && `${modInfo.join('\n')}`
 
+      loonArg = (loonArg[0] || '') && `[Argument]\n${loonArg.join('\n')}`
+
       rules = (rules[0] || '') && `[Rule]\n${rules.join('\n')}`
 
       Panel = (Panel[0] || '') && `[Panel]\n${Panel.join('\n\n')}`
@@ -1695,6 +1723,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       }
 
       body = `${modInfo}
+
+${loonArg}
 
 ${General}
 
@@ -1797,12 +1827,21 @@ ${providers}
       break
   } //输出内容结束
   body = body.replace(/\n{2,}/g, '\n\n')
-  if (!isSurgeiOS && sgArg.length > 0) {
+  if (!isSurgeiOS && !isLooniOS && sgArg.length > 0) {
     for (let i = 0; i < sgArg.length; i++) {
       let e = '{{{' + sgArg[i].key + '}}}'
       let r = sgArg[i].value
       body = body.replaceAll(e, r)
     } //for
+  } else if (isSurgeiOS) {
+    body = body.replaceAll('{{{','{').replaceAll('}}}','}')
+    for (let i = 0; i < sgArg.length; i++) {
+      let e = '{' + sgArg[i].key + '}'
+      let r = '{{{' + sgArg[i].key + '}}}'
+      body = body.replaceAll(e, r)
+    } //for
+  } else if (isLooniOS) {
+      body = body.replaceAll('{{{','{').replaceAll('}}}','}')
   }
 
   eval(evJsmodi)
@@ -2273,6 +2312,7 @@ function getPolicy(str) {
 }
 
 function parseArguments(str) {
+  if (/#!arguments/.test(str)){
   const queryString = str.split(/#!arguments\s*=\s*/)[1] //获取查询字符串部分
   const regex = /([^:,]+):(\s*".+?"|[^,]*)/g //匹配键值对的正则表达式
   let match
@@ -2280,12 +2320,30 @@ function parseArguments(str) {
   while ((match = regex.exec(queryString))) {
     const key = match[1].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
     const value = match[2].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
-    sgArg.push({ key, value }) //将键值对添加到对象中
+    const type = /^(true|false)$/.test(value) ? 'switch' : 'input'
+    const tag = `tag=${key}, desc=${key}`
+
+    sgArg.push({ key, value, type, tag }) //将键值对添加到对象中
+
     if (value == "hostname") {
       hn2 = true
-      hn2name = '{{{' + key + '}}}'
+      hn2name = key
     }
   }
+} else {
+  const regex = /(^.*?)\s*=\s*(.*?)\s*,(.*?),\s*([^,]*\s*=.+)/ //获取信息
+  const key = str.match(regex)[1]
+  const type = str.match(regex)[2]
+  const value = str.match(regex)[3]
+  const tag = str.match(regex)[4]
+
+  sgArg.push({ key, value, type, tag })
+  
+  if (value == "hostname") {
+    hn2 = true
+    hn2name = key
+  }
+}
 }
 
 function parseQueryString(url) {
