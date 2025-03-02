@@ -522,7 +522,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
 
     //#!arguments参数
-    if (/^#!arguments\s*=\s*.+/.test(x) || /=\s*input|select|switch/.test(x)) {
+    if (/^#!arguments\s*=\s*.+/.test(x) || /^[^#]=\s*(input|select|switch)\s*,/.test(x)) {
       parseArguments(x)
     }
 
@@ -1434,6 +1434,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       cronexp = reJsValue(nCron || 'null', ncronexp, jsname, ori, cronexp)
 
+      cronexp = /,/.test(cronexp) ? '"' + cronexp + '"' : cronexp
+
       jsname = reJsValue(njsnametarget || 'null', njsname, jsname, ori, jsname)
 
       timeout = reJsValue(timeoutt || 'null', timeoutv, jsname, ori, timeout)
@@ -1516,9 +1518,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 jsname +
                 ' = type=' +
                 jstype +
-                ', cronexp="' +
+                ', cronexp=' +
                 cronexp +
-                '"' +
                 ', script-path=' +
                 jsurl +
                 updatetime +
@@ -1532,9 +1533,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
               mark +
                 noteK +
                 jstype +
-                ' "' +
+                ' ' +
                 cronexp +
-                '"' +
                 ' script-path=' +
                 jsurl +
                 timeout +
@@ -1659,7 +1659,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
       if (jstype == 'cron') {
-        cron.push(mark + `${noteK4}- name: "` + jsname + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg)
+        cron.push(mark + `${noteK4}- name: "` + jsname + `"${noteKn6}cron: ` + cronexp + `${timeout}` + jsarg)
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
       if (jstype == 'generic') {
@@ -1703,7 +1703,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       script = (script[0] || '') && `[Script]\n${script.join('\n\n')}`
 
       if (isLooniOS) {
-        MITM = hnBox.length > 0 ? '[MITM]\nhostname = ' + hnBox : ''
+        MITM = hnBox.length > 0 ? `[MITM]\n${hn2name} = ` + hnBox : ''
         fheBox.length > 0 && General.push('force-http-engine-hosts = ' + fheBox)
         skipBox.length > 0 && General.push('skip-proxy = ' + skipBox)
         realBox.length > 0 && General.push('real-ip = ' + realBox)
@@ -1828,9 +1828,10 @@ ${providers}
   } //输出内容结束
   body = body.replace(/\n{2,}/g, '\n\n')
   if (!isSurgeiOS && !isLooniOS && sgArg.length > 0) {
+    body = body.replaceAll('{{{','{').replaceAll('}}}','}')
     for (let i = 0; i < sgArg.length; i++) {
-      let e = '{{{' + sgArg[i].key + '}}}'
-      let r = sgArg[i].value
+      let e = '{' + sgArg[i].key + '}'
+      let r = sgArg[i].value.split(',')[0]
       body = body.replaceAll(e, r)
     } //for
   } else if (isSurgeiOS) {
@@ -2327,7 +2328,7 @@ function parseArguments(str) {
 
     if (value == "hostname") {
       hn2 = true
-      hn2name = key
+      hn2name = '{{{' + key + '}}}'
     }
   }
 } else {
@@ -2341,7 +2342,7 @@ function parseArguments(str) {
   
   if (value == "hostname") {
     hn2 = true
-    hn2name = key
+    hn2name = '{{{' + key + '}}}'
   }
 }
 }
