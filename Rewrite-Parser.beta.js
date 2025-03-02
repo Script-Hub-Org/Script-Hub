@@ -263,7 +263,7 @@ let skipaddMethod = '%APPEND%'
 let realaddMethod = '%APPEND%'
 
 let hn2 = false //surge模块中带有禁用MITM参数时无法捕捉hostname，此变量用以判断有无此类参数，以便后续解析
-let hn2name = ''
+let hn2name = 'hostname'
 
 //待输出
 let modInfo = [] //模块简介
