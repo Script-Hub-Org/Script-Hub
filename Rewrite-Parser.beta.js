@@ -262,6 +262,9 @@ let fheaddMethod = '%APPEND%'
 let skipaddMethod = '%APPEND%'
 let realaddMethod = '%APPEND%'
 
+let hn2 = false //surge模块中带有禁用MITM参数时无法捕捉hostname，此变量用以判断有无此类参数，以便后续解析
+let hn2name = ''
+
 //待输出
 let modInfo = [] //模块简介
 let httpFrame = '' //Stash的http:父框架
@@ -518,12 +521,14 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
 
     //#!arguments参数
-    if (!isSurgeiOS && /^#!arguments\s*=\s*.+/.test(x)) {
+    if (/^#!arguments\s*=\s*.+/.test(x)) {
       parseArguments(x)
     }
 
     //hostname
     if (/^hostname\s*=.+/.test(x)) hnaddMethod = getHn(x, hnBox, hnaddMethod)
+
+    if (hn2 == true && x.match(hn2name)) hnaddMethod = getHn(x, hnBox, hnaddMethod)
 
     if (/^force-http-engine-hosts\s*=.+/.test(x)) fheaddMethod = getHn(x, fheBox, fheaddMethod)
 
@@ -1678,7 +1683,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       }
 
       if (isSurgeiOS || isShadowrocket) {
-        MITM = hnBox.length > 0 ? `[MITM]\nhostname = ${hnaddMethod} ` + hnBox : ''
+        if (isSurgeiOS) {
+          MITM = hnBox.length > 0 ? `[MITM]\n${hn2name} = ${hnaddMethod} ` + hnBox : ''
+        }else{
+          MITM = hnBox.length > 0 ? `[MITM]\nhostname = ${hnaddMethod} ` + hnBox : ''
+        }
         fheBox.length > 0 && General.push(`force-http-engine-hosts = ${fheaddMethod} ` + fheBox)
         skipBox.length > 0 && General.push(`skip-proxy = ${skipaddMethod} ` + skipBox)
         realBox.length > 0 && General.push(`always-real-ip = ${realaddMethod} ` + realBox)
@@ -1788,7 +1797,7 @@ ${providers}
       break
   } //输出内容结束
   body = body.replace(/\n{2,}/g, '\n\n')
-  if (sgArg.length > 0) {
+  if (!isSurgeiOS && sgArg.length > 0) {
     for (let i = 0; i < sgArg.length; i++) {
       let e = '{{{' + sgArg[i].key + '}}}'
       let r = sgArg[i].value
@@ -2272,6 +2281,10 @@ function parseArguments(str) {
     const key = match[1].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
     const value = match[2].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
     sgArg.push({ key, value }) //将键值对添加到对象中
+    if (value == "hostname") {
+      hn2 = true
+      hn2name = '{{{' + key + '}}}'
+    }
   }
 }
 
