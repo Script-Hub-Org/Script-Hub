@@ -262,8 +262,12 @@ let fheaddMethod = '%APPEND%'
 let skipaddMethod = '%APPEND%'
 let realaddMethod = '%APPEND%'
 
+let hn2 = false //surge模块中带有禁用MITM参数时无法捕捉hostname，此变量用以判断有无此类参数，以便后续解析
+let hn2name = 'hostname'
+
 //待输出
 let modInfo = [] //模块简介
+let loonArg = [] //[Argument]
 let httpFrame = '' //Stash的http:父框架
 let tiles = [] //磁贴覆写
 let General = []
@@ -513,17 +517,19 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     if (/^#!.+?=\s*$/.test(x)) {
     } else if (isLooniOS && /^#!(?:select|input)\s*=\s*.+/.test(x)) {
       getInputInfo(x, modInputBox)
-    } else if (/^#!.+?=.+/.test(x) && !/^#!(?:select|input)\s*=\s*.+/.test(x)) {
+    } else if (/^#!.+?=.+/.test(x) && !/^#!(?:select|input|arguments)\s*=\s*.+/.test(x)) {
       getModInfo(x)
     }
 
     //#!arguments参数
-    if (!isSurgeiOS && /^#!arguments\s*=\s*.+/.test(x)) {
+    if (/^#!arguments\s*=\s*.+/.test(x) || /^[^#]=\s*(input|select|switch)\s*,/.test(x)) {
       parseArguments(x)
     }
 
     //hostname
     if (/^hostname\s*=.+/.test(x)) hnaddMethod = getHn(x, hnBox, hnaddMethod)
+
+    if (hn2 == true && x.match(hn2name)) hnaddMethod = getHn(x, hnBox, hnaddMethod)
 
     if (/^force-http-engine-hosts\s*=.+/.test(x)) fheaddMethod = getHn(x, fheBox, fheaddMethod)
 
@@ -805,6 +811,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         ? getJsInfo(x, /[=,\s]\s*cronexpr?\s*=\s*/)
         : /cron\s+"/.test(x)
         ? x.split('"')[1]
+        : /cron\s+[^\s]+?\s+/
+        ? x.split(/\s/)[1]
         : ''
       ability = getJsInfo(x, /[=,\s]\s*ability\s*=\s*/)
       engine = getJsInfo(x, /[=,\s]\s*engine\s*=\s*/)
@@ -1046,6 +1054,17 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   realBox = pieceHn(realBox)
   if (synMitm) fheBox = hnBox
 
+  if (isSurgeiOS && sgArg.length > 0) {
+    let sgargArr = []
+    for (let i = 0; i < sgArg.length; i++) {
+      let key = sgArg[i].key
+      let value = sgArg[i].value.split(',')[0].trim()
+      let a = key + ':' + value
+      sgargArr.push(a)
+    }
+    modInfoObj['arguments'] = (sgargArr[0] || '') && `${sgargArr.join(',')}`
+  }
+
   //模块信息输出
   switch (targetApp) {
     case 'surge-module':
@@ -1084,6 +1103,18 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       } //for
       break
   } //模块信息输出结束
+
+  //[Argument]输出
+  if (isLooniOS && sgArg.length > 0) {
+    for (let i = 0; i < sgArg.length; i++) {
+      let key = sgArg[i].key
+      let type = sgArg[i].type
+      let value = sgArg[i].value
+      if (type == 'switch') value = /^true/.test(value) ? 'true,false' : 'false,true'
+      let tag = sgArg[i].tag
+      loonArg.push(key + '=' + type + ',' + value + ',' + tag)
+    }
+  }
 
   //rule输出 switch不适合
   for (let i = 0; i < ruleBox.length; i++) {
@@ -1403,6 +1434,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       cronexp = reJsValue(nCron || 'null', ncronexp, jsname, ori, cronexp)
 
+      cronexp = /,/.test(cronexp) ? '"' + cronexp + '"' : cronexp
+
       jsname = reJsValue(njsnametarget || 'null', njsname, jsname, ori, jsname)
 
       timeout = reJsValue(timeoutt || 'null', timeoutv, jsname, ori, timeout)
@@ -1485,9 +1518,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 jsname +
                 ' = type=' +
                 jstype +
-                ', cronexp="' +
+                ', cronexp=' +
                 cronexp +
-                '"' +
                 ', script-path=' +
                 jsurl +
                 updatetime +
@@ -1501,9 +1533,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
               mark +
                 noteK +
                 jstype +
-                ' "' +
+                ' ' +
                 cronexp +
-                '"' +
                 ' script-path=' +
                 jsurl +
                 timeout +
@@ -1628,7 +1659,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
       if (jstype == 'cron') {
-        cron.push(mark + `${noteK4}- name: "` + jsname + `"${noteKn6}cron: "` + cronexp + `"${timeout}` + jsarg)
+        cron.push(mark + `${noteK4}- name: "` + jsname + `"${noteKn6}cron: ` + cronexp + `${timeout}` + jsarg)
         providers.push(`${noteK2}"` + jsname + '":' + `${noteKn4}url: ` + jsurl + `${noteKn4}interval: 86400`)
       }
       if (jstype == 'generic') {
@@ -1653,6 +1684,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     case 'loon-plugin':
       modInfo = (modInfo[0] || '') && `${modInfo.join('\n')}`
 
+      loonArg = (loonArg[0] || '') && `[Argument]\n${loonArg.join('\n')}`
+
       rules = (rules[0] || '') && `[Rule]\n${rules.join('\n')}`
 
       Panel = (Panel[0] || '') && `[Panel]\n${Panel.join('\n\n')}`
@@ -1670,7 +1703,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       script = (script[0] || '') && `[Script]\n${script.join('\n\n')}`
 
       if (isLooniOS) {
-        MITM = hnBox.length > 0 ? '[MITM]\nhostname = ' + hnBox : ''
+        MITM = hnBox.length > 0 ? `[MITM]\n${hn2name} = ` + hnBox : ''
         fheBox.length > 0 && General.push('force-http-engine-hosts = ' + fheBox)
         skipBox.length > 0 && General.push('skip-proxy = ' + skipBox)
         realBox.length > 0 && General.push('real-ip = ' + realBox)
@@ -1678,7 +1711,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       }
 
       if (isSurgeiOS || isShadowrocket) {
-        MITM = hnBox.length > 0 ? `[MITM]\nhostname = ${hnaddMethod} ` + hnBox : ''
+        if (isSurgeiOS) {
+          MITM = hnBox.length > 0 ? `[MITM]\n${hn2name} = ${hnaddMethod} ` + hnBox : ''
+        } else {
+          MITM = hnBox.length > 0 ? `[MITM]\nhostname = ${hnaddMethod} ` + hnBox : ''
+        }
         fheBox.length > 0 && General.push(`force-http-engine-hosts = ${fheaddMethod} ` + fheBox)
         skipBox.length > 0 && General.push(`skip-proxy = ${skipaddMethod} ` + skipBox)
         realBox.length > 0 && General.push(`always-real-ip = ${realaddMethod} ` + realBox)
@@ -1686,6 +1723,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       }
 
       body = `${modInfo}
+
+${loonArg}
 
 ${General}
 
@@ -1788,12 +1827,22 @@ ${providers}
       break
   } //输出内容结束
   body = body.replace(/\n{2,}/g, '\n\n')
-  if (sgArg.length > 0) {
+  if (!isSurgeiOS && !isLooniOS && sgArg.length > 0) {
+    body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
     for (let i = 0; i < sgArg.length; i++) {
-      let e = '{{{' + sgArg[i].key + '}}}'
-      let r = sgArg[i].value
+      let e = '{' + sgArg[i].key + '}'
+      let r = sgArg[i].value.split(',')[0]
       body = body.replaceAll(e, r)
     } //for
+  } else if (isSurgeiOS) {
+    body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
+    for (let i = 0; i < sgArg.length; i++) {
+      let e = '{' + sgArg[i].key + '}'
+      let r = '{{{' + sgArg[i].key + '}}}'
+      body = body.replaceAll(e, r)
+    } //for
+  } else if (isLooniOS) {
+    body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
   }
 
   eval(evJsmodi)
@@ -2264,14 +2313,37 @@ function getPolicy(str) {
 }
 
 function parseArguments(str) {
-  const queryString = str.split(/#!arguments\s*=\s*/)[1] //获取查询字符串部分
-  const regex = /([^:,]+):(\s*".+?"|[^,]*)/g //匹配键值对的正则表达式
-  let match
+  if (/#!arguments/.test(str)) {
+    const queryString = str.split(/#!arguments\s*=\s*/)[1] //获取查询字符串部分
+    const regex = /([^:,]+):(\s*".+?"|[^,]*)/g //匹配键值对的正则表达式
+    let match
 
-  while ((match = regex.exec(queryString))) {
-    const key = match[1].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
-    const value = match[2].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
-    sgArg.push({ key, value }) //将键值对添加到对象中
+    while ((match = regex.exec(queryString))) {
+      const key = match[1].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
+      const value = match[2].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
+      const type = /^(true|false)$/.test(value) ? 'switch' : 'input'
+      const tag = `tag=${key}, desc=${key}`
+
+      sgArg.push({ key, value, type, tag }) //将键值对添加到对象中
+
+      if (value == 'hostname') {
+        hn2 = true
+        hn2name = '{{{' + key + '}}}'
+      }
+    }
+  } else {
+    const regex = /(^.*?)\s*=\s*(.*?)\s*,(.*?),\s*([^,]*\s*=.+)/ //获取信息
+    const key = str.match(regex)[1]
+    const type = str.match(regex)[2]
+    const value = str.match(regex)[3]
+    const tag = str.match(regex)[4]
+
+    sgArg.push({ key, value, type, tag })
+
+    if (value == 'hostname') {
+      hn2 = true
+      hn2name = '{{{' + key + '}}}'
+    }
   }
 }
 

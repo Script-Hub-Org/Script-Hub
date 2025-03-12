@@ -12,36 +12,6 @@ const HOST = process.env.HOST || '0.0.0.0'
 const BASE_URL = process.env.BASE_URL || `http://127.0.0.1:${PORT}`
 const BETA_BASE_URL = process.env.BETA_BASE_URL || `http://127.0.0.1:${BETA_PORT}`
 
-const { NodeVM } = require('vm2')
-const vmconfigs = {
-  console: 'inherit',
-  require: {
-    builtin: ['fs'],
-    mock: {
-      fs: {
-        readFileSync(path) {
-          try {
-            const data = fs.readFileSync(path.join(workspace, path))
-            return data
-          } catch (err) {
-            console.error(err)
-          }
-        },
-        writeFileSync(path, data) {
-          try {
-            fs.writeFileSync(path.join(workspace, path), data)
-          } catch (err) {
-            console.error(err)
-          }
-        },
-        existsSync(path) {
-          return fs.existsSync(path.join(workspace, path))
-        },
-      },
-    },
-  },
-}
-
 const evalFn = async ({ $request, scriptFilePath }) => {
   let content = fs.readFileSync(scriptFilePath, { encoding: 'utf8' })
   content = content.replace(/\$\.?done\(/g, '$eval_env.resolve(')
