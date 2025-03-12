@@ -1355,7 +1355,7 @@ const htmls = `
     nore: false,
     synMitm: false,
     noNtf: false,
-    jqEnabled: false,
+    jqEnabled: true,
     frontendConvert: false,
     sni: '',
     pm: '',
