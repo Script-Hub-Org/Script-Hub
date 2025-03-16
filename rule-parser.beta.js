@@ -88,7 +88,7 @@ let evUrlori = queryObject.evalUrlori
 let evUrlmodi = queryObject.evalUrlmodi
 
 //用于自定义发送请求的请求头
-const reqHeaders = { headers: {} }
+const reqHeaders = { headers: { 'User-Agent': 'script-hub/1.0.0' } }
 
 if (queryObject.headers) {
   decodeURIComponent(queryObject.headers)
