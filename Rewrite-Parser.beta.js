@@ -1054,7 +1054,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   realBox = pieceHn(realBox)
   if (synMitm) fheBox = hnBox
 
-  if ( isSurgeiOS && sgArg.length > 0 ){
+  if (isSurgeiOS && sgArg.length > 0) {
     let sgargArr = []
     for (let i = 0; i < sgArg.length; i++) {
       let key = sgArg[i].key
@@ -1105,7 +1105,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   } //模块信息输出结束
 
   //[Argument]输出
-  if ( isLooniOS && sgArg.length > 0 ){
+  if (isLooniOS && sgArg.length > 0) {
     for (let i = 0; i < sgArg.length; i++) {
       let key = sgArg[i].key
       let type = sgArg[i].type
@@ -1534,7 +1534,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 noteK +
                 jstype +
                 ' ' +
-                cronexp +
+                `"${cronexp.replace(/"/g, '')}"` +
                 ' script-path=' +
                 jsurl +
                 timeout +
@@ -1713,7 +1713,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       if (isSurgeiOS || isShadowrocket) {
         if (isSurgeiOS) {
           MITM = hnBox.length > 0 ? `[MITM]\n${hn2name} = ${hnaddMethod} ` + hnBox : ''
-        }else{
+        } else {
           MITM = hnBox.length > 0 ? `[MITM]\nhostname = ${hnaddMethod} ` + hnBox : ''
         }
         fheBox.length > 0 && General.push(`force-http-engine-hosts = ${fheaddMethod} ` + fheBox)
@@ -1828,21 +1828,21 @@ ${providers}
   } //输出内容结束
   body = body.replace(/\n{2,}/g, '\n\n')
   if (!isSurgeiOS && !isLooniOS && sgArg.length > 0) {
-    body = body.replaceAll('{{{','{').replaceAll('}}}','}')
+    body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
     for (let i = 0; i < sgArg.length; i++) {
       let e = '{' + sgArg[i].key + '}'
       let r = sgArg[i].value.split(',')[0]
       body = body.replaceAll(e, r)
     } //for
   } else if (isSurgeiOS) {
-    body = body.replaceAll('{{{','{').replaceAll('}}}','}')
+    body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
     for (let i = 0; i < sgArg.length; i++) {
       let e = '{' + sgArg[i].key + '}'
       let r = '{{{' + sgArg[i].key + '}}}'
       body = body.replaceAll(e, r)
     } //for
   } else if (isLooniOS) {
-      body = body.replaceAll('{{{','{').replaceAll('}}}','}')
+    body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
   }
 
   eval(evJsmodi)
@@ -2313,38 +2313,38 @@ function getPolicy(str) {
 }
 
 function parseArguments(str) {
-  if (/#!arguments/.test(str)){
-  const queryString = str.split(/#!arguments\s*=\s*/)[1] //获取查询字符串部分
-  const regex = /([^:,]+):(\s*".+?"|[^,]*)/g //匹配键值对的正则表达式
-  let match
+  if (/#!arguments/.test(str)) {
+    const queryString = str.split(/#!arguments\s*=\s*/)[1] //获取查询字符串部分
+    const regex = /([^:,]+):(\s*".+?"|[^,]*)/g //匹配键值对的正则表达式
+    let match
 
-  while ((match = regex.exec(queryString))) {
-    const key = match[1].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
-    const value = match[2].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
-    const type = /^(true|false)$/.test(value) ? 'switch' : 'input'
-    const tag = `tag=${key}, desc=${key}`
+    while ((match = regex.exec(queryString))) {
+      const key = match[1].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
+      const value = match[2].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
+      const type = /^(true|false)$/.test(value) ? 'switch' : 'input'
+      const tag = `tag=${key}, desc=${key}`
 
-    sgArg.push({ key, value, type, tag }) //将键值对添加到对象中
+      sgArg.push({ key, value, type, tag }) //将键值对添加到对象中
 
-    if (value == "hostname") {
+      if (value == 'hostname') {
+        hn2 = true
+        hn2name = '{{{' + key + '}}}'
+      }
+    }
+  } else {
+    const regex = /(^.*?)\s*=\s*(.*?)\s*,(.*?),\s*([^,]*\s*=.+)/ //获取信息
+    const key = str.match(regex)[1]
+    const type = str.match(regex)[2]
+    const value = str.match(regex)[3]
+    const tag = str.match(regex)[4]
+
+    sgArg.push({ key, value, type, tag })
+
+    if (value == 'hostname') {
       hn2 = true
       hn2name = '{{{' + key + '}}}'
     }
   }
-} else {
-  const regex = /(^.*?)\s*=\s*(.*?)\s*,(.*?),\s*([^,]*\s*=.+)/ //获取信息
-  const key = str.match(regex)[1]
-  const type = str.match(regex)[2]
-  const value = str.match(regex)[3]
-  const tag = str.match(regex)[4]
-
-  sgArg.push({ key, value, type, tag })
-  
-  if (value == "hostname") {
-    hn2 = true
-    hn2name = '{{{' + key + '}}}'
-  }
-}
 }
 
 function parseQueryString(url) {

@@ -1534,7 +1534,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 noteK +
                 jstype +
                 ' ' +
-                cronexp +
+                `"${cronexp.replace(/"/g, '')}"` +
                 ' script-path=' +
                 jsurl +
                 timeout +
