@@ -345,6 +345,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   body = body.match(/[^\r\n]+/g)
 
   for await (let [y, x] of body.entries()) {
+    // 保持原始 x
+    const _x = x
     //简单处理方便后续操作
     x = x
       .trim()
@@ -555,8 +557,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rw_redirect(x, mark)
     }
 
-    if (/\s((request|response)-body-json-jq)\s/.test(x)) {
-      let [_, regex, type, value] = x.match(/^(.*?)\s+?(?:(request|response)-body-json-jq)\s+?(.*?)\s*$/)
+    if (/\s((request|response)-body-json-jq)\s/.test(_x)) {
+      let [_, regex, type, value] = _x.match(/^(.*?)\s+?(?:(request|response)-body-json-jq)\s+?(.*?)\s*$/)
       if (jqEnabled && isSurgeiOS) {
         const jqPath = value.match(/jq-path="(.+?)"/)?.[1]
         if (jqPath) {
