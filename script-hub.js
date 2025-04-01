@@ -1562,6 +1562,9 @@ const htmls = `
         if (this.src && this.src.startsWith('https://quantumult.app/x/open-app/add-resource')) {
           return '⚠️⚠️⚠️ 你填入的是 QX 导入链接. 请安装 https://t.me/h5683577/211 然后在浏览器中预览资源 分别转换规则集和重写'
         }
+        if (this.src && this.src.startsWith('https://www.nsloon.com/')) {
+          return '⚠️⚠️⚠️ 你填入的是 Loon 导入链接. 请自行提取资源文件链接填入. 一般是类似 https://www.nsloon.com/openloon/import?plugin= 后面的部分(可能需要 URL 解码)'
+        }
 				const fields = {}
         if (this.jsc_all) {
           fields.jsc = '.'
