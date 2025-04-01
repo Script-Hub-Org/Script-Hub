@@ -572,6 +572,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           }
         }
         if (value) {
+          value = value.replace(/\s+\/\//g, '//')
           rwbodyBox.push({ type: `http-${type}-jq`, regex, value })
         }
       } else if (isLooniOS) {
