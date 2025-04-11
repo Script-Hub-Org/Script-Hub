@@ -559,7 +559,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     if (/\s((request|response)-body-json-jq)\s/.test(_x)) {
       let [_, regex, type, value] = _x.match(/^(.*?)\s+?(?:(request|response)-body-json-jq)\s+?(.*?)\s*$/)
-      if (jqEnabled && isSurgeiOS) {
+      if (jqEnabled && (isSurgeiOS || isStashiOS)) {
         const jqPath = value.match(/jq-path="(.+?)"/)?.[1]
         if (jqPath) {
           if (/^https?:\/\//.test(jqPath)) {
@@ -610,7 +610,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       const jsptn = regex
       let args = [[action, newSuffixArray]]
 
-      if (jqEnabled && isSurgeiOS) {
+      if (jqEnabled && (isSurgeiOS || isStashiOS)) {
         if (action === 'json-add') {
           newSuffixArray.forEach(item => {
             const paths = parseJsonPath(item[0])
@@ -1199,6 +1199,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
     } else if (/^(?:and|or|not)$/i.test(ruletype) && !isStashiOS) {
       rules.push(ori)
+    } else if (/^(?:and|or|not)$/i.test(ruletype) && isStashiOS) {
+      rules.push(mark + noteK2 + '- ' + ori)
     } else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|de?st-port)/i.test(ruletype) && isStashiOS) {
       rules.push(mark + noteK2 + '- ' + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
     } else if (/src-port/i.test(ruletype) && (isSurgeiOS || isLooniOS)) {
