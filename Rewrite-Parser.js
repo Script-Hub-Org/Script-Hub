@@ -559,7 +559,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     if (/\s((request|response)-body-json-jq)\s/.test(_x)) {
       let [_, regex, type, value] = _x.match(/^(.*?)\s+?(?:(request|response)-body-json-jq)\s+?(.*?)\s*$/)
-      if (jqEnabled && isSurgeiOS) {
+      if (jqEnabled && (isSurgeiOS || isStashiOS)) {
         const jqPath = value.match(/jq-path="(.+?)"/)?.[1]
         if (jqPath) {
           if (/^https?:\/\//.test(jqPath)) {
@@ -610,7 +610,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       const jsptn = regex
       let args = [[action, newSuffixArray]]
 
-      if (jqEnabled && isSurgeiOS) {
+      if (jqEnabled && (isSurgeiOS || isStashiOS)) {
         if (action === 'json-add') {
           newSuffixArray.forEach(item => {
             const paths = parseJsonPath(item[0])
