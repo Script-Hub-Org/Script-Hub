@@ -1774,7 +1774,9 @@ ${MITM}
       for (let i = 0; i < rwbodyBox.length; i++) {
         const { type, regex, value } = rwbodyBox[i]
         StashBodyRewrite.push(
-          `    - ${regex} ${type.replace(/^http-/, '').replace(/^(request|response)$/, '$1-replace-regex')} ${value
+          `    - >-\n      ${regex} ${type
+            .replace(/^http-/, '')
+            .replace(/^(request|response)$/, '$1-replace-regex')} ${value
             .replace(/^"(.+)"$/, '$1')
             .replace(/^'(.+)'$/, '$1')
             .split(' ')
