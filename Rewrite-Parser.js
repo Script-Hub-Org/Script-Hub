@@ -1091,7 +1091,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             value = value.toLowerCase()
             value = value.includes('mac') ? (value.includes('ios') ? ((delsystem = true), 'mac') : 'mac') : 'ios'
           } else if (isLooniOS && key == 'category') {
-            key = 'keyword'
+            key = 'tag'
           } else if (!isLooniOS && key == 'keyword') {
             key = 'category'
           }
