@@ -1273,7 +1273,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         if (/(?:reject|302|307|header)$/.test(rwtype))
           URLRewrite.push(mark + noteK + rwptn + ' ' + rwvalue + ' ' + rwtype)
         if (/reject-dict/.test(rwtype))
-          MapLocal.push(mark + noteK + rwptn + ' data-type=text data="{}" status-code=200')
+          MapLocal.push(
+            mark + noteK + rwptn + ' data-type=text data="{}" status-code=200 header="Content-Type:application/json"'
+          )
         if (/reject-array/.test(rwtype))
           MapLocal.push(mark + noteK + rwptn + ' data-type=text data="[]" status-code=200')
         if (/reject-200/.test(rwtype)) MapLocal.push(mark + noteK + rwptn + ' data-type=text data=" " status-code=200')
@@ -2132,7 +2134,7 @@ function getMockInfo(x, mark, y) {
       // Loon data-type: body的类型，json,text,css,html,javascript,plain,png,gif,jpeg,tiff,svg,mp4,form-data 应该设置对应的 Content-Type
       switch (mocktype) {
         case 'json':
-          mockheader = 'Content-Type:text/json'
+          mockheader = 'Content-Type:application/json'
           break
         case 'text':
           mockheader = 'Content-Type:text/plain'
