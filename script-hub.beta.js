@@ -901,7 +901,7 @@ const htmls = `
 
     <!-- position: fixed; -->
     <div style="padding: 1rem;bottom: 0rem;margin-right: 0rem;background-color: var(--kbg);/* border: 1px solid var(--border); */border-radius: var(--standard-border-radius);">
-        <span v-if="result" style="color: red">请勿打开链接之后复制浏览器地址栏的链接 浏览器地址栏中的链接可能未编码 可能会导致导入参数异常</span><br/>
+        <span v-if="result" style="color: red">请勿打开链接之后复制浏览器地址栏的链接 浏览器地址栏中的链接可能未编码 可能会导致导入参数异常</span><br/><span v-if="src && src.includes('.lpx')" style="color: red">⚠️ 你填入的可能是 Loon 加密的私有插件(.lpx) Script Hub 无法处理</span><br/>
         <a v-if="result" :href="result" target="_blank" style="margin: 0 0.5rem 0 0">打开链接</a>
         <a v-if="previewResult" :href="previewResult" target="_blank" style="margin: 0 0.5rem 0 0">预览结果</a>
         <a v-if="result && target === 'shadowrocket-module' " :href=" 'https://api.boxjs.app/shadowrocket/install?module=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">导入(Shadowrocket)</a>
