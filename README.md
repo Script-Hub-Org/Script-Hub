@@ -70,3 +70,7 @@ Powered by [_@Chavy‘s_](https://github.com/chavyleung) [Env.js](https://github
 支持我们的工作
 
 [Patreon](https://www.patreon.com/scripthuborg)
+
+## Sponsors
+
+[![Powered by DartNode](https://dartnode.com/branding/DN-Open-Source-sm.png)](https://dartnode.com 'Powered by DartNode - Free VPS for Open Source')
