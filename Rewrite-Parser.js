@@ -1371,6 +1371,15 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             : ''
         MapLocal.push(mark + noteK + mockptn + mocktype + mockurl + mockstatus + mockheader)
         break
+
+      case 'shadowrocket-module':
+        mockheader =
+          mockBox[i].mockheader && !/&contentType=/.test(mockBox[i].mockheader)
+            ? ' header="' + mockBox[i].mockheader + '"'
+            : ''
+        MapLocal.push(mark + noteK + mockptn + mocktype + mockurl + mockheader)
+        break
+
       case 'loon-plugin':
         URLRewrite.push(
           mark +
@@ -2192,6 +2201,7 @@ function getMockInfo(x, mark, y) {
   }
   switch (targetApp) {
     case 'surge-module':
+    case 'shadowrocket-module':
       if (mockbase64 && datapath) {
         const e = `暂不支持远程 base64:\n${x}`
         console.log(e)
@@ -2216,7 +2226,6 @@ function getMockInfo(x, mark, y) {
         mocknum: y,
       })
       break
-    case 'shadowrocket-module':
     case 'stash-stoverride':
       let mfile = mocktype == 'file' ? mockurl.substring(mockurl.lastIndexOf('/') + 1) : mockurl
       let m2rType
