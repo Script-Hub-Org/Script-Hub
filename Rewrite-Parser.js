@@ -923,6 +923,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         proto,
         size,
         timeout: '60',
+        jsarg,
         ori: x,
         num: y,
       })
@@ -961,6 +962,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         jsptn: '',
         cronexp,
         jsurl,
+        jsarg,
         wakesys: '1',
         timeout: '120',
         ori: x,
@@ -974,7 +976,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       getMockInfo(x, mark, y)
     }
   } //for await循环结束
-
+$.log($.toStr(jsBox))
   //去重
   let obj = {}
 
@@ -1287,7 +1289,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   for (let i = 0; i < rwbodyBox.length; i++) {
     const { type, regex, value } = rwbodyBox[i]
-    BodyRewrite.push(`${type} ${regex} ${value}`)
+    if (isSurgeiOS || isShadowrocket){
+      BodyRewrite.push(`${type} ${regex} ${value}`)
+    }else if (isLooniOS){
+      let type2 = /request/.test(type) ? 'request-body-json-jq' : 'response-body-json-jq';
+      URLRewrite.push(`${regex} ${type2} ${value}`)
+    }
+    
   }
 
   //headerRewrite输出
