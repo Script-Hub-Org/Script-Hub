@@ -822,7 +822,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       updatetime = getJsInfo(x, /[=,\s]\s*script-update-interval\s*=\s*/)
       timeout = getJsInfo(x, /[=,\s]\s*timeout\s*=\s*/)
       tilesicon = jstype == 'generic' && /icon=/.test(x) ? x.split('icon=')[1].split('&')[0] : ''
-      tilescolor = jstype == 'generic' && /icon-color=/.test(x) ? x.split('icon-color=')[1].split('&')[0] : ''
+      tilescolor = jstype == 'generic' && /icon-color=/.test(x) ? x.split('icon-color=')[1].split('&')[0] : '#5d84f8'
       if (nCron != null && jstype != 'cron') {
         for (let i = 0; i < nCron.length; i++) {
           let elem = nCron[i].trim()
@@ -966,7 +966,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         wakesys: '1',
         timeout: '120',
         ori: x,
-        num: y,
+        num: y
       })
     } //qx cron 脚本解析结束
 
