@@ -1,6 +1,7 @@
 #!name=Script Hub: 重写 & 规则集转换
 #!desc=https://script.hub
 #!author=@小白脸 @xream @keywos @ckyb
+#!category=工具
 #!arguments=Notify:开启通知
 #!arguments-desc=Notify:\nScriptHub通知设置, 可选 开启通知, 关闭通知, 跟随链接
 

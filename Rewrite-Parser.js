@@ -976,7 +976,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       getMockInfo(x, mark, y)
     }
   } //for await循环结束
-$.log($.toStr(jsBox))
+
   //去重
   let obj = {}
 
