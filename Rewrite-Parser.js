@@ -1853,14 +1853,14 @@ ${providers}
       break
   } //输出内容结束
   body = body.replace(/\n{2,}/g, '\n\n')
-  if (!isSurgeiOS && !isLooniOS && sgArg.length > 0) {
+  if (isStashiOS && sgArg.length > 0) {
     body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
     for (let i = 0; i < sgArg.length; i++) {
       let e = '{' + sgArg[i].key + '}'
       let r = sgArg[i].value.split(',')[0]
       body = body.replaceAll(e, r)
     } //for
-  } else if (isSurgeiOS) {
+  } else if (isSurgeiOS || isShadowrocket) {
     body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
     for (let i = 0; i < sgArg.length; i++) {
       let e = '{' + sgArg[i].key + '}'
