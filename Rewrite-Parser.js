@@ -839,6 +839,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
               updatetime,
               wakesys: '1',
               timeout: '120',
+              jsarg: '',
+              rebody: '',
               ori: x,
               num: y,
             })
@@ -905,6 +907,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
               jsurl,
               wakesys: '1',
               timeout: '120',
+              jsarg: '',
+              rebody: '',
               ori: x,
               num: y,
             })
@@ -962,9 +966,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         jsptn: '',
         cronexp,
         jsurl,
-        jsarg,
+        jsarg: '',
         wakesys: '1',
         timeout: '120',
+        rebody: '',
         ori: x,
         num: y
       })
@@ -976,7 +981,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       getMockInfo(x, mark, y)
     }
   } //for await循环结束
-
+//console.log($.toStr(jsBox))
   //去重
   let obj = {}
 
@@ -1023,9 +1028,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   jsBox = jsBox.reduce((curr, next) => {
     /*判断对象中是否已经有该属性  没有的话 push 到 curr数组*/
-    obj[next.jstype + next.jsptn + next.jsurl + next.jsarg]
+    obj[next.jstype + next.jsptn + next.jsurl + next.jsarg + next.rebody]
       ? ''
-      : (obj[next.jstype + next.jsptn + next.jsurl + next.jsarg] = curr.push(next))
+      : (obj[next.jstype + next.jsptn + next.jsurl + next.jsarg + next.rebody] = curr.push(next))
     return curr
   }, [])
 
@@ -1959,6 +1964,7 @@ function getModInfo(x) {
   let key = x.match(regex)[1] == 'keyword' ? 'category' : x.match(regex)[1]
   let value = x.match(regex)[2]
   modInfoObj[key] = value
+  //console.log(key)
 }
 
 //获取可莉图标集
