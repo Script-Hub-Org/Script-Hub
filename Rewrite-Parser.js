@@ -524,7 +524,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
 
     //#!arguments参数
-    if (/^#!arguments\s*=\s*.+/.test(x) || /^[^#]=\s*(input|select|switch)\s*,/.test(x)) {
+    if (/^#!arguments\s*=\s*.+/.test(x) || /^[^#].+?=\s*(input|select|switch)\s*,/.test(x)) {
       parseArguments(x)
     }
 
@@ -610,7 +610,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       const jsptn = regex
       let args = [[action, newSuffixArray]]
 
-      if (jqEnabled && (isSurgeiOS || isStashiOS)) {
+      if (jqEnabled && (isSurgeiOS || isStashiOS || isShadowrocket)) {
         if (action === 'json-add') {
           newSuffixArray.forEach(item => {
             const paths = parseJsonPath(item[0])
@@ -642,6 +642,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           newSuffixArray = newSuffixArray.map(item => item.join(' '))
           rwbodyBox.push({ type: jstype, regex: jsptn, value: newSuffixArray.join(' ') })
         }
+      }else if (jqEnabled && isLooniOS) {
+        URLRewrite.push(x)
       } else {
         // console.log(JSON.stringify(args, null, 2))
         const index = jsBox.findIndex(i => i.jsurl === jsurl && i.jstype === jstype && i.jsptn === jsptn)
@@ -1064,7 +1066,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   realBox = pieceHn(realBox)
   if (synMitm) fheBox = hnBox
 
-  if (isSurgeiOS && sgArg.length > 0) {
+  if ((isSurgeiOS || isShadowrocket) && sgArg.length > 0) {
     let sgargArr = []
     for (let i = 0; i < sgArg.length; i++) {
       let key = sgArg[i].key
@@ -1114,13 +1116,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       break
   } //模块信息输出结束
 
-  //[Argument]输出
+  //surge模块参数转[Argument]输出
   if (isLooniOS && sgArg.length > 0) {
     for (let i = 0; i < sgArg.length; i++) {
       let key = sgArg[i].key
       let type = sgArg[i].type
       let value = sgArg[i].value
-      if (type == 'switch') value = /^true/.test(value) ? 'true,false' : 'false,true'
+      if (type == 'switch') value = /^true/.test(value) ? '"true","false"' : '"false","true"'
       let tag = sgArg[i].tag
       loonArg.push(key + '=' + type + ',' + value + ',' + tag)
     }
@@ -1311,6 +1313,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     const isResponseHeaderRewrite = /^http-response\s/.test(x)
     switch (targetApp) {
       case 'surge-module':
+      case 'shadowrocket-module':
+      
         HeaderRewrite.push(mark + noteK + x)
         break
 
@@ -1339,10 +1343,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         let hdtype = isResponseHeaderRewrite ? ' response-' : ' request-'
         x = x.replace(/^http-(?:request|response)\s+/, '').replace(/\s+header-/, hdtype)
         HeaderRewrite.push(mark + `${noteK4}- >-${noteKn6}` + x)
-        break
-
-      case 'shadowrocket-module':
-        otherRule.push(noteK + x)
         break
     } //headerRewrite输出结束
   } //for
@@ -1803,9 +1803,10 @@ ${MITM}
             .replace(/^(request|response)$/, '$1-replace-regex')} ${value
             .replace(/^"(.+)"$/, '$1')
             .replace(/^'(.+)'$/, '$1')
-            .split(' ')
-            .map(i => i.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1'))
-            .join(' ')}`
+            //.split(' ')
+            //.map(i => i.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1'))
+            //.join(' ')
+            }`
         )
       }
       if (StashBodyRewrite.length > 0) {
