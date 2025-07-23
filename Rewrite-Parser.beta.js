@@ -165,6 +165,7 @@ let name,
   size,
   proto,
   engine,
+  jsenable,
   jsptn,
   jsarg,
   rebody,
@@ -557,8 +558,8 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rw_redirect(x, mark)
     }
 
-    if (/\s((request|response)-body-json-jq)\s/.test(_x)) {
-      let [_, regex, type, value] = _x.match(/^(.*?)\s+?(?:(request|response)-body-json-jq)\s+?(.*?)\s*$/)
+    if (/\s((request|response)-body-json-jq)\s|\surl\sjsonjq-(response|request)-body/.test(_x)) {
+      let [_, regex, type, value] = _x.match(/^(.*?)\s+?(?:url\s+?jsonjq-)?(request|response)-body(?:-json-jq)?\s+?(.*?)\s*$/)
       if (jqEnabled && (isSurgeiOS || isStashiOS)) {
         const jqPath = value.match(/jq-path="(.+?)"/)?.[1]
         if (jqPath) {
@@ -576,7 +577,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           rwbodyBox.push({ type: `http-${type}-jq`, regex, value })
         }
       } else if (isLooniOS) {
-        URLRewrite.push(x)
+        /body-json-jq/.test(_x) ? URLRewrite.push(_x) : URLRewrite.push(`${regex} ${type}-body-json-jq ${value}`)
       }
     }
 
@@ -821,6 +822,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         : ''
       ability = getJsInfo(x, /[=,\s]\s*ability\s*=\s*/)
       engine = getJsInfo(x, /[=,\s]\s*engine\s*=\s*/)
+      jsenable = getJsInfo(x, /[=,\s]\s*enable\s*=\s*/)
       updatetime = getJsInfo(x, /[=,\s]\s*script-update-interval\s*=\s*/)
       timeout = getJsInfo(x, /[=,\s]\s*timeout\s*=\s*/)
       tilesicon = jstype == 'generic' && /icon=/.test(x) ? x.split('icon=')[1].split('&')[0] : ''
@@ -843,6 +845,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
               timeout: '120',
               jsarg: '',
               rebody: '',
+              jsenable,
               ori: x,
               num: y,
             })
@@ -872,6 +875,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           tilescolor,
           eventname,
           engine,
+          jsenable,
           ori: x,
           num: y,
         })
@@ -1448,6 +1452,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rebody = jsBox[i].rebody ? istrue(jsBox[i].rebody) : ''
       proto = jsBox[i].proto ? istrue(jsBox[i].proto) : ''
       engine = jsBox[i].engine ? jsBox[i].engine : ''
+      jsenable = jsBox[i].jsenable ? jsBox[i].jsenable : ''
       size = jsBox[i].size ? jsBox[i].size : ''
       ability = jsBox[i].ability ? ', ability=' + jsBox[i].ability : ''
       updatetime = jsBox[i].updatetime ? ', script-update-interval=' + jsBox[i].updatetime : ''
@@ -1480,6 +1485,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           size = size ? ', max-size=' + size : ''
           timeout = timeout ? ', timeout=' + timeout : ''
           engine = engine && isSurgeiOS ? ', engine=' + engine : ''
+          jsenable = jsenable && isLooniOS ? ', enable=' + jsenable : ''
           if (jsarg != '' && /,/.test(jsarg) && !/^".+"$/.test(jsarg)) jsarg = ', argument="' + jsarg + '"'
           if (jsarg != '' && (!/,/.test(jsarg) || /^".+"$/.test(jsarg))) jsarg = ', argument=' + jsarg
 
@@ -1500,6 +1506,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                     timeout +
                     ', tag=' +
                     jsname +
+                    jsenable +
                     img +
                     jsarg
                 )
@@ -1569,6 +1576,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
                 timeout +
                 ', tag=' +
                 jsname +
+                jsenable +
                 img +
                 jsarg
             )
