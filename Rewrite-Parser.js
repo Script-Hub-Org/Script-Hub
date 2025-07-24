@@ -1748,11 +1748,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       }
 
       if (isSurgeiOS || isShadowrocket) {
-        if (isSurgeiOS) {
           MITM = hnBox.length > 0 ? `[MITM]\n${hn2name} = ${hnaddMethod} ` + hnBox : ''
-        } else {
-          MITM = hnBox.length > 0 ? `[MITM]\nhostname = ${hnaddMethod} ` + hnBox : ''
-        }
         fheBox.length > 0 && General.push(`force-http-engine-hosts = ${fheaddMethod} ` + fheBox)
         skipBox.length > 0 && General.push(`skip-proxy = ${skipaddMethod} ` + skipBox)
         realBox.length > 0 && General.push(`always-real-ip = ${realaddMethod} ` + realBox)
