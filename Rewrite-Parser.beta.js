@@ -560,7 +560,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     if (/\s((request|response)-body-json-jq)\s|\surl\sjsonjq-(response|request)-body/.test(_x)) {
       let [_, regex, type, value] = _x.match(/^(.*?)\s+?(?:url\s+?jsonjq-)?(request|response)-body(?:-json-jq)?\s+?(.*?)\s*$/)
-      if (jqEnabled && (isSurgeiOS || isStashiOS)) {
+      if (jqEnabled && (isSurgeiOS || isStashiOS || isShadowrocket)) {
         const jqPath = value.match(/jq-path="(.+?)"/)?.[1]
         if (jqPath) {
           if (/^https?:\/\//.test(jqPath)) {
@@ -1302,11 +1302,25 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     const { type, regex, value } = rwbodyBox[i]
     if (isSurgeiOS || isShadowrocket){
       BodyRewrite.push(`${type} ${regex} ${value}`)
-    }else if (isLooniOS){
-      let type2 = /request/.test(type) ? 'request-body-json-jq' : 'response-body-json-jq';
+    } else if (isLooniOS) {
+      let type2
+      switch (type) {
+        case 'http-request':
+          type2 = 'request-body-replace-regex'
+          break
+        case 'http-response':
+          type2 = 'response-body-replace-regex'
+          break
+        case 'http-request-jq':
+          type2 = 'request-body-json-jq'
+          break
+        case 'http-response-jq':
+          type2 = 'response-body-json-jq'
+          break
+      }
       URLRewrite.push(`${regex} ${type2} ${value}`)
     }
-    
+
   }
 
   //headerRewrite输出
@@ -1400,13 +1414,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       case 'loon-plugin':
         URLRewrite.push(
           mark +
-            noteK +
-            mockptn +
-            ' mock-response-body' +
-            mocktype +
-            (mockBox[i].datapath ? ` data-path=${mockBox[i].datapath}` : ` data="${mockBox[i].data}"`) +
-            mockstatus +
-            (mockBox[i].mockbase64 ? ' mock-data-is-base64=true' : '')
+          noteK +
+          mockptn +
+          ' mock-response-body' +
+          mocktype +
+          (mockBox[i].datapath ? ` data-path=${mockBox[i].datapath}` : mockBox[i].data ? ` data="${mockBox[i].data}"` : mockBox[i].mockurl ? ` data-path=${mockBox[i].mockurl}` : "") +
+          mockstatus +
+          (mockBox[i].mockbase64 ? ' mock-data-is-base64=true' : '')
         )
         break
     } //switch
@@ -2143,6 +2157,7 @@ function getMockInfo(x, mark, y) {
     mockurl = x.split(/\s+echo-response\s+/)[2]
     mocktype = 'file'
     mockheader = '&contentType=' + encodeURIComponent(x.split(/\s+echo-response\s+/)[1])
+    oritype = mocktype
   }
 
   if (/\sdata\s*=\s*"|\sdata-type=/.test(x)) {
@@ -2207,7 +2222,7 @@ function getMockInfo(x, mark, y) {
         mocktype = 'base64'
       }
     } else if (/\smock-request-body\s/.test(x)) {
-      if (targetApp === 'surge-module') {
+      if (targetApp === 'surge-module' || targetApp === 'shadowrocket-module') {
         const e = `暂不支持 Mock Request Body:\n${x}`
         console.log(e)
         shNotify(e)
