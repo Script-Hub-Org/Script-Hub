@@ -559,7 +559,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
 
     if (/\s((request|response)-body-json-jq)\s|\surl\sjsonjq-(response|request)-body/.test(_x)) {
-      let [_, regex, type, value] = _x.match(/^(.*?)\s+?(?:url\s+?jsonjq-)?(request|response)-body(?:-json-jq)?\s+?(.*?)\s*$/)
+      let [_, regex, type, value] = _x.match(
+        /^(.*?)\s+?(?:url\s+?jsonjq-)?(request|response)-body(?:-json-jq)?\s+?(.*?)\s*$/
+      )
       if (jqEnabled && (isSurgeiOS || isStashiOS || isShadowrocket)) {
         const jqPath = value.match(/jq-path="(.+?)"/)?.[1]
         if (jqPath) {
@@ -577,7 +579,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           rwbodyBox.push({ type: `http-${type}-jq`, regex, value })
         }
       } else if (isLooniOS) {
-        /body-json-jq/.test(_x) ? URLRewrite.push(_x) : URLRewrite.push(`${regex} ${type}-body-json-jq ${value}`)
+        ;/body-json-jq/.test(_x) ? URLRewrite.push(_x) : URLRewrite.push(`${regex} ${type}-body-json-jq ${value}`)
       }
     }
 
@@ -643,7 +645,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           newSuffixArray = newSuffixArray.map(item => item.join(' '))
           rwbodyBox.push({ type: jstype, regex: jsptn, value: newSuffixArray.join(' ') })
         }
-      }else if (jqEnabled && isLooniOS) {
+      } else if (jqEnabled && isLooniOS) {
         URLRewrite.push(x)
       } else {
         // console.log(JSON.stringify(args, null, 2))
@@ -977,7 +979,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         timeout: '120',
         rebody: '',
         ori: x,
-        num: y
+        num: y,
       })
     } //qx cron 脚本解析结束
 
@@ -987,7 +989,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       getMockInfo(x, mark, y)
     }
   } //for await循环结束
-//console.log($.toStr(jsBox))
+  //console.log($.toStr(jsBox))
   //去重
   let obj = {}
 
@@ -1300,7 +1302,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   for (let i = 0; i < rwbodyBox.length; i++) {
     const { type, regex, value } = rwbodyBox[i]
-    if (isSurgeiOS || isShadowrocket){
+    if (isSurgeiOS || isShadowrocket) {
       BodyRewrite.push(`${type} ${regex} ${value}`)
     } else if (isLooniOS) {
       let type2
@@ -1320,7 +1322,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       }
       URLRewrite.push(`${regex} ${type2} ${value}`)
     }
-
   }
 
   //headerRewrite输出
@@ -1332,7 +1333,6 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     switch (targetApp) {
       case 'surge-module':
       case 'shadowrocket-module':
-      
         HeaderRewrite.push(mark + noteK + x)
         break
 
@@ -1414,13 +1414,19 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       case 'loon-plugin':
         URLRewrite.push(
           mark +
-          noteK +
-          mockptn +
-          ' mock-response-body' +
-          mocktype +
-          (mockBox[i].datapath ? ` data-path=${mockBox[i].datapath}` : mockBox[i].data ? ` data="${mockBox[i].data}"` : mockBox[i].mockurl ? ` data-path=${mockBox[i].mockurl}` : "") +
-          mockstatus +
-          (mockBox[i].mockbase64 ? ' mock-data-is-base64=true' : '')
+            noteK +
+            mockptn +
+            ' mock-response-body' +
+            mocktype +
+            (mockBox[i].datapath
+              ? ` data-path=${mockBox[i].datapath}`
+              : mockBox[i].data
+              ? ` data="${mockBox[i].data}"`
+              : mockBox[i].mockurl
+              ? ` data-path=${mockBox[i].mockurl}`
+              : '') +
+            mockstatus +
+            (mockBox[i].mockbase64 ? ' mock-data-is-base64=true' : '')
         )
         break
     } //switch
@@ -1762,7 +1768,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       }
 
       if (isSurgeiOS || isShadowrocket) {
-          MITM = hnBox.length > 0 ? `[MITM]\n${hn2name} = ${hnaddMethod} ` + hnBox : ''
+        MITM = hnBox.length > 0 ? `[MITM]\n${hn2name} = ${hnaddMethod} ` + hnBox : ''
         fheBox.length > 0 && General.push(`force-http-engine-hosts = ${fheaddMethod} ` + fheBox)
         skipBox.length > 0 && General.push(`skip-proxy = ${skipaddMethod} ` + skipBox)
         realBox.length > 0 && General.push(`always-real-ip = ${realaddMethod} ` + realBox)
@@ -1816,15 +1822,12 @@ ${MITM}
       for (let i = 0; i < rwbodyBox.length; i++) {
         const { type, regex, value } = rwbodyBox[i]
         StashBodyRewrite.push(
-          `    - >-\n      ${regex} ${type
-            .replace(/^http-/, '')
-            .replace(/^(request|response)$/, '$1-replace-regex')} ${value
-            .replace(/^"(.+)"$/, '$1')
-            .replace(/^'(.+)'$/, '$1')
+          `    - >-\n      ${regex} ${type.replace(/^http-/, '').replace(/^(request|response)$/, '$1-replace-regex')} ${
+            value.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1')
             //.split(' ')
             //.map(i => i.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1'))
             //.join(' ')
-            }`
+          }`
         )
       }
       if (StashBodyRewrite.length > 0) {
