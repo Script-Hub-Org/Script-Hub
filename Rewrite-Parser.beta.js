@@ -1280,7 +1280,15 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           noteK2 = '#  '
         }
         URLRewrite.push(
-          mark + noteK4 + '- >-' + noteKn6 + rwptn + ' ' + rwvalue + ' ' + rwtype.replace(/-video|-tinygif/, '-img')
+          mark +
+            noteK4 +
+            '- >-' +
+            noteKn6 +
+            rwptn +
+            ' ' +
+            rwvalue +
+            ' ' +
+            rwtype.replace(/-video|-tinygif/, '-img').replace(/^header$/, 'transparent')
         )
         break
 
