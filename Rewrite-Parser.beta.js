@@ -576,10 +576,20 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         }
         if (value) {
           value = value.replace(/\s+\/\//g, '//')
-          rwbodyBox.push({ type: `http-${type}-jq`, regex, value })
+          rwbodyBox.push({
+            type: `http-${type}-jq`,
+            regex,
+            value: value.startsWith("'") && value.endsWith("'") ? value : `'${value}'`,
+          })
         }
       } else if (isLooniOS) {
-        ;/body-json-jq/.test(_x) ? URLRewrite.push(_x) : URLRewrite.push(`${regex} ${type}-body-json-jq ${value}`)
+        if (/body-json-jq/.test(_x)) {
+          URLRewrite.push(_x)
+        } else {
+          URLRewrite.push(
+            `${regex} ${type}-body-json-jq ${value.startsWith("'") && value.endsWith("'") ? value : `'${value}'`}`
+          )
+        }
       }
     }
 
