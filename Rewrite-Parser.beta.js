@@ -1090,7 +1090,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     let sgargArr = []
     for (let i = 0; i < sgArg.length; i++) {
       let key = sgArg[i].key
-      let value = sgArg[i].value.split(',')[0].trim()
+      let value = sgArg[i].value.split(',')[0].trim().replace(/^"(.+)"$/, '$1') // 去掉引号用于 Surge 输出
       let a = key + ':' + value
       sgargArr.push(a)
     }
@@ -1906,7 +1906,7 @@ ${providers}
     body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
     for (let i = 0; i < sgArg.length; i++) {
       let e = '{' + sgArg[i].key + '}'
-      let r = sgArg[i].value.split(',')[0]
+      let r = sgArg[i].value.split(',')[0].replace(/^"(.+)"$/, '$1') // 去掉引号用于变量替换
       body = body.replaceAll(e, r)
     } //for
   } else if (isSurgeiOS || isShadowrocket) {
@@ -2399,11 +2399,12 @@ function parseArguments(str) {
 
     while ((match = regex.exec(queryString))) {
       const key = match[1].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
-      const value = match[2].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
+      const originalValue = match[2].trim() //保留原始值（包括双引号）
+      const value = originalValue.replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号用于类型判断
       const type = /^(true|false)$/.test(value) ? 'switch' : 'input'
       const tag = `tag=${key}, desc=${key}`
 
-      sgArg.push({ key, value, type, tag }) //将键值对添加到对象中
+      sgArg.push({ key, value: originalValue, type, tag }) //将键值对添加到对象中，保留原始值
 
       if (value == 'hostname') {
         hn2 = true
