@@ -257,6 +257,8 @@ let skipBox = [] //skip-ip
 let realBox = [] //real-ip
 let hndelBox = [] //正则剔除的主机名
 let sgArg = [] //surge模块参数
+let surgeRuleToggleArgs = new Map() //Surge 用行首 # 注释控制脚本启停的参数
+let argumentKeyRenameMap = new Map() //Surge 模板参数名 -> 脚本实际读取的 $argument key
 
 let hnaddMethod = '%APPEND%'
 let fheaddMethod = '%APPEND%'
@@ -520,6 +522,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       jsSuf = jsSuf + `&evalUrlmodi=${encodeURIComponent(scEvUrlmodi)}`
     }
 
+    const leadingTemplate = takeLeadingTemplate(x)
+    if (leadingTemplate) {
+      x = leadingTemplate.rest
+    }
+
     //模块信息
     if (/^#!.+?=\s*$/.test(x)) {
     } else if (isLooniOS && /^#!(?:select|input)\s*=\s*.+/.test(x)) {
@@ -534,7 +541,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
 
     //hostname
-    if (/^hostname\s*=.+/.test(x)) hnaddMethod = getHn(x, hnBox, hnaddMethod)
+    if (/^hostname\s*=.+/.test(x)) hnaddMethod = getHn(x, hnBox, hnaddMethod, leadingTemplate?.key)
 
     if (hn2 == true && x.match(hn2name)) hnaddMethod = getHn(x, hnBox, hnaddMethod)
 
@@ -800,6 +807,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         style,
         scriptname,
         updatetime,
+        toggleKey: leadingTemplate?.key || '',
         ori: x,
         num: y,
       })
@@ -838,7 +846,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         : ''
       ability = getJsInfo(x, /[=,\s]\s*ability\s*=\s*/)
       engine = getJsInfo(x, /[=,\s]\s*engine\s*=\s*/)
-      jsenable = getJsInfo(x, /[=,\s]\s*enable\s*=\s*/)
+      jsenable = getJsInfo(x, /[=,\s]\s*enabled?\s*=\s*/)
+      jsenable = jsenable || (leadingTemplate?.key ? `{${leadingTemplate.key}}` : '')
+      getTemplateKeys(jsenable).forEach(key => surgeRuleToggleArgs.set(key, true))
       updatetime = getJsInfo(x, /[=,\s]\s*script-update-interval\s*=\s*/)
       timeout = getJsInfo(x, /[=,\s]\s*timeout\s*=\s*/)
       tilesicon = jstype == 'generic' && /icon=/.test(x) ? x.split('icon=')[1].split('&')[0] : ''
@@ -1071,12 +1081,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   shNotify(outBox)
 
   //mitm删除主机名
-  if (hnDel != null && hnBox.length > 0) hnBox = hnBox.filter(item => hnDel.indexOf(item) == -1)
+  if (hnDel != null && hnBox.length > 0) hnBox = hnBox.filter(item => hnDel.indexOf(getHnValue(item)) == -1)
 
   //mitm正则删除主机名
   if (hnRegDel != null) {
-    hndelBox = hnBox.filter(item => hnRegDel.test(item))
-    hnBox = hnBox.filter(item => !hnRegDel.test(item))
+    hndelBox = hnBox.filter(item => hnRegDel.test(getHnValue(item)))
+    hnBox = hnBox.filter(item => !hnRegDel.test(getHnValue(item)))
   }
   hndelBox.length > 0 && noNtf == false && $.msg(JS_NAME, notifyName + ' 已根据正则剔除主机名', `${hndelBox}`)
 
@@ -1090,11 +1100,16 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     let sgargArr = []
     for (let i = 0; i < sgArg.length; i++) {
       let key = sgArg[i].key
-      let value = sgArg[i].value.split(',')[0].trim()
+      let value = getSurgeArgumentDefault(sgArg[i], surgeRuleToggleArgs.has(key))
       let a = key + ':' + value
       sgargArr.push(a)
     }
     modInfoObj['arguments'] = (sgargArr[0] || '') && `${sgargArr.join(',')}`
+    modInfoObj['arguments-desc'] = modInfoObj['arguments-desc'] || buildSurgeArgumentsDesc(sgArg)
+  }
+
+  if (isLooniOS) {
+    collectArgumentKeyRenameMap(jsBox)
   }
 
   //模块信息输出
@@ -1121,8 +1136,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             value = value.includes('mac') ? (value.includes('ios') ? ((delsystem = true), 'mac') : 'mac') : 'ios'
           } else if (isLooniOS && key == 'category') {
             key = 'tag'
+          } else if (!isLooniOS && key == 'tag') {
+            key = 'category'
           } else if (!isLooniOS && key == 'keyword') {
             key = 'category'
+          } else if (isLooniOS && key == 'arguments-desc') {
+            continue
           }
           let info = !isStashiOS ? '#!' + key + '=' + value : key + ': |-\n  ' + value
           !delsystem && modInfo.push(info)
@@ -1138,11 +1157,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   //surge模块参数转[Argument]输出
   if (isLooniOS && sgArg.length > 0) {
+    applySurgeArgumentsDesc(sgArg, modInfoObj['arguments-desc'])
     for (let i = 0; i < sgArg.length; i++) {
-      let key = sgArg[i].key
+      let key = argumentKeyRenameMap.get(sgArg[i].key) || sgArg[i].key
       let type = sgArg[i].type
-      let value = sgArg[i].value
-      if (type == 'switch') value = /^true/.test(value) ? '"true","false"' : '"false","true"'
+      let value = formatLoonArgumentValue(sgArg[i])
       let tag = sgArg[i].tag
       loonArg.push(key + '=' + type + ',' + value + ',' + tag)
     }
@@ -1503,20 +1522,25 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       timeout = jsBox[i].timeout ? jsBox[i].timeout : ''
       jsarg = jsBox[i].jsarg ? jsBox[i].jsarg : ''
       ori = jsBox[i].ori
+      let scriptPrefix = ''
 
       jsarg = reJsValue(nArgTarget || 'null', nArg, jsname, ori, jsarg)
         .replace(/t;amp;/g, '&')
         .replace(/t;add;/g, '+')
+      jsarg = normalizeScriptArgument(jsarg, targetApp)
 
       cronexp = reJsValue(nCron || 'null', ncronexp, jsname, ori, cronexp)
+      cronexp = normalizeTemplateValue(cronexp, targetApp)
 
-      cronexp = /,/.test(cronexp) ? '"' + cronexp + '"' : cronexp
+      cronexp = formatCronexp(cronexp, targetApp)
 
       jsname = reJsValue(njsnametarget || 'null', njsname, jsname, ori, jsname)
 
       timeout = reJsValue(timeoutt || 'null', timeoutv, jsname, ori, timeout)
 
       engine = reJsValue(enginet || 'null', enginev, jsname, ori, engine)
+      jsenable = normalizeTemplateValue(jsenable, targetApp)
+      scriptPrefix = isSurgeiOS || isShadowrocket ? getSurgeRuleTogglePrefix(jsenable) : ''
 
       switch (targetApp) {
         case 'surge-module':
@@ -1528,8 +1552,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           timeout = timeout ? ', timeout=' + timeout : ''
           engine = engine && isSurgeiOS ? ', engine=' + engine : ''
           jsenable = jsenable && isLooniOS ? ', enable=' + jsenable : ''
-          if (jsarg != '' && /,/.test(jsarg) && !/^".+"$/.test(jsarg)) jsarg = ', argument="' + jsarg + '"'
-          if (jsarg != '' && (!/,/.test(jsarg) || /^".+"$/.test(jsarg))) jsarg = ', argument=' + jsarg
+          if (jsarg != '' && /,/.test(jsarg) && !/^".+"$/.test(jsarg) && !isLoonArgumentContainer(jsarg))
+            jsarg = ', argument="' + jsarg + '"'
+          if (jsarg != '' && (!/,/.test(jsarg) || /^".+"$/.test(jsarg) || isLoonArgumentContainer(jsarg)))
+            jsarg = ', argument=' + jsarg
 
           if (/generic/.test(jstype) && isShadowrocket) {
             otherRule.push(ori)
@@ -1556,8 +1582,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             ;/^generic\s/.test(ori)
               ? otherRule.push(ori)
               : script.push(
-                  mark +
+                    mark +
                     noteK +
+                    scriptPrefix +
                     jsname +
                     ' = type=' +
                     jstype +
@@ -1577,6 +1604,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             script.push(
               mark +
                 noteK +
+                scriptPrefix +
                 jsname +
                 ' = type=' +
                 jstype +
@@ -1593,6 +1621,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             script.push(
               mark +
                 noteK +
+                scriptPrefix +
                 jsname +
                 ' = type=' +
                 jstype +
@@ -1626,6 +1655,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             script.push(
               mark +
                 noteK +
+                scriptPrefix +
                 jsname +
                 ' = type=' +
                 jstype +
@@ -1994,6 +2024,273 @@ function getArgArr(str) {
   return arr.map(item => item.replace(/➕/g, '+'))
 }
 
+function stripWrapQuote(str) {
+  str = `${str ?? ''}`.trim()
+  return /^".*"$/.test(str) || /^'.*'$/.test(str) ? str.slice(1, -1) : str
+}
+
+function splitTopLevel(str, sep = ',') {
+  let arr = []
+  let current = ''
+  let quote = ''
+  let braceDepth = 0
+  let bracketDepth = 0
+  let parenDepth = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i]
+    const prev = str[i - 1]
+    if (quote) {
+      current += char
+      if (char === quote && prev !== '\\') quote = ''
+      continue
+    }
+    if (char === '"' || char === "'") {
+      quote = char
+      current += char
+      continue
+    }
+    if (char === '{') braceDepth++
+    if (char === '}') braceDepth = Math.max(0, braceDepth - 1)
+    if (char === '[') bracketDepth++
+    if (char === ']') bracketDepth = Math.max(0, bracketDepth - 1)
+    if (char === '(') parenDepth++
+    if (char === ')') parenDepth = Math.max(0, parenDepth - 1)
+    if (char === sep && braceDepth === 0 && bracketDepth === 0 && parenDepth === 0) {
+      arr.push(current.trim())
+      current = ''
+    } else {
+      current += char
+    }
+  }
+  arr.push(current.trim())
+  return arr
+}
+
+function splitFirstTopLevel(str, sep) {
+  const parts = splitTopLevel(str, sep)
+  return [parts[0] || '', parts.slice(1).join(sep).trim()]
+}
+
+function quoteIfNeeded(str) {
+  str = `${str ?? ''}`.trim()
+  if (/^'.*'$/.test(str)) str = `"${str.slice(1, -1)}"`
+  return /,/.test(str) && !/^".*"$/.test(str) ? `"${str}"` : str
+}
+
+function getSwitchDefault(value) {
+  value = stripWrapQuote(`${value ?? ''}`.trim()).split(',')[0].trim()
+  return /^true$/i.test(value) ? 'true' : 'false'
+}
+
+function getSurgeArgumentDefault(item, isRuleToggle = false) {
+  const value = `${item.value ?? ''}`.trim()
+  if (isRuleToggle) return getSwitchDefault(value) == 'true' ? '' : '#'
+  if (item.type == 'switch') return getSwitchDefault(value)
+  return quoteIfNeeded(splitTopLevel(value, ',')[0] || value)
+}
+
+function formatLoonArgumentValue(item) {
+  const value = `${item.value ?? ''}`.trim()
+  if (item.type == 'switch') return getSwitchDefault(value) == 'true' ? 'true,false' : 'false,true'
+  return quoteIfNeeded(value)
+}
+
+function isLoonArgumentList(str) {
+  return /^\s*\[(?:\s*\{[^{}]+\}\s*,?)+\]\s*$/.test(stripWrapQuote(str))
+}
+
+function isLoonArgumentContainer(str) {
+  return /^\s*\[[\s\S]*\]\s*$/.test(stripWrapQuote(str))
+}
+
+function isJsonObjectArgument(str) {
+  str = stripWrapQuote(str)
+  return /^\s*\{[\s\S]*\}\s*$/.test(str) && /:/.test(str)
+}
+
+function formatLoonJsonArgument(str, renameMap = argumentKeyRenameMap) {
+  const objectBody = normalizeTemplateValue(str, 'loon-plugin')
+    .replace(/"([^"]+)"\s*:/g, '$1:')
+    .replace(/:\s*"?\{([^{}]+)\}"?/g, ':$1')
+    .replace(/^\s*\{|\}\s*$/g, '')
+  return splitTopLevel(objectBody, ',')
+    .filter(Boolean)
+    .map(item => {
+      const [key, value] = splitFirstTopLevel(item, ':')
+      const scriptKey = stripWrapQuote(key)
+      const templateKey = stripWrapQuote(value)
+      if (templateKey && scriptKey) renameMap.set(templateKey, scriptKey)
+      return `{${scriptKey}}`
+    })
+    .join(',')
+}
+
+function collectArgumentKeyRenameMap(box) {
+  for (let i = 0; i < box.length; i++) {
+    if (isJsonObjectArgument(box[i].jsarg)) {
+      formatLoonJsonArgument(box[i].jsarg)
+    }
+  }
+}
+
+function getTemplateKeys(str) {
+  str = stripWrapQuote(str)
+  return [
+    ...[...str.matchAll(/\{\{\{([^{}]+)\}\}\}/g)].map(item => item[1].trim()),
+    ...[...str.replace(/\{\{\{[^{}]+\}\}\}/g, '').matchAll(/\{([^{}]+)\}/g)].map(item => item[1].trim()),
+  ].filter(Boolean)
+}
+
+function getLoonArgumentKeys(str) {
+  str = stripWrapQuote(str)
+  if (!isLoonArgumentList(str)) return []
+  return [...str.matchAll(/\{([^{}]+)\}/g)].map(item => item[1].trim()).filter(Boolean)
+}
+
+function getSurgeTemplateArgumentKeys(str) {
+  str = stripWrapQuote(str)
+  if (!/\{\{\{[^{}]+\}\}\}/.test(str)) return []
+  return splitTopLevel(str, '&')
+    .map(item => {
+      const matched = item.match(/^\s*([^=\s]+)\s*=\s*"?\{\{\{([^{}]+)\}\}\}"?\s*$/)
+      return matched && matched[1].trim() === matched[2].trim() ? matched[1].trim() : ''
+    })
+    .filter(Boolean)
+}
+
+function getSurgeTemplateArgumentListKeys(str) {
+  str = stripWrapQuote(str)
+  if (!/\{\{\{[^{}]+\}\}\}/.test(str) || !/&/.test(str)) return []
+  const items = splitTopLevel(str, '&')
+  const keys = []
+  for (let i = 0; i < items.length; i++) {
+    const matched = items[i].match(/^\s*([^=\s]+)\s*=\s*"?\{\{\{([^{}]+)\}\}\}"?\s*$/)
+    if (!matched) return []
+    keys.push(matched[2].trim())
+  }
+  return keys
+}
+
+function normalizeScriptArgument(jsarg, targetApp) {
+  if (!jsarg) return jsarg
+  const loonKeys = getLoonArgumentKeys(jsarg)
+  if ((targetApp == 'surge-module' || targetApp == 'shadowrocket-module') && loonKeys.length > 0) {
+    return loonKeys.map(key => `${key}="{{{${key}}}}"`).join('&')
+  }
+  if (targetApp == 'loon-plugin') {
+    if (isJsonObjectArgument(jsarg)) return `[${formatLoonJsonArgument(jsarg)}]`
+    const surgeListKeys = getSurgeTemplateArgumentListKeys(jsarg)
+    if (surgeListKeys.length > 0) return `[${surgeListKeys.map(key => `{${key}}`).join(',')}]`
+    const surgeKeys = getSurgeTemplateArgumentKeys(jsarg)
+    if (surgeKeys.length > 0) return `[${surgeKeys.map(key => `{${key}}`).join(',')}]`
+  }
+  if (targetApp == 'loon-plugin') return normalizeTemplateValue(jsarg, targetApp)
+  return jsarg
+}
+
+function takeLeadingTemplate(str) {
+  const matched = `${str ?? ''}`.match(/^(\s*)\{\{\{([^{}]+)\}\}\}\s*(.*)$/)
+  return matched ? { key: matched[2].trim(), rest: matched[1] + matched[3] } : null
+}
+
+function getHnValue(item) {
+  return typeof item == 'object' && item !== null ? item.value : item
+}
+
+function getHnToggleKey(item) {
+  return typeof item == 'object' && item !== null ? item.toggleKey : ''
+}
+
+function normalizeTemplateValue(value, targetApp) {
+  if (!value) return value
+  value = stripWrapQuote(value)
+  if (targetApp == 'surge-module' || targetApp == 'shadowrocket-module') {
+    return value.replace(/(?<!\{)\{([^{}]+)\}(?!\})/g, '{{{$1}}}')
+  }
+  if (targetApp == 'loon-plugin') {
+    return value.replace(/\{\{\{([^{}]+)\}\}\}/g, '{$1}')
+  }
+  return value
+}
+
+function formatCronexp(value, targetApp) {
+  if (!value) return value
+  value = normalizeTemplateValue(value, targetApp)
+  if ((targetApp == 'surge-module' || targetApp == 'shadowrocket-module') && /\{\{\{[^{}]+\}\}\}/.test(value)) {
+    return `"${value}"`
+  }
+  return /,/.test(value) ? `"${value}"` : value
+}
+
+function getSurgeRuleTogglePrefix(value) {
+  if (!value) return ''
+  const keys = getTemplateKeys(value)
+  if (keys.length > 0) return `{{{${keys[0]}}}}`
+  return getSwitchDefault(value) == 'false' ? '#' : ''
+}
+
+function parseArgumentTagFields(str) {
+  str = `${str ?? ''}`.trim()
+  const tag = str.match(/(?:^|,\s*)tag\s*=\s*([\s\S]*?)(?=,\s*desc\s*=|$)/)?.[1]?.trim()
+  const desc = str.match(/(?:^|,\s*)desc\s*=\s*([\s\S]*)/)?.[1]?.trim()
+  return { tag, desc }
+}
+
+function escapeArgumentDesc(str) {
+  return `${str ?? ''}`.replace(/\r?\n/g, '\\n').trim()
+}
+
+function buildSurgeArgumentsDesc(args) {
+  return args
+    .map(item => {
+      const { tag, desc } = parseArgumentTagFields(item.tag)
+      const title = tag && tag !== item.key ? tag : item.key
+      const detail = desc && desc !== item.key ? desc : ''
+      return `${item.key}: ${escapeArgumentDesc([title, detail].filter(Boolean).join('\n'))}`
+    })
+    .filter(Boolean)
+    .join('\\n\\n')
+}
+
+function escapeRegExp(str) {
+  return `${str}`.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function parseSurgeArgumentsDesc(str, keys = []) {
+  str = `${str ?? ''}`.replace(/\\n/g, '\n')
+  const map = {}
+  const keyPattern = keys.length > 0 ? keys.map(escapeRegExp).join('|') : '[^:\\n]+'
+  const regex = new RegExp(`(?:^|\\n)(${keyPattern}):\\s*`, 'g')
+  const matches = [...str.matchAll(regex)]
+  for (let i = 0; i < matches.length; i++) {
+    const key = matches[i][1].trim()
+    const start = matches[i].index + matches[i][0].length
+    const end = i + 1 < matches.length ? matches[i + 1].index : str.length
+    const value = str.slice(start, end).trim()
+    if (key && value) map[key] = value
+  }
+  return map
+}
+
+function applySurgeArgumentsDesc(args, rawDesc) {
+  const descMap = parseSurgeArgumentsDesc(
+    rawDesc,
+    args.map(item => item.key)
+  )
+  args.forEach(item => {
+    const desc = descMap[item.key]
+    if (!desc) return
+    const { tag } = parseArgumentTagFields(item.tag)
+    const firstLine = desc.split(/\r?\n/)[0].trim()
+    item.tag = `tag=${tag && tag !== item.key ? tag : firstLine || item.key}, desc=${escapeArgumentDesc(desc)}`
+  })
+}
+
+function rewriteArgumentTagKey(tag, oldKey, newKey) {
+  if (!tag || oldKey === newKey) return tag
+  return tag.replace(new RegExp(`(tag|desc)=${escapeRegExp(oldKey)}(?=,|$)`, 'g'), `$1=${newKey}`)
+}
+
 //loon的input select互动按钮解析
 function getInputInfo(x, box) {
   x = x.replace(/\s*=\s*/, '=')
@@ -2122,19 +2419,20 @@ function getQxReInfo(x, y, mark) {
   jsBox.push({ mark, noteK, jsname, jstype, jsptn, jsurl, rebody, size, timeout: '30', jsarg, ori: x, num: y })
 }
 
-function getHn(x, arr, addMethod) {
+function getHn(x, arr, addMethod, toggleKey = '') {
   let hnBox2 = x
     .replace(/\s|%.+%/g, '')
     .split('=')[1]
     .split(/,/)
   for (let i = 0; i < hnBox2.length; i++) {
-    hnBox2[i].length > 0 && arr.push(hnBox2[i])
+    hnBox2[i].length > 0 && arr.push(toggleKey ? { value: hnBox2[i], toggleKey } : hnBox2[i])
   } //for
   if (/%INSERT%/i.test(x)) return '%INSERT%'
   else return addMethod
 }
 
 function pieceHn(arr) {
+  arr = arr.map(item => getHnValue(item))
   if (!isStashiOS && arr.length > 0) return arr.join(', ')
   else if (isStashiOS && arr.length > 0) return arr.join(`"\n    - "`)
   else return []
@@ -2394,32 +2692,40 @@ function getPolicy(str) {
 function parseArguments(str) {
   if (/#!arguments/.test(str)) {
     const queryString = str.split(/#!arguments\s*=\s*/)[1] //获取查询字符串部分
-    const regex = /([^:,]+):(\s*".+?"|[^,]*)/g //匹配键值对的正则表达式
-    let match
+    const items = splitTopLevel(queryString, ',')
 
-    while ((match = regex.exec(queryString))) {
-      const key = match[1].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
-      const value = match[2].trim().replace(/^"(.+)"$/, '$1') //去除头尾空白符和引号
-      const type = /^(true|false)$/.test(value) ? 'switch' : 'input'
+    for (let i = 0; i < items.length; i++) {
+      const [rawKey, rawValue] = splitFirstTopLevel(items[i], ':')
+      if (!rawKey || !rawValue) continue
+      const key = stripWrapQuote(rawKey)
+      const value = rawValue.trim()
+      const type = /^(true|false)$/i.test(stripWrapQuote(value)) ? 'switch' : 'input'
       const tag = `tag=${key}, desc=${key}`
 
       sgArg.push({ key, value, type, tag }) //将键值对添加到对象中
 
-      if (value == 'hostname') {
+      if (stripWrapQuote(value) == 'hostname') {
         hn2 = true
         hn2name = '{{{' + key + '}}}'
       }
     }
   } else {
-    const regex = /(^.*?)\s*=\s*(.*?)\s*,(.*?),\s*([^,]*\s*=.+)/ //获取信息
-    const key = str.match(regex)[1]
-    const type = str.match(regex)[2]
-    const value = str.match(regex)[3]
-    const tag = str.match(regex)[4]
+    const matched = str.match(/^([^=]+?)\s*=\s*(.+)$/)
+    if (!matched) return
+    const rawKey = matched[1]
+    const rawRest = matched[2]
+    const parts = splitTopLevel(rawRest, ',')
+    const key = rawKey.trim()
+    const type = parts.shift()
+    const tagIndex = parts.findIndex(item => /^\s*(?:tag|desc)\s*=/.test(item))
+    const valueParts = tagIndex === -1 ? parts : parts.slice(0, tagIndex)
+    const tagParts = tagIndex === -1 ? [] : parts.slice(tagIndex)
+    const value = type == 'select' ? valueParts[0] : valueParts.join(',')
+    const tag = tagParts.join(', ') || `tag=${key}, desc=${key}`
 
     sgArg.push({ key, value, type, tag })
 
-    if (value == 'hostname') {
+    if (stripWrapQuote(value) == 'hostname') {
       hn2 = true
       hn2name = '{{{' + key + '}}}'
     }
