@@ -1,0 +1,60 @@
+{
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "never",
+    "source.fixAll.stylelint": "never",
+    "source.fixAll.eslint": "never"
+  },
+}
+
+
+icon-dark.png
+icon-dark144x144.png
+icon-dark192x192.png
+icon-dark512x512.png
+icon.png
+icon144x144.png
+icon192x192.png
+icon512x512.png
+
+
+env.js
+env_nolog.js
+
+
+script-hub.beta.loon.plugin
+script-hub.beta.qx.conf
+script-hub.beta.rocket.module
+script-hub.beta.stash.stoverride
+script-hub.beta.surge.sgmodule
+script-hub.loon.plugin
+script-hub.qx.conf
+script-hub.rocket.module
+script-hub.stash.stoverride
+script-hub.surge.sgmodule
+
+
+.gitignore
+.nvmrc
+.prettierignore
+.prettierrc.js
+LICENSE
+README.md
+Rewrite-Parser.beta.js
+Rewrite-Parser.js
+SurgeModuleTool.js
+SurgeModuleTool_macOS.js
+ignored-build-step.js
+index.js
+package.json
+preview.js
+rule-parser.beta.js
+rule-parser.js
+script-converter.beta.js
+script-converter.js
+script-hub.beta.js
+script-hub.js
+scriptMap.js
+service.js
