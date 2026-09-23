@@ -2320,13 +2320,33 @@ function escapeArgumentDesc(str) {
   return `${str ?? ''}`.replace(/\r?\n/g, '\\n').trim()
 }
 
+function normalizeArgumentOptions(options) {
+  return (Array.isArray(options) ? options : [])
+    .map(value => stripWrapQuote(`${value ?? ''}`.trim()))
+    .filter(Boolean)
+}
+
+function getArgumentOptions(item) {
+  const options = normalizeArgumentOptions(item?.options)
+  if (options.length > 1) return options
+  if (item?.type != 'switch' && item?.type != 'select') return []
+  return normalizeArgumentOptions(splitTopLevel(`${item?.value ?? ''}`, ','))
+}
+
+function formatArgumentOptionsDesc(item) {
+  const options = getArgumentOptions(item)
+  if (options.length <= 1) return ''
+  return `可选值: ${options.map(quoteIfNeeded).join(', ')}`
+}
+
 function buildSurgeArgumentsDesc(args) {
   return args
     .map(item => {
       const { tag, desc } = parseArgumentTagFields(item.tag)
       const title = tag && tag !== item.key ? tag : item.key
       const detail = desc && desc !== item.key ? desc : ''
-      return `${item.key}: ${escapeArgumentDesc([title, detail].filter(Boolean).join('\n'))}`
+      const options = formatArgumentOptionsDesc(item)
+      return `${item.key}: ${escapeArgumentDesc([title, detail, options].filter(Boolean).join('\n'))}`
     })
     .filter(Boolean)
     .join('\\n\\n')
@@ -2822,14 +2842,15 @@ function parseArguments(str) {
     const rawRest = matched[2]
     const parts = splitTopLevel(rawRest, ',')
     const key = rawKey.trim()
-    const type = parts.shift()
+    const type = `${parts.shift() || ''}`.trim()
     const tagIndex = parts.findIndex(item => /^\s*(?:tag|desc)\s*=/.test(item))
     const valueParts = tagIndex === -1 ? parts : parts.slice(0, tagIndex)
     const tagParts = tagIndex === -1 ? [] : parts.slice(tagIndex)
     const value = type == 'select' ? valueParts[0] : valueParts.join(',')
+    const options = normalizeArgumentOptions(valueParts)
     const tag = tagParts.join(', ') || `tag=${key}, desc=${key}`
 
-    sgArg.push({ key, value, type, tag })
+    sgArg.push({ key, value, type, options, tag })
 
     if (stripWrapQuote(value) == 'hostname') {
       hn2 = true
