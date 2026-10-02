@@ -302,3 +302,9 @@ test('Beta host modules route the Shadowrocket target into the converter', () =>
     assert.match(moduleText, /Rewrite-Parser\.beta\.js/, relative)
   }
 })
+
+test('the default fork Surge module uses the repaired parser', () => {
+  const moduleText = fs.readFileSync(path.join(__dirname, '../modules/script-hub.surge.sgmodule'), 'utf8')
+  assert.match(moduleText, /ranzhigg\/Script-Hub\/feat\/loon-v2-cross-platform\/Rewrite-Parser\.beta\.js/)
+  assert.match(moduleText, /shadowrocket-module/)
+})
