@@ -6,11 +6,11 @@ const test = require('node:test')
 
 const parser = fs.readFileSync(path.join(__dirname, '..', 'Rewrite-Parser.beta.js'), 'utf8')
 
-async function convert(source, target, httpBodies = {}) {
+async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugin') {
   let doneValue
   const notifications = []
   const encoded = encodeURIComponent(source)
-  const requestUrl = `https://script.hub/file/_start_/http://local.text/_end_/?type=loon-plugin&target=${target}&localtext=${encoded}`
+  const requestUrl = `https://script.hub/file/_start_/http://local.text/_end_/?type=${sourceType}&target=${target}&localtext=${encoded}`
 
   const context = {
     console,
@@ -271,6 +271,32 @@ test('Loon v2 native Rewrite is preserved in the Loon target section', async () 
   assert.match(body, /\[Rewrite\]/)
   assert.ok(body.includes('response if ${url} ~=') && body.includes('response.json.delete("data.ad")'))
   assert.doesNotMatch(body, /\[Script\][\s\S]*response if \$\{url\}/)
+})
+
+test('QX echo-response keeps its content type when converted to a Loon plugin', async () => {
+  const { body } = await convert(
+    '^https?:\\/\\/example\\.com\\/script url echo-response text/json echo-response https://example.com/mock.js',
+    'loon-plugin',
+    {},
+    'qx-rewrite'
+  )
+  assert.match(body, /mock-response-body data-type=json data-path="https:\/\/example\.com\/mock\.js"/)
+  assert.doesNotMatch(body, /data-type=file/)
+})
+
+test('Loon mock data and data-path values are always quoted', async () => {
+  const { body } = await convert(
+    [
+      '^https?:\\/\\/example\\.com\\/path mock-response-body data-type=json data-path="https://example.com/data.json"',
+      '^https?:\\/\\/example\\.com\\/body mock-response-body data-type=text data="hello"',
+      '^https?:\\/\\/example\\.com\\/empty mock-response-body data-type=text data=""',
+    ].join('\n'),
+    'loon-plugin'
+  )
+  assert.match(body, /data-type=json data-path="https:\/\/example\.com\/data\.json"/)
+  assert.match(body, /data-type=text data="hello"/)
+  assert.match(body, /data-type=text data=""/)
+  assert.doesNotMatch(body, /data-path=https:\/\/example\.com\/data\.json/)
 })
 
 test('Loon v2 keeps jq fallback operators inside quoted actions', async () => {

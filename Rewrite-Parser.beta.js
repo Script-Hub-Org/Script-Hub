@@ -1510,12 +1510,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             mockptn +
             ' mock-response-body' +
             mocktype +
-            (mockBox[i].datapath
-              ? ` data-path=${mockBox[i].datapath}`
-              : mockBox[i].data
-                ? ` data="${mockBox[i].data}"`
+            (mockBox[i].hasDataPath
+              ? ` data-path=${quoteLoonInputValue(mockBox[i].datapath)}`
+              : mockBox[i].hasData
+                ? ` data=${quoteLoonInputValue(mockBox[i].data)}`
                 : mockBox[i].mockurl
-                  ? ` data-path=${mockBox[i].mockurl}`
+                  ? ` data-path=${quoteLoonInputValue(mockBox[i].mockurl)}`
                   : '') +
             mockstatus +
             (mockBox[i].mockbase64 ? ' mock-data-is-base64=true' : '')
@@ -3638,16 +3638,43 @@ async function isBinaryMode(url, name) {
   }
 } //查binary
 
+function getLoonMockType(contentType) {
+  const mime = `${contentType ?? ''}`.split(';')[0].trim().toLowerCase()
+  const mimeTypes = {
+    'application/json': 'json',
+    'text/json': 'json',
+    'text/plain': 'text',
+    'text/html': 'html',
+    'text/css': 'css',
+    'text/javascript': 'javascript',
+    'application/javascript': 'javascript',
+    'application/x-javascript': 'javascript',
+    'application/x-www-form-urlencoded': 'form-data',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/jpeg': 'jpeg',
+    'image/tiff': 'tiff',
+    'image/svg+xml': 'svg',
+    'video/mp4': 'mp4',
+  }
+  if (mimeTypes[mime]) return mimeTypes[mime]
+  if (/json$/i.test(mime)) return 'json'
+  return 'text'
+}
+
 //获取mock参数
 function getMockInfo(x, mark, y) {
   let noteK = isNoteK(x)
   let mockptn, mockurl, mockheader, mocktype, mockstatus, oritype, datapath, data, mockbase64
+  let hasDataPath = false
+  let hasData = false
   if (/url\s+echo-response\s/.test(x)) {
     mockptn = x.split(/\s+url\s+/)[0]
     mockurl = x.split(/\s+echo-response\s+/)[2]
     mocktype = 'file'
-    mockheader = '&contentType=' + encodeURIComponent(x.split(/\s+echo-response\s+/)[1])
-    oritype = mocktype
+    const contentType = x.split(/\s+echo-response\s+/)[1]
+    mockheader = '&contentType=' + encodeURIComponent(contentType)
+    oritype = getLoonMockType(contentType)
   }
 
   if (/\sdata\s*=\s*"|\sdata-type=/.test(x)) {
@@ -3655,6 +3682,8 @@ function getMockInfo(x, mark, y) {
       .split(/\s+/)[0]
       .replace(/^#/g, '')
       .replace(/^"(.+)"$/, '$1')
+    hasDataPath = /\sdata-path\s*=/.test(x)
+    hasData = /\sdata\s*=/.test(x)
     datapath = getJsInfo(x, /\s+data-path\s*=\s*/).replace(/^"(.*)"$/, '$1')
     data = getJsInfo(x, /\s+data\s*=\s*/).replace(/^"(.*)"$/, '$1')
     mockurl = data || datapath
@@ -3742,6 +3771,8 @@ function getMockInfo(x, mark, y) {
         mockptn,
         data,
         datapath,
+        hasData,
+        hasDataPath,
         mockurl,
         mockstatus,
         mocktype: oritype,
