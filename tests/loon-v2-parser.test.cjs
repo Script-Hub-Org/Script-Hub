@@ -299,6 +299,42 @@ test('Loon mock data and data-path values are always quoted', async () => {
   assert.doesNotMatch(body, /data-path=https:\/\/example\.com\/data\.json/)
 })
 
+test('Beta keeps Loon-supported AND rules instead of filtering them as policies', async () => {
+  const { body, notifications } = await convert(
+    [
+      'AND, ((DOMAIN-KEYWORD, chatgpt-async-webps-prod-), (DOMAIN-SUFFIX, webpubsub.azure.com))',
+      'AND, ((DOMAIN-KEYWORD, openaicom-api-), (DOMAIN-SUFFIX, azurefd.net))',
+    ].join('\n'),
+    'loon-plugin',
+    {},
+    'surge-module'
+  )
+  assert.match(body, /\[Rule\]/)
+  assert.ok(body.includes('AND,((DOMAIN-KEYWORD,chatgpt-async-webps-prod-),(DOMAIN-SUFFIX,webpubsub.azure.com))'))
+  assert.ok(body.includes('AND,((DOMAIN-KEYWORD,openaicom-api-),(DOMAIN-SUFFIX,azurefd.net))'))
+  assert.doesNotMatch(JSON.stringify(notifications), /不是loon内置策略/)
+})
+
+test('Beta maps Surge local host proxy selection to Loon use-in-proxy', async () => {
+  const { body } = await convert(
+    [
+      '[General]',
+      'use-local-host-item-for-proxy = true',
+      '[Host]',
+      '91.108.56.100 = 91.108.56.147,91.108.56.135,91.108.56.130',
+    ].join('\n'),
+    'loon-plugin',
+    {},
+    'surge-module'
+  )
+  assert.match(body, /\[Host\]/)
+  assert.match(
+    body,
+    /91\.108\.56\.100 = 91\.108\.56\.147,91\.108\.56\.135,91\.108\.56\.130, use-in-proxy=true/
+  )
+  assert.doesNotMatch(body, /use-local-host-item-for-proxy/)
+})
+
 test('Loon v2 keeps jq fallback operators inside quoted actions', async () => {
   const source = 'response if ${url} ~= /^https:\\/\\/acs\\.m\\.goofish\\.com\\/gw\\/adapter\\//i then response.json.jq(".data.items |= map(select((.template.name? // \\"\\") | test(\\"^my_fy[0-9]+_header$\\")))")'
   const { body, notifications } = await convert(source, 'surge-module')
