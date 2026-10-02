@@ -273,6 +273,14 @@ test('Loon v2 native Rewrite is preserved in the Loon target section', async () 
   assert.doesNotMatch(body, /\[Script\][\s\S]*response if \$\{url\}/)
 })
 
+test('Loon v2 keeps jq fallback operators inside quoted actions', async () => {
+  const source = 'response if ${url} ~= /^https:\\/\\/acs\\.m\\.goofish\\.com\\/gw\\/adapter\\//i then response.json.jq(".data.items |= map(select((.template.name? // \\"\\") | test(\\"^my_fy[0-9]+_header$\\")))")'
+  const { body, notifications } = await convert(source, 'surge-module')
+  assert.equal(sectionLines(body, 'Body Rewrite').length, 1)
+  assert.ok(body.includes('.template.name? //'))
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容|Action 缺少结束括号/)
+})
+
 test('real 什么值得买 Loon plugin converts all native actions for Surge', async () => {
   const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'smzdm_remove_ads.lpx'), 'utf8')
   const jqUrl = 'https://kelee.one/Resource/JQLang/smzdm/home_smzdm_remove_ads.jq'

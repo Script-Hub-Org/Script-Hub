@@ -359,12 +359,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       .trim()
       .replace(/^(#|;|\/\/)\s*/, '#')
       .replace(/\s+[^\s]+\s+url-and-header\s+/, ' url ')
-      .replace(/(^[^#].+)\x20+\/\/.+/, '$1')
       .replace(/^#!PROFILE-VERSION-REQUIRED\s+[0-9]+\s+/i, '')
       .replace(/^(#)?host(-suffix|-keyword|-wildcard)?\s*,\s*/i, '$1DOMAIN$2,')
       .replace(/^(#)?ip6-cidr\s*,\s*/i, '$1IP-CIDR6,')
     if (!/^(#|\/\/|;)/.test(x)) {
-      x = x.replace(/\s+?(?:#|\/\/|;).*?$/, '')
+      x = stripLoonV2InlineComment(x)
     }
     //去掉注释
     if (Pin0 != null) {
@@ -2652,6 +2651,48 @@ function splitLoonV2ActionList(str) {
   }
   result.push(current.trim())
   return result
+}
+
+function stripLoonV2InlineComment(source) {
+  let quote = ''
+  let regex = false
+  let escaped = false
+  for (let i = 0; i < source.length; i++) {
+    const char = source[i]
+    if (quote) {
+      if (escaped) {
+        escaped = false
+      } else if (char === '\\') {
+        escaped = true
+      } else if (char === quote) {
+        quote = ''
+      }
+      continue
+    }
+    if (regex) {
+      if (escaped) {
+        escaped = false
+      } else if (char === '\\') {
+        escaped = true
+      } else if (char === '/') {
+        regex = false
+      }
+      continue
+    }
+    if (char === '"' || char === "'" || char === String.fromCharCode(96)) {
+      quote = char
+      continue
+    }
+    if (char === '/' && /(?:~=|==|!=|,)\s*$/.test(source.slice(0, i))) {
+      regex = true
+      continue
+    }
+    const precededBySpace = i === 0 || /\s/.test(source[i - 1])
+    if (precededBySpace && (char === '#' || char === ';' || (char === '/' && source[i + 1] === '/'))) {
+      return source.slice(0, i).trimEnd()
+    }
+  }
+  return source
 }
 
 function findLoonV2ActionClosingParen(str, openIndex) {
