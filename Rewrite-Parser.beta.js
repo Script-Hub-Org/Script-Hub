@@ -255,6 +255,7 @@ let hnBox = [] //MITM主机名
 let fheBox = [] //force-http-engine
 let skipBox = [] //skip-ip
 let realBox = [] //real-ip
+let useLocalHostItemForProxy = null // Surge General: use-local-host-item-for-proxy
 let hndelBox = [] //正则剔除的主机名
 let sgArg = [] //surge模块参数
 let loonSgArg = [] //转换为 Loon 时实际需要保留的参数
@@ -595,6 +596,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     if (/^(?:always-)?real-ip\s*=.+/.test(x)) realaddMethod = getHn(x, realBox, realaddMethod)
 
+    if (/^use-local-host-item-for-proxy\s*=\s*(true|false)\s*$/i.test(x)) {
+      useLocalHostItemForProxy = x.match(/^use-local-host-item-for-proxy\s*=\s*(true|false)\s*$/i)[1].toLowerCase()
+    }
+
     //reject 解析
     if (
       /.+reject(?:-\w+)?$/i.test(x) &&
@@ -822,14 +827,25 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     } //rule解析结束
 
     //host解析
+    const hostProxyMatch = x.match(/,\s*use-in-proxy\s*=\s*(true|false)\s*$/i)
+    const hostLine = hostProxyMatch ? x.slice(0, hostProxyMatch.index).trim() : x
     if (
-      /^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+)\s*=\s*(?:sever\s*:\s*|script\s*:\s*)?[\s0-9a-z:/,.]+$/g.test(x)
+      /^#?(?:\*|localhost|[-*?0-9a-z]+\.[-*.?0-9a-z]+)\s*=\s*(?:sever\s*:\s*|script\s*:\s*)?[\s0-9a-z:/,.]+$/i.test(
+        hostLine
+      )
     ) {
       noteK = isNoteK(x)
       mark = getMark(y, body)
-      hostdomain = x.split(/\s*=\s*/)[0]
-      hostvalue = x.split(/\s*=\s*/)[1]
-      hostBox.push({ mark, noteK, hostdomain, hostvalue, ori: x })
+      hostdomain = hostLine.split(/\s*=\s*/)[0]
+      hostvalue = hostLine.split(/\s*=\s*/)[1]
+      hostBox.push({
+        mark,
+        noteK,
+        hostdomain,
+        hostvalue,
+        useInProxy: hostProxyMatch?.[1]?.toLowerCase() || null,
+        ori: x,
+      })
     }
 
     //Panel信息
@@ -1246,6 +1262,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
     modistatus = ruleBox[i].modistatus
     ori = ruleBox[i].ori
+    if (isLooniOS && /^(?:and|or|not)$/i.test(ruletype)) {
+      rules.push(mark + noteK + ori)
+      continue
+    }
     if (/de?st-port/i.test(ruletype)) {
       ruletype = isSurgeiOS || isLooniOS ? 'DEST-PORT' : 'DST-PORT'
     }
@@ -1464,12 +1484,14 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     hostdomain = hostBox[i].hostdomain
     hostvalue = hostBox[i].hostvalue
     ori = hostBox[i].ori
+    const useInProxy = hostBox[i].useInProxy ?? useLocalHostItemForProxy
+    const loonHostOptions = isLooniOS && useInProxy != null ? `, use-in-proxy=${useInProxy}` : ''
     if (isStashiOS) {
       otherRule.push(ori)
     } else if (isLooniOS && /script\s*:\s*/.test(hostvalue)) {
       otherRule.push(ori)
     } else if (isSurgeiOS || isShadowrocket || isLooniOS) {
-      host.push(mark + noteK + hostdomain + ' = ' + hostvalue)
+      host.push(mark + noteK + hostdomain + ' = ' + hostvalue + loonHostOptions)
     }
   } //for
 
