@@ -6,7 +6,8 @@
   "scripts": {
     "service": "nodemon service.js",
     "preview": "nodemon preview.js",
-    "export_html": "cross-env EXPORT_HTML=true node preview.js"
+    "export_html": "cross-env EXPORT_HTML=true node preview.js",
+    "test:loon-v2": "node --test tests/loon-v2-parser.test.cjs"
   },
   "license": "GPL-3.0",
   "dependencies": {
