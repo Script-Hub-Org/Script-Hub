@@ -6,7 +6,7 @@ const test = require('node:test')
 
 const parser = fs.readFileSync(path.join(__dirname, '..', 'Rewrite-Parser.beta.js'), 'utf8')
 
-async function convert(source, target) {
+async function convert(source, target, httpBodies = {}) {
   let doneValue
   const notifications = []
   const encoded = encodeURIComponent(source)
@@ -53,7 +53,10 @@ async function convert(source, target) {
       post: (...args) => notifications.push(args),
     },
     $httpClient: {
-      get: (options, callback) => callback(null, { status: 200, statusCode: 200, headers: {} }, ''),
+      get: (options, callback) => {
+        const body = Object.prototype.hasOwnProperty.call(httpBodies, options?.url) ? httpBodies[options.url] : ''
+        callback(null, { status: 200, statusCode: 200, headers: {} }, body)
+      },
       post: (options, callback) => callback(null, { status: 200, statusCode: 200, headers: {} }, ''),
     },
   }
@@ -64,6 +67,22 @@ async function convert(source, target) {
   assert.ok(doneValue, `${target} conversion did not finish`)
   const body = doneValue?.response?.body ?? doneValue?.body ?? ''
   return { body, notifications }
+}
+
+function sectionLines(body, sectionName) {
+  const headers = ['[Rule]', '[Rewrite]', '[Script]', '[Body Rewrite]', '[Header Rewrite]', '[Map Local]', '[MITM]']
+  const header = `[${sectionName}]`
+  const start = body.indexOf(header)
+  assert.ok(start >= 0, `${header} is missing`)
+  const next = headers
+    .map(candidate => body.indexOf(candidate, start + header.length))
+    .filter(index => index >= 0)
+    .sort((a, b) => a - b)[0] ?? body.length
+  return body
+    .slice(start + header.length, next)
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line && !line.startsWith('#'))
 }
 
 test('Loon v2 response maps to Surge without guessing body buffering', async () => {
@@ -216,6 +235,56 @@ test('unsupported Loon v2 compound conditions are reported', async () => {
   const notificationText = JSON.stringify(notifications)
   assert.match(notificationText, /Loon v2/)
   assert.match(notificationText, /无法等价转换|只转换单一/)
+})
+
+test('Loon v2 native reject and JSON actions map completely to Surge', async () => {
+  const jqUrl = 'https://example.com/filter.jq'
+  const { body, notifications } = await convert(
+    [
+      'request if ${url} ~= /^https:\\/\\/example\\.com\\/dict/i then reject_dict(200)',
+      'request if ${url} ~= /^https:\\/\\/example\\.com\\/missing/i then reject(404)',
+      'response if ${url} ~= /^https:\\/\\/example\\.com\\/update/i then response.json.replace(["data.a", "data.b"], [0, 0])',
+      'response if ${url} ~= /^https:\\/\\/example\\.com\\/update/i then response.json.delete(["data.ad", "data.banner"])',
+      'response if ${url} ~= /^https:\\/\\/example\\.com\\/update/i then response.json.jq(".data.rows |= map(select(.model_type != \\"ads\\"))")',
+      `response if \${url} ~= /^https:\\/\\/example\\.com\\/home/i then response.json.jq_file("${jqUrl}")`,
+    ].join('\n'),
+    'surge-module',
+    { [jqUrl]: '.data.items |= map(select(.ad | not))' }
+  )
+
+  assert.match(body, /\[Map Local\]/)
+  assert.ok(body.includes('data-type=text data="{}" status-code=200 header="Content-Type:application/json"'))
+  assert.ok(body.includes('data-type=text data="" status-code=404'))
+  assert.match(body, /\[Body Rewrite\]/)
+  assert.ok(body.includes('getpath(["data"]) // {}') && body.includes('has("a")'))
+  assert.ok(body.includes('delpaths([["data","ad"]])'))
+  assert.ok(body.includes('model_type != "ads"'))
+  assert.ok(body.includes('.data.items |= map(select(.ad | not))'))
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容|Loon v2.*失败/)
+})
+
+test('Loon v2 native Rewrite is preserved in the Loon target section', async () => {
+  const { body } = await convert(
+    'response if ${url} ~= /^https:\\/\\/example\\.com\\/data/i then response.json.delete("data.ad")',
+    'loon-plugin'
+  )
+  assert.match(body, /\[Rewrite\]/)
+  assert.ok(body.includes('response if ${url} ~=') && body.includes('response.json.delete("data.ad")'))
+  assert.doesNotMatch(body, /\[Script\][\s\S]*response if \$\{url\}/)
+})
+
+test('real 什么值得买 Loon plugin converts all native actions for Surge', async () => {
+  const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'smzdm_remove_ads.lpx'), 'utf8')
+  const jqUrl = 'https://kelee.one/Resource/JQLang/smzdm/home_smzdm_remove_ads.jq'
+  const jq = fs.readFileSync(path.join(__dirname, 'fixtures', 'smzdm_home_remove_ads.jq'), 'utf8')
+  const { body, notifications } = await convert(source, 'surge-module', { [jqUrl]: jq })
+  assert.equal(sectionLines(body, 'Rule').length, 1)
+  assert.equal(sectionLines(body, 'Body Rewrite').length, 28)
+  assert.equal(sectionLines(body, 'Map Local').length, 7)
+  assert.equal(sectionLines(body, 'MITM').length, 1)
+  assert.match(body, /zz_content/)
+  assert.match(body, /Content-Type:application\/json/)
+  assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|不支持以下内容|失败/)
 })
 
 test('Beta host modules route the Shadowrocket target into the converter', () => {
