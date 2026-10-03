@@ -5417,9 +5417,28 @@ function generateRule(node, platform, flags = {}) {
     AND: 2,
     OR: 1,
   }
-  let hasPreMatching
-  function traverseTree(node, platform, parentOperator = null) {
-    node.flags = { ...node.flags, ...flags }
+  function collectRuleOperators(children) {
+    const operators = []
+    flattenChildren(children).forEach(child => {
+      if (!child?.operator) return
+      operators.push(child.operator)
+      if (child.type === 'LOGICAL') {
+        operators.push(...collectRuleOperators(child.children))
+      }
+    })
+    return operators
+  }
+
+  function inheritedValueFlags(node, inheritedFlags) {
+    if (node.type !== 'VALUE') return {}
+    return Object.fromEntries(
+      Object.entries(inheritedFlags).filter(
+        ([flag, isSet]) => isSet && flag !== 'preMatching' && FLAG_SUPPORTED_TYPES[flag]?.includes(node.operator)
+      )
+    )
+  }
+
+  function traverseTree(node, platform, parentOperator = null, root = false, inheritedFlags = {}) {
     const features = platformFeatures[platform]
     if (!features) {
       throw new Error(`未知的平台：${platform}`)
@@ -5430,15 +5449,17 @@ function generateRule(node, platform, flags = {}) {
       return ''
     }
 
+    const nodeFlags = {
+      ...(node.flags || {}),
+      ...(root ? flags : inheritedValueFlags(node, inheritedFlags)),
+    }
+
     if (node.type === 'LOGICAL') {
       const operator = node.operator
       const arity = LOGICAL_OPERATORS_ARITY[operator]
+      let hasPreMatching = Boolean(node.routingPolicy && nodeFlags.preMatching)
 
       // 检查是否有 pre-matching 标志
-      // const hasPreMatching = node.flags && node.flags.preMatching;
-      if (node.routingPolicy) {
-        hasPreMatching = node.flags && node.flags.preMatching
-      }
       if (hasPreMatching && node.routingPolicy) {
         // 验证 routingPolicy 是否符合 ^REJECT(-[A-Z]+)*$ 的格式
         if (!features.rejectPolicyRegex.test(node.routingPolicy)) {
@@ -5449,18 +5470,10 @@ function generateRule(node, platform, flags = {}) {
 
       if (hasPreMatching) {
         // 检查所有子规则是否属于支持 pre-matching 的类型
-        const notSupportedTypes = []
-        const allChildrenSupported = node.children.every(childArray => {
-          return Array.isArray(childArray)
-            ? childArray.every(child => {
-                const isSupported = FLAG_SUPPORTED_TYPES.preMatching.includes(child.operator)
-                if (!isSupported) {
-                  notSupportedTypes.push(child.operator)
-                }
-                return isSupported
-              })
-            : true
-        })
+        const notSupportedTypes = collectRuleOperators(node.children).filter(
+          operatorName => !FLAG_SUPPORTED_TYPES.preMatching.includes(operatorName)
+        )
+        const allChildrenSupported = notSupportedTypes.length === 0
 
         if (!allChildrenSupported) {
           console.log(
@@ -5475,7 +5488,7 @@ function generateRule(node, platform, flags = {}) {
       let childrenOutputs = []
       node.children.forEach(child => {
         flattenChildren(child).forEach(subChild => {
-          const output = traverseTree(subChild, platform, operator)
+          const output = traverseTree(subChild, platform, operator, false, inheritedFlags)
           if (output !== '') {
             childrenOutputs.push(output)
           }
@@ -5490,8 +5503,8 @@ function generateRule(node, platform, flags = {}) {
           throw new Error(`操作符 ${operator} 期望有 1 个子节点，但得到 ${childrenOutputs.length} 个`)
         }
         // 仅允许添加 pre-matching 标志
-        if (node.flags) {
-          const { extendedMatching, noResolve, preMatching, src } = node.flags
+        if (nodeFlags) {
+          const { extendedMatching, noResolve, preMatching, src } = nodeFlags
           if (extendedMatching || noResolve || src) {
             console.log(`操作符 ${operator} 不能添加 extended-matching、no-resolve 或 src 标志`)
           }
@@ -5526,12 +5539,16 @@ function generateRule(node, platform, flags = {}) {
       }
       let result = `${node.operator},${node.value}`
 
-      if (node.flags) {
+      if (nodeFlags) {
         let flagStrings = []
 
-        for (const [flag, isSet] of Object.entries(node.flags)) {
+        for (const [flag, isSet] of Object.entries(nodeFlags)) {
           if (isSet) {
             const supportedTypes = FLAG_SUPPORTED_TYPES[flag]
+            if (!supportedTypes) {
+              console.log(`未知的标志类型：${flag}`)
+              continue
+            }
             if (!supportedTypes.includes(node.operator)) {
               console.log(`标志 ${flag} 不支持应用于规则类型 ${node.operator}`)
             } else {
@@ -5607,7 +5624,7 @@ function generateRule(node, platform, flags = {}) {
     }
     return result
   }
-  return traverseTree(node, platform)
+  return traverseTree(node, platform, null, true, flags)
 }
 
 function modifyRule(input, platform, flags) {

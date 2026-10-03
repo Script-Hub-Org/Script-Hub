@@ -10,6 +10,7 @@ const ruleParser = fs.readFileSync(path.join(__dirname, '..', 'rule-parser.beta.
 async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugin', queryParams = {}, runtime = {}) {
   let doneValue
   const notifications = []
+  const logs = []
   const encoded = encodeURIComponent(source)
   const extraQuery = Object.entries(queryParams)
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
@@ -18,7 +19,11 @@ async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugi
   const requestUrl = `https://script.hub/file/_start_/${sourceUrl}/_end_/?type=${sourceType}&target=${target}&localtext=${encoded}${extraQuery ? `&${extraQuery}` : ''}`
 
   const context = {
-    console,
+    console: {
+      log: (...args) => logs.push(args.join(' ')),
+      warn: (...args) => logs.push(args.join(' ')),
+      error: (...args) => logs.push(args.join(' ')),
+    },
     Date,
     Error,
     JSON,
@@ -72,7 +77,7 @@ async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugi
   for (let i = 0; i < 100 && !doneValue; i++) await new Promise(resolve => setTimeout(resolve, 5))
   assert.ok(doneValue, `${target} conversion did not finish`)
   const body = doneValue?.response?.body ?? doneValue?.body ?? ''
-  return { body, notifications }
+  return { body, notifications, logs }
 }
 
 function sectionLines(body, sectionName) {
@@ -766,6 +771,53 @@ test('Beta keeps Loon-supported AND rules instead of filtering them as policies'
   assert.ok(body.includes('AND,((DOMAIN-KEYWORD,chatgpt-async-webps-prod-),(DOMAIN-SUFFIX,webpubsub.azure.com))'))
   assert.ok(body.includes('AND,((DOMAIN-KEYWORD,openaicom-api-),(DOMAIN-SUFFIX,azurefd.net))'))
   assert.doesNotMatch(JSON.stringify(notifications), /不是loon内置策略/)
+})
+
+test('Beta does not attach pre-matching flags to AND rules containing PROTOCOL', async () => {
+  const source = 'AND, ((PROTOCOL, STUN), (DOMAIN-KEYWORD, smzdm.)), REJECT'
+  for (const target of ['surge-module', 'shadowrocket-module']) {
+    const { body, logs } = await convert(source, target, {}, 'loon-plugin', { sni: '.', pm: '.' })
+
+    assert.match(body, /AND,\(\(PROTOCOL,STUN\),\(DOMAIN-KEYWORD,smzdm\.(?:,extended-matching)?\)\),REJECT/)
+    assert.doesNotMatch(body, /AND,.*pre-matching/)
+    assert.doesNotMatch(logs.join('\n'), /标志 .*不支持应用于规则类型/)
+    if (target === 'surge-module') {
+      assert.match(body, /DOMAIN-KEYWORD,smzdm\.,extended-matching/)
+      assert.equal(logs.filter(line => /PROTOCOL/.test(line)).length, 1)
+    } else {
+      assert.doesNotMatch(body, /DOMAIN-KEYWORD,smzdm\.,extended-matching/)
+      assert.equal(logs.filter(line => /PROTOCOL/.test(line)).length, 0)
+    }
+  }
+})
+
+test('Beta validates nested logical children before adding pre-matching', async () => {
+  const source = 'OR, ((DOMAIN, allowed.example), (AND, ((PROTOCOL, STUN), (DOMAIN-SUFFIX, inner.example)), REJECT)), REJECT'
+  const { body, logs } = await convert(source, 'surge-module', {}, 'loon-plugin', { sni: '.', pm: '.' })
+
+  assert.doesNotMatch(body, /pre-matching/)
+  assert.match(body, /DOMAIN,allowed\.example,extended-matching/)
+  assert.match(body, /DOMAIN-SUFFIX,inner\.example,extended-matching/)
+  assert.doesNotMatch(body, /PROTOCOL,STUN,extended-matching|PROTOCOL,STUN,pre-matching/)
+  assert.equal(logs.filter(line => /PROTOCOL/.test(line)).length, 1)
+})
+
+test('Beta keeps pre-matching on fully supported logical rules', async () => {
+  const source = 'AND, ((DOMAIN, allowed.example), (DOMAIN-SUFFIX, inner.example)), REJECT'
+  const { body, logs } = await convert(source, 'surge-module', {}, 'loon-plugin', { pm: '.' })
+
+  assert.match(body, /AND,\(\(DOMAIN,allowed\.example\),\(DOMAIN-SUFFIX,inner\.example\)\),REJECT,pre-matching/)
+  assert.doesNotMatch(logs.join('\n'), /标志 .*不支持应用于规则类型/)
+})
+
+test('Beta scopes no-resolve to supported child rule types', async () => {
+  const source = 'AND, ((IP-CIDR, 10.0.0.0\/8), (DOMAIN, allowed.example)), REJECT'
+  const { body, logs } = await convert(source, 'surge-module', {}, 'loon-plugin', { nore: 'true' })
+
+  assert.match(body, /IP-CIDR,10\.0\.0\.0\/8,no-resolve/)
+  assert.match(body, /DOMAIN,allowed\.example\)/)
+  assert.doesNotMatch(body, /DOMAIN,allowed\.example,no-resolve/)
+  assert.doesNotMatch(logs.join('\n'), /标志 .*不支持应用于规则类型/)
 })
 
 test('Beta maps Surge local host proxy selection to Loon use-in-proxy', async () => {
