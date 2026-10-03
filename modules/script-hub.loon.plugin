@@ -12,20 +12,17 @@
 #!input=Parser_body_max
 #!input=Parser_http_timeout
 
-[General]
-force-http-engine-hosts = script.hub, *.script.hub
-
 [Rule]
 DOMAIN,scripthub.vercel.app,PROXY
 
 [Script]
-http-request ^https?:\/\/script\.hub\/($|edit\/|reload) script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js, timeout=300, tag=Script Hub: 前端
+request if ${url} ~= /^https?:\/\/script\.hub\/($|edit\/|reload)/i then script("https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js") with tag="Script Hub: 前端", timeout=300
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|loon-plugin|all-module) script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/Rewrite-Parser.js, timeout=300, tag=Script Hub: 重写转换
+request if ${url} ~= /^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|loon-plugin|all-module)/i then script("https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/Rewrite-Parser.js") with tag="Script Hub: 重写转换", timeout=300
 
-http-request ^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/rule-parser.js, timeout=300, tag=Script Hub: 规则集转换
+request if ${url} ~= /^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set/i then script("https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/rule-parser.js") with tag="Script Hub: 规则集转换", timeout=300
 
-http-request ^https?:\/\/script\.hub\/convert\/ script-path=https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.js, timeout=300, tag=Script Hub: 脚本转换
+request if ${url} ~= /^https?:\/\/script\.hub\/convert\//i then script("https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-converter.js") with tag="Script Hub: 脚本转换", timeout=300
 
 [MITM]
 hostname = script.hub, *.script.hub

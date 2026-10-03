@@ -6,11 +6,11 @@ const test = require('node:test')
 
 const parser = fs.readFileSync(path.join(__dirname, '..', 'Rewrite-Parser.beta.js'), 'utf8')
 
-async function convert(source, target, httpBodies = {}) {
+async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugin') {
   let doneValue
   const notifications = []
   const encoded = encodeURIComponent(source)
-  const requestUrl = `https://script.hub/file/_start_/http://local.text/_end_/?type=loon-plugin&target=${target}&localtext=${encoded}`
+  const requestUrl = `https://script.hub/file/_start_/http://local.text/_end_/?type=${sourceType}&target=${target}&localtext=${encoded}`
 
   const context = {
     console,
@@ -273,6 +273,111 @@ test('Loon v2 native Rewrite is preserved in the Loon target section', async () 
   assert.doesNotMatch(body, /\[Script\][\s\S]*response if \$\{url\}/)
 })
 
+test('Loon v2 header.replace and body.replace support regex literals and batches', async () => {
+  const { body, notifications } = await convert(
+    'response if ${url} ~= /\\/api\\// then response.header.replace(["X-A", "X-B"], [/old/i, /disabled/], ["new", "enabled"]) | response.body.replace([/false/, /disabled/], ["true", "enabled"])',
+    'surge-module'
+  )
+  assert.equal(sectionLines(body, 'Body Rewrite').length, 2)
+  assert.equal(sectionLines(body, 'Header Rewrite').length, 2)
+  assert.match(body, /"\(\?i\)old" "new"/)
+  assert.match(body, /"disabled" "enabled"/)
+  assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|暂不支持 Loon v2 Action/)
+})
+
+test('Loon v2 response body mock and mock_file map to Surge Map Local', async () => {
+  const { body, notifications } = await convert(
+    [
+      'response if ${url} ~= /\\/inline\\// then response.body.mock("json", `{"code":0}`, 201)',
+      'response if ${url} ~= /\\/asset\\// then response.body.mock_file("png", "https://example.com/a.png", 204)',
+      'response if ${url} ~= /\\/base64\\// then response.body.mock("png", "iVBORw0KGgo=", 200, true)',
+    ].join('\n'),
+    'surge-module'
+  )
+  const mapLines = sectionLines(body, 'Map Local')
+  assert.equal(mapLines.length, 3)
+  assert.ok(mapLines.some(line => line.includes('data-type=text') && line.includes('data="{\\"code\\":0}"') && line.includes('status-code=201')))
+  assert.ok(mapLines.some(line => line.includes('data-type=file') && line.includes('data="https://example.com/a.png"') && line.includes('status-code=204')))
+  assert.ok(mapLines.some(line => line.includes('data-type=base64') && line.includes('data="iVBORw0KGgo="')))
+  assert.match(body, /Content-Type:application\/json/)
+  assert.match(body, /Content-Type:image\/png/)
+  assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|暂不支持 Loon v2 Action/)
+})
+
+test('Loon v2 request body mock converts inline text and diagnoses unsupported resources', async () => {
+  const { body, notifications } = await convert(
+    [
+      'request if ${url} ~= /\\/inline\\// then request.body.mock("json", `{"ok":true}`)',
+      'request if ${url} ~= /\\/resource\\// then request.body.mock_file("json", "request.json")',
+    ].join('\n'),
+    'surge-module'
+  )
+  assert.match(body, /http-request .*"\(\?s\)\^\.\*\$" "\{\\"ok\\":true\}"/)
+  assert.match(JSON.stringify(notifications), /request\.body\.mock_file.*资源文件无法直接转换/)
+})
+
+test('QX echo-response keeps its content type when converted to a Loon plugin', async () => {
+  const { body } = await convert(
+    '^https?:\\/\\/example\\.com\\/script url echo-response text/json echo-response https://example.com/mock.js',
+    'loon-plugin',
+    {},
+    'qx-rewrite'
+  )
+  assert.match(body, /mock-response-body data-type=json data-path="https:\/\/example\.com\/mock\.js"/)
+  assert.doesNotMatch(body, /data-type=file/)
+})
+
+test('Loon mock data and data-path values are always quoted', async () => {
+  const { body } = await convert(
+    [
+      '^https?:\\/\\/example\\.com\\/path mock-response-body data-type=json data-path="https://example.com/data.json"',
+      '^https?:\\/\\/example\\.com\\/body mock-response-body data-type=text data="hello"',
+      '^https?:\\/\\/example\\.com\\/empty mock-response-body data-type=text data=""',
+    ].join('\n'),
+    'loon-plugin'
+  )
+  assert.match(body, /data-type=json data-path="https:\/\/example\.com\/data\.json"/)
+  assert.match(body, /data-type=text data="hello"/)
+  assert.match(body, /data-type=text data=""/)
+  assert.doesNotMatch(body, /data-path=https:\/\/example\.com\/data\.json/)
+})
+
+test('Beta keeps Loon-supported AND rules instead of filtering them as policies', async () => {
+  const { body, notifications } = await convert(
+    [
+      'AND, ((DOMAIN-KEYWORD, chatgpt-async-webps-prod-), (DOMAIN-SUFFIX, webpubsub.azure.com))',
+      'AND, ((DOMAIN-KEYWORD, openaicom-api-), (DOMAIN-SUFFIX, azurefd.net))',
+    ].join('\n'),
+    'loon-plugin',
+    {},
+    'surge-module'
+  )
+  assert.match(body, /\[Rule\]/)
+  assert.ok(body.includes('AND,((DOMAIN-KEYWORD,chatgpt-async-webps-prod-),(DOMAIN-SUFFIX,webpubsub.azure.com))'))
+  assert.ok(body.includes('AND,((DOMAIN-KEYWORD,openaicom-api-),(DOMAIN-SUFFIX,azurefd.net))'))
+  assert.doesNotMatch(JSON.stringify(notifications), /不是loon内置策略/)
+})
+
+test('Beta maps Surge local host proxy selection to Loon use-in-proxy', async () => {
+  const { body } = await convert(
+    [
+      '[General]',
+      'use-local-host-item-for-proxy = true',
+      '[Host]',
+      '91.108.56.100 = 91.108.56.147,91.108.56.135,91.108.56.130',
+    ].join('\n'),
+    'loon-plugin',
+    {},
+    'surge-module'
+  )
+  assert.match(body, /\[Host\]/)
+  assert.match(
+    body,
+    /91\.108\.56\.100 = 91\.108\.56\.147,91\.108\.56\.135,91\.108\.56\.130, use-in-proxy=true/
+  )
+  assert.doesNotMatch(body, /use-local-host-item-for-proxy/)
+})
+
 test('Loon v2 keeps jq fallback operators inside quoted actions', async () => {
   const source = 'response if ${url} ~= /^https:\\/\\/acs\\.m\\.goofish\\.com\\/gw\\/adapter\\//i then response.json.jq(".data.items |= map(select((.template.name? // \\"\\") | test(\\"^my_fy[0-9]+_header$\\")))")'
   const { body, notifications } = await convert(source, 'surge-module')
@@ -311,8 +416,14 @@ test('Beta host modules route the Shadowrocket target into the converter', () =>
   }
 })
 
-test('the default fork Surge module uses the repaired parser', () => {
-  const moduleText = fs.readFileSync(path.join(__dirname, '../modules/script-hub.surge.sgmodule'), 'utf8')
-  assert.match(moduleText, /ranzhigg\/Script-Hub\/feat\/loon-v2-cross-platform\/Rewrite-Parser\.beta\.js/)
-  assert.match(moduleText, /shadowrocket-module/)
+test('Beta Loon module uses native Loon v2 Script syntax', () => {
+  const moduleText = fs.readFileSync(path.join(__dirname, '../modules/script-hub.beta.loon.plugin'), 'utf8')
+  const scriptLines = moduleText
+    .split(/\r?\n/)
+    .filter(line => /^request if \$\{url\}/.test(line))
+  assert.equal(scriptLines.length, 4)
+  assert.ok(scriptLines.every(line => / then script\(".*\.beta\.js"\) with /.test(line)))
+  assert.ok(scriptLines.some(line => /shadowrocket-module/.test(line)))
+  assert.doesNotMatch(moduleText, /^http-request .*script-path=/m)
+  assert.doesNotMatch(moduleText, /force-http-engine-hosts\s*=/)
 })

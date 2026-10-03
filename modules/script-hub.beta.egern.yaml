@@ -14,7 +14,7 @@ scriptings:
 - http_request:
     name: 'Script Hub: 重写转换'
     match: ^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|shadowrocket-module|loon-plugin|all-module)
-    script_url: https://raw.githubusercontent.com/ranzhigg/Script-Hub/feat/loon-v2-cross-platform/Rewrite-Parser.beta.js
+    script_url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/Rewrite-Parser.beta.js
     arguments:
       _compat.$argument: Notify={{{Notify}}}
     timeout: 300
