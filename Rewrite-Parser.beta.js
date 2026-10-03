@@ -72,8 +72,8 @@ noNtf = openMsgHtml ? true : noNtf
 let nName = queryObject.n != undefined ? getArgArr(queryObject.n) : null //名字简介
 let category = queryObject.category ?? null
 let icon = queryObject.icon ?? null
-let Pin0 = queryObject.y != undefined ? getArgArr(queryObject.y) : null //保留
-let Pout0 = queryObject.x != undefined ? getArgArr(queryObject.x) : null //排除
+let Pin0 = queryObject.y != undefined ? getArgArr(queryObject.y).filter(item => item.trim()) : null //保留
+let Pout0 = queryObject.x != undefined ? getArgArr(queryObject.x).filter(item => item.trim()) : null //排除
 let hnAdd = queryObject.hnadd != undefined ? queryObject.hnadd.split(/\s*,\s*/) : null //加
 let hnDel = queryObject.hndel != undefined ? queryObject.hndel.split(/\s*,\s*/) : null //减
 let hnRegDel = queryObject.hnregdel != undefined ? new RegExp(queryObject.hnregdel) : null //正则删除hostname
@@ -325,7 +325,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       let res = await http(reqArr[i], reqHeaders)
       let reStatus = res.status
       body = reStatus == 200 ? res.body : reStatus == 404 ? '#!error=404: Not Found' : ''
-      reStatus == 404 && $.msg(JS_NAME, '来源链接已失效', '404: Not Found ---> ' + reqArr[i], '')
+      reStatus == 404 && noNtf == false && $.msg(JS_NAME, '来源链接已失效', '404: Not Found ---> ' + reqArr[i], '')
 
       if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)) {
         body = body.match(/^(?:\n|\r)*\/\*([\s\S]*?)(?:\r|\n)\s*\*+\//)[1]
@@ -389,16 +389,18 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     let isCommented = /^#/.test(x) && !/^#!/.test(x)
     let excludedByKeyword = false
     //去掉注释
-    if (hasKeyword(Pin0, x) && /^#/.test(x)) {
+    if (hasKeyword(Pin0, x) && /^#/.test(x) && !/^#!/.test(x)) {
       x = x.replace(/^#/, '')
+      isCommented = false
       inBox.push(x)
     }
 
     //增加注释
+    const isArgumentMetadata = /^#!arguments\s*=/.test(x)
     if (
       hasKeyword(Pout0, x) &&
       !/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip)\s*=/.test(x) &&
-      !/^#/.test(x)
+      (!/^#/.test(x) || isArgumentMetadata)
     ) {
       x = '#' + x
       isCommented = excludedByKeyword = true
@@ -606,8 +608,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     // x-filtered Argument declarations are still metadata for a preserved
     // commented Script. Parse the original declaration while del=false;
     // del=true has already blanked x and therefore removes it from sgArg.
-    const argumentSource = excludedByKeyword && !delNoteSc ? x.replace(/^#/, '').trim() : x
-    const argumentNote = excludedByKeyword && !delNoteSc ? '#' : ''
+    const preserveArgumentComment = !delNoteSc && (excludedByKeyword || isCommented)
+    const argumentSource = preserveArgumentComment ? x.replace(/^#/, '').trim() : x
+    const argumentNote = preserveArgumentComment ? '#' : ''
     if (
       /^#!arguments\s*=\s*.+/.test(argumentSource) ||
       /^[^#].+?=\s*(input|select|switch)\s*,/.test(argumentSource)
@@ -2194,7 +2197,7 @@ function isNoteK(x) {
 }
 
 function hasKeyword(list, line) {
-  return list?.some(item => line.includes(item.trim()))
+  return list?.some(item => item.trim() && line.includes(item.trim()))
 }
 
 // Disabled rewrite/script lines are rules in their own right, not comments

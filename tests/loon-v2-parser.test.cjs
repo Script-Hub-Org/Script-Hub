@@ -5,6 +5,7 @@ const vm = require('node:vm')
 const test = require('node:test')
 
 const parser = fs.readFileSync(path.join(__dirname, '..', 'Rewrite-Parser.beta.js'), 'utf8')
+const ruleParser = fs.readFileSync(path.join(__dirname, '..', 'rule-parser.beta.js'), 'utf8')
 
 async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugin', queryParams = {}, runtime = {}) {
   let doneValue
@@ -13,7 +14,8 @@ async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugi
   const extraQuery = Object.entries(queryParams)
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join('&')
-  const requestUrl = `https://script.hub/file/_start_/http://local.text/_end_/?type=${sourceType}&target=${target}&localtext=${encoded}${extraQuery ? `&${extraQuery}` : ''}`
+  const sourceUrl = runtime.sourceUrl || 'http://local.text'
+  const requestUrl = `https://script.hub/file/_start_/${sourceUrl}/_end_/?type=${sourceType}&target=${target}&localtext=${encoded}${extraQuery ? `&${extraQuery}` : ''}`
 
   const context = {
     console,
@@ -58,14 +60,15 @@ async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugi
     $httpClient: {
       get: (options, callback) => {
         const body = Object.prototype.hasOwnProperty.call(httpBodies, options?.url) ? httpBodies[options.url] : ''
-        callback(null, { status: 200, statusCode: 200, headers: {} }, body)
+        const status = runtime.httpStatus || 200
+        callback(null, { status, statusCode: status, headers: {} }, body)
       },
       post: (options, callback) => callback(null, { status: 200, statusCode: 200, headers: {} }, ''),
     },
   }
   context.globalThis = context
 
-  vm.runInNewContext(parser, context, { filename: 'Rewrite-Parser.beta.js' })
+  vm.runInNewContext(runtime.parser || parser, context, { filename: runtime.parser ? 'rule-parser.beta.js' : 'Rewrite-Parser.beta.js' })
   for (let i = 0; i < 100 && !doneValue; i++) await new Promise(resolve => setTimeout(resolve, 5))
   assert.ok(doneValue, `${target} conversion did not finish`)
   const body = doneValue?.response?.body ?? doneValue?.body ?? ''
@@ -225,6 +228,19 @@ test('Notify keeps force-on, force-off, and follow-link modes distinct', async (
 
   const storedOff = await convert(source, 'surge-module', {}, 'loon-plugin', { ...query, noNtf: 'false' }, { store: { ScriptHub通知: '关闭' } })
   assert.equal(storedOff.notifications.length, 0)
+})
+
+test('Rewrite notification modes suppress source 404 notices consistently', async () => {
+  const runtime = { sourceUrl: 'https://example.com/missing.sgmodule', httpStatus: 404 }
+
+  const forcedOff = await convert('', 'surge-module', {}, 'surge-module', { noNtf: 'true' }, { ...runtime, argument: 'Notify=关闭通知' })
+  assert.equal(forcedOff.notifications.length, 0)
+
+  const forcedOn = await convert('', 'surge-module', {}, 'surge-module', { noNtf: 'true' }, { ...runtime, argument: 'Notify=开启通知' })
+  assert.equal(forcedOn.notifications.length, 1)
+
+  const followLink = await convert('', 'surge-module', {}, 'surge-module', {}, { ...runtime, argument: 'Notify=跟随链接' })
+  assert.equal(followLink.notifications.length, 1)
 })
 
 test('del toggles commented Body Rewrite entries consistently', async () => {
@@ -415,6 +431,74 @@ test('an explicitly excluded Argument stays commented when its Script is active'
   const deleted = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'manual-only', del: 'true' })
   assert.doesNotMatch(deleted.body, /shared=input/)
   assert.match(deleted.body, /request if .*kept\.js/)
+})
+
+test('argument filtering preserves legacy and pre-commented declarations', async () => {
+  const source = [
+    '#!name=argument declaration variants',
+    '#!arguments=legacy:manual-only',
+    '[Argument]',
+    '#pre=input,old,tag=pre-commented, desc=pre-commented',
+    '[Script]',
+    'legacy = type=http-request, pattern=legacy.example, script-path=https://example.com/legacy.js, argument=legacy={{{legacy}}}',
+    'pre = type=http-request, pattern=pre.example, script-path=https://example.com/pre.js, argument=pre={{{pre}}}',
+  ].join('\n')
+
+  const { body } = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'manual-only' })
+  assert.match(body, /\n#legacy=input,"manual-only"/)
+  assert.match(body, /\n#pre=input,"old"/)
+  assert.match(body, /request if .*legacy\.js/)
+  assert.match(body, /request if .*pre\.js/)
+})
+
+test('keep selectors restore pre-commented arguments without corrupting metadata', async () => {
+  const source = [
+    '#!name=argument keep selector',
+    '#!arguments=legacy:keep-me',
+    '[Argument]',
+    '#pre=input,old,tag=keep-me, desc=keep-me',
+    '[Script]',
+    'legacy = type=http-request, pattern=legacy.example, script-path=https://example.com/legacy.js, argument=legacy={{{legacy}}}',
+    'kept = type=http-request, pattern=kept.example, script-path=https://example.com/kept.js, argument=pre={{{pre}}}',
+  ].join('\n')
+
+  const { body } = await convert(source, 'loon-plugin', {}, 'loon-plugin', { y: 'keep-me' })
+  assert.match(body, /(^|\n)legacy=input,"keep-me"/)
+  assert.match(body, /(^|\n)pre=input,"old"/)
+  assert.doesNotMatch(body, /(^|\n)#pre=input,"old"/)
+  assert.match(body, /request if .*kept\.js/)
+  assert.doesNotMatch(body, /(^|\n)#request if .*kept\.js/)
+})
+
+test('empty keyword selectors do not filter every line', async () => {
+  const source = ['#!name=empty selector', '[Rule]', 'DOMAIN,example.com,DIRECT'].join('\n')
+
+  const { body } = await convert(source, 'surge-module', {}, 'surge-module', { x: '', y: '' })
+  assert.match(body, /DOMAIN,example\.com,DIRECT/)
+  assert.doesNotMatch(body, /#DOMAIN,example\.com,DIRECT/)
+})
+
+test('rule-set empty keyword selectors do not filter every rule', async () => {
+  const source = 'example.com\napi.example.com'
+
+  const { body } = await convert(source, 'surge-rule-set', {}, 'rule-set', { x: '', y: '' }, { parser: ruleParser })
+  assert.match(body, /DOMAIN,example\.com/)
+  assert.match(body, /DOMAIN,api\.example\.com/)
+  assert.doesNotMatch(body, /;#DOMAIN,example\.com/)
+  assert.doesNotMatch(body, /;#DOMAIN,api\.example\.com/)
+})
+
+test('rule-set notification modes suppress source 404 notices consistently', async () => {
+  const runtime = { parser: ruleParser, sourceUrl: 'https://example.com/missing.list', httpStatus: 404 }
+
+  const forcedOff = await convert('', 'surge-rule-set', {}, 'rule-set', { noNtf: 'true' }, { ...runtime, argument: 'Notify=关闭通知' })
+  assert.equal(forcedOff.notifications.length, 0)
+
+  const forcedOn = await convert('', 'surge-rule-set', {}, 'rule-set', { noNtf: 'true' }, { ...runtime, argument: 'Notify=开启通知' })
+  assert.equal(forcedOn.notifications.length, 1)
+
+  const followLink = await convert('', 'surge-rule-set', {}, 'rule-set', {}, { ...runtime, argument: 'Notify=跟随链接' })
+  assert.equal(followLink.notifications.length, 1)
 })
 
 test('Loon v2 cron preserves dynamic cron and timeout parameters', async () => {

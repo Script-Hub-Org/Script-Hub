@@ -77,8 +77,8 @@ if (queryObject.target == 'rule-set') {
   isShadowrocket = isRockettarget
 }
 
-let Rin0 = queryObject.y != undefined ? getArgArr(queryObject.y) : null
-let Rout0 = queryObject.x != undefined ? getArgArr(queryObject.x) : null
+let Rin0 = queryObject.y != undefined ? getArgArr(queryObject.y).filter(item => item.trim()) : null
+let Rout0 = queryObject.x != undefined ? getArgArr(queryObject.x).filter(item => item.trim()) : null
 let ipNoResolve = istrue(queryObject.nore)
 let sni = queryObject.sni != undefined ? getArgArr(queryObject.sni) : null
 
