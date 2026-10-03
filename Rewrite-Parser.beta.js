@@ -2116,7 +2116,10 @@ ${providers}
       body = body.replaceAll(e, r)
     } //for
     for (const key of surgeTemplateKeys) {
-      body = body.replaceAll('{' + key + '}', '{{{' + key + '}}}')
+      // Only wrap a standalone single-brace token. A triple-brace token
+      // already contains the same `{key}` substring and must not be wrapped twice.
+      const token = new RegExp(`(?<!\\{)\\{${escapeRegExp(key)}\\}(?!\\})`, 'g')
+      body = body.replace(token, '{{{' + key + '}}}')
     }
   } else if (isLooniOS) {
     body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')

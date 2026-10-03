@@ -404,6 +404,23 @@ test('Loon argument options are preserved in Surge arguments-desc', async () => 
   assert.match(body, /captionLang: 字幕语言\\n字幕语言\\n可选值: zh-Hans, zh-Hant/)
 })
 
+test('Beta does not double-wrap declared Surge template arguments', async () => {
+  const source = [
+    '#!name=哔哩哔哩增强',
+    '#!arguments=空降助手策略:DIRECT',
+    '[Rule]',
+    'DOMAIN,bsbsb.top,{{{空降助手策略}}}',
+    'DOMAIN,undeclared.example,{{{undeclared}}}',
+  ].join('\n')
+
+  for (const target of ['surge-module', 'shadowrocket-module']) {
+    const { body } = await convert(source, target, {}, 'surge-module')
+    assert.match(body, /DOMAIN,bsbsb\.top,\{\{\{空降助手策略\}\}\}/)
+    assert.match(body, /DOMAIN,undeclared\.example,\{\{\{undeclared\}\}\}/)
+    assert.doesNotMatch(body, /\{\{\{\{\{/)
+  }
+})
+
 test('Loon v2 network-changed maps to a Surge event script', async () => {
   const { body } = await convert(
     'network-changed then script("https://example.com/network.js") with tag="Network"',
