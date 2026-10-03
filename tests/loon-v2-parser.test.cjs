@@ -6,7 +6,7 @@ const test = require('node:test')
 
 const parser = fs.readFileSync(path.join(__dirname, '..', 'Rewrite-Parser.beta.js'), 'utf8')
 
-async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugin', queryParams = {}) {
+async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugin', queryParams = {}, runtime = {}) {
   let doneValue
   const notifications = []
   const encoded = encodeURIComponent(source)
@@ -46,10 +46,10 @@ async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugi
     $done: value => {
       doneValue = value
     },
-    $argument: '',
+    $argument: runtime.argument || '',
     $environment: { 'surge-version': 'test' },
     $persistentStore: {
-      read: () => null,
+      read: key => runtime.store?.[key] ?? null,
       write: () => true,
     },
     $notification: {
@@ -198,6 +198,30 @@ test('x-filtered Rewrite and Script entries remain commented in Loon preview unt
   const removed = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: '0.6.0', del: 'true' })
   assert.doesNotMatch(removed.body, /v0\.6\.0\/disabled/)
   assert.match(JSON.stringify(removed.notifications), /已根据关键词排除以下内容/)
+})
+
+test('Notify keeps force-on, force-off, and follow-link modes distinct', async () => {
+  const source = [
+    '#!name=notify mode',
+    '[Rewrite]',
+    'response if \${url} ~= /v0.6.0/ then response.body.mock("text", "https://example.com/v0.6.0")',
+  ].join('\n')
+  const query = { x: 'v0.6.0', noNtf: 'true' }
+
+  const forcedOn = await convert(source, 'surge-module', {}, 'loon-plugin', query, { argument: 'Notify=开启' })
+  assert.equal(forcedOn.notifications.length, 1)
+
+  const forcedOff = await convert(source, 'surge-module', {}, 'loon-plugin', { ...query, noNtf: 'false' }, { argument: 'Notify=关闭通知' })
+  assert.equal(forcedOff.notifications.length, 0)
+
+  const followLink = await convert(source, 'surge-module', {}, 'loon-plugin', query, { argument: 'Notify=跟随链接' })
+  assert.equal(followLink.notifications.length, 0)
+
+  const followLinkOn = await convert(source, 'surge-module', {}, 'loon-plugin', { ...query, noNtf: 'false' }, { argument: 'Notify=跟随链接' })
+  assert.equal(followLinkOn.notifications.length, 1)
+
+  const storedOff = await convert(source, 'surge-module', {}, 'loon-plugin', { ...query, noNtf: 'false' }, { store: { ScriptHub通知: '关闭' } })
+  assert.equal(storedOff.notifications.length, 0)
 })
 
 test('del toggles commented Body Rewrite entries consistently', async () => {
