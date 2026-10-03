@@ -607,11 +607,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     // commented Script. Parse the original declaration while del=false;
     // del=true has already blanked x and therefore removes it from sgArg.
     const argumentSource = excludedByKeyword && !delNoteSc ? x.replace(/^#/, '').trim() : x
+    const argumentNote = excludedByKeyword && !delNoteSc ? '#' : ''
     if (
       /^#!arguments\s*=\s*.+/.test(argumentSource) ||
       /^[^#].+?=\s*(input|select|switch)\s*,/.test(argumentSource)
     ) {
-      parseArguments(argumentSource)
+      parseArguments(argumentSource, argumentNote)
     }
 
     //hostname
@@ -1262,7 +1263,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       let type = isRuleToggle ? 'switch' : loonSgArg[i].type
       let value = formatLoonArgumentValue(loonSgArg[i], type, isRuleToggle)
       let tag = loonSgArg[i].tag
-      loonArg.push(key + '=' + type + ',' + value + ',' + tag)
+      loonArg.push((loonSgArg[i].noteK ? '#' : '') + key + '=' + type + ',' + value + ',' + tag)
     }
   }
 
@@ -2116,7 +2117,10 @@ ${providers}
       body = body.replaceAll(e, r)
     } //for
     for (const key of surgeTemplateKeys) {
-      body = body.replaceAll('{' + key + '}', '{{{' + key + '}}}')
+      // Only wrap a standalone single-brace token. A triple-brace token
+      // already contains the same `{key}` substring and must not be wrapped twice.
+      const token = new RegExp(`(?<!\\{)\\{${escapeRegExp(key)}\\}(?!\\})`, 'g')
+      body = body.replace(token, '{{{' + key + '}}}')
     }
   } else if (isLooniOS) {
     body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
@@ -3536,33 +3540,49 @@ function getArgumentDefaultValue(item) {
   return stripWrapQuote(splitTopLevel(value, ',')[0] || value).trim()
 }
 
-function collectUsedArgumentKeys(jsBox, hnBox = [], nativeLines = []) {
-  const keys = new Set()
-  for (let i = 0; i < jsBox.length; i++) {
-    ;['jsarg', 'jsenable', 'cronexp'].forEach(field => {
-      getTemplateKeys(jsBox[i][field] || '').forEach(key => keys.add(key))
+function collectArgumentUsage(jsBox, hnBox = [], nativeLines = []) {
+  const usage = { all: new Set(), active: new Set(), commented: new Set() }
+  const collect = (value, isCommented) => {
+    getTemplateKeys(value || '').forEach(key => {
+      usage.all.add(key)
+      usage[isCommented ? 'commented' : 'active'].add(key)
     })
+  }
+  for (let i = 0; i < jsBox.length; i++) {
+    const isCommented = jsBox[i].noteK == '#'
+    ;['jsarg', 'jsenable', 'cronexp'].forEach(field => collect(jsBox[i][field], isCommented))
   }
   for (let i = 0; i < hnBox.length; i++) {
     const key = getHnToggleKey(hnBox[i])
-    key && keys.add(key)
+    if (key) usage.all.add(key), usage.active.add(key)
   }
   for (let i = 0; i < nativeLines.length; i++) {
-    getTemplateKeys(nativeLines[i].line || '').forEach(key => keys.add(key))
+    const line = nativeLines[i].line || ''
+    collect(line, /^#/.test(line))
   }
-  return keys
+  return usage
 }
 
 function filterLoonArguments(args, jsBox, hnBox = [], nativeLines = []) {
-  const usedKeys = collectUsedArgumentKeys(jsBox, hnBox, nativeLines)
-  return args.filter(item => {
-    const sourceKey = item.key
-    const targetKey = argumentKeyRenameMap.get(sourceKey) || sourceKey
-    const defaultValue = getArgumentDefaultValue(item)
-    if (!usedKeys.has(sourceKey) && !usedKeys.has(targetKey)) return false
-    if (defaultValue === '--' && sourceKey === targetKey) return false
-    return true
-  })
+  const usage = collectArgumentUsage(jsBox, hnBox, nativeLines)
+  return args
+    .filter(item => {
+      const sourceKey = item.key
+      const targetKey = argumentKeyRenameMap.get(sourceKey) || sourceKey
+      const defaultValue = getArgumentDefaultValue(item)
+      if (!usage.all.has(sourceKey) && !usage.all.has(targetKey)) return false
+      if (defaultValue === '--' && sourceKey === targetKey) return false
+      return true
+    })
+    .map(item => {
+      const sourceKey = item.key
+      const targetKey = argumentKeyRenameMap.get(sourceKey) || sourceKey
+      const keys = [sourceKey, targetKey]
+      const active = keys.some(key => usage.active.has(key))
+      const commented = keys.some(key => usage.commented.has(key))
+      const noteK = active ? '' : item.noteK == '#' || commented ? '#' : ''
+      return { ...item, noteK }
+    })
 }
 
 function getLoonArgumentKeys(str) {
@@ -4805,7 +4825,7 @@ function getPolicy(str) {
   }
 }
 
-function parseArguments(str) {
+function parseArguments(str, noteK = '') {
   if (/#!arguments/.test(str)) {
     const queryString = str.split(/#!arguments\s*=\s*/)[1] //获取查询字符串部分
     const items = splitTopLevel(queryString, ',')
@@ -4818,7 +4838,7 @@ function parseArguments(str) {
       const type = /^(true|false)$/i.test(stripWrapQuote(value)) ? 'switch' : 'input'
       const tag = `tag=${key}, desc=${key}`
 
-      sgArg.push({ key, value, type, tag }) //将键值对添加到对象中
+      sgArg.push({ key, value, type, tag, noteK }) //将键值对添加到对象中
 
       if (stripWrapQuote(value) == 'hostname') {
         hn2 = true
@@ -4840,7 +4860,7 @@ function parseArguments(str) {
     const options = normalizeArgumentOptions(valueParts)
     const tag = tagParts.join(', ') || `tag=${key}, desc=${key}`
 
-    sgArg.push({ key, value, type, options, tag })
+    sgArg.push({ key, value, type, options, tag, noteK })
 
     if (stripWrapQuote(value) == 'hostname') {
       hn2 = true
