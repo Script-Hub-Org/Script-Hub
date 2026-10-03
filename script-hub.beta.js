@@ -1635,7 +1635,8 @@ const htmls = `
       previewResult: function () {
         try {
           const array = this.result.split('/_end_/')
-          return array[0] + '/_end_/' + array[1].replace('?', '.txt?')
+          const preview = array[0] + '/_end_/' + array[1].replace('?', '.txt?')
+          return preview + (preview.includes('?') ? '&' : '?') + 'noNtf=true'
         } catch (e) {
           return ''
         }
