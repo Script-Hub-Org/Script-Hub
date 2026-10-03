@@ -344,17 +344,24 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   if (bodyRewrite) {
     for await (let [y, x] of bodyRewrite.match(/[^\r\n]+/g).entries()) {
-      const normalized = x
+      let line = x
         .trim()
         .replace(/^(#|;|\/\/)\s*/, '#')
-      const noteK = /^#/.test(normalized) && !/^#!/.test(normalized) ? '#' : ''
+      let noteK = /^#/.test(line) && !/^#!/.test(line) ? '#' : ''
 
-      // Keep the same del=true semantics as [Rewrite]/[Script]. Previously
-      // Body Rewrite comments were always discarded before the option could
-      // take effect, so toggling the option produced identical output.
+      if (noteK && hasKeyword(Pin0, line)) {
+        line = line.replace(/^#/, '').trim()
+        noteK = ''
+      }
+      if (!noteK && hasKeyword(Pout0, line)) {
+        line = '#' + line
+        noteK = '#'
+        outBox.push(line)
+      }
+
       if (delNoteSc && noteK) continue
 
-      const line = noteK ? normalized.slice(1).trim() : normalized
+      line = noteK ? line.slice(1).trim() : line
       const match = line.match(/^((?:http-request|http-response)(?:-jq)?)\s+?(.*?)\s+?(.*?)$/)
       if (!match) continue
       const [, type, regex, value] = match
@@ -378,37 +385,27 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     if (!/^(#|\/\/|;)/.test(x)) {
       x = stripLoonV2InlineComment(x)
     }
-    const isCommented = /^#/.test(x) && !/^#!/.test(x)
+    let isCommented = /^#/.test(x) && !/^#!/.test(x)
+    let excludedByKeyword = false
     //去掉注释
-    if (Pin0 != null) {
-      for (let i = 0; i < Pin0.length; i++) {
-        const elem = Pin0[i].trim()
-        if (x.indexOf(elem) != -1 && /^#/.test(x)) {
-          x = x.replace(/^#/, '')
-          inBox.push(x)
-          break
-        }
-      } //循环结束
-    } //去掉注释结束
+    if (hasKeyword(Pin0, x) && /^#/.test(x)) {
+      x = x.replace(/^#/, '')
+      inBox.push(x)
+    }
 
     //增加注释
-    if (Pout0 != null) {
-      for (let i = 0; i < Pout0.length; i++) {
-        const elem = Pout0[i].trim()
-        if (
-          x.indexOf(elem) != -1 &&
-          !/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip)\s*=/.test(x) &&
-          !/^#/.test(x)
-        ) {
-          x = '#' + x
-          outBox.push(x)
-          break
-        }
-      } //循环结束
-    } //增加注释结束
+    if (
+      hasKeyword(Pout0, x) &&
+      !/^(hostname|force-http-engine-hosts|skip-proxy|always-real-ip|real-ip)\s*=/.test(x) &&
+      !/^#/.test(x)
+    ) {
+      x = '#' + x
+      isCommented = excludedByKeyword = true
+      outBox.push(x)
+    }
 
     //剔除被注释的重写
-    if (delNoteSc == true && isCommented) {
+    if (delNoteSc && isCommented) {
       x = ''
     }
 
@@ -897,10 +894,12 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       })
     } //Panel信息解析结束
 
-    //脚本解析
-    if (/script-path\s*=.+/.test(x)) {
+    //脚本解析。x 过滤生成的注释在 del=false 时仍要出现在预览结果中。
+    const scriptSource = excludedByKeyword && !delNoteSc ? x.replace(/^#/, '').trim() : x
+    if (/script-path\s*=.+/.test(scriptSource)) {
+      x = scriptSource
       mark = getMark(y, body)
-      noteK = isNoteK(x)
+      noteK = excludedByKeyword ? '#' : isNoteK(x)
       jsurl = getJsInfo(x, /script-path\s*=\s*/)
       jsname = leadingTemplateIsNameOnly
         ? leadingTemplate.key
@@ -966,7 +965,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         } //for
       }
       // 注释不加
-      if (!/^(#|;|\/\/)\s*/.test(x)) {
+      if (excludedByKeyword || !/^(#|;|\/\/)\s*/.test(x)) {
         jsBox.push({
           mark,
           noteK,
@@ -995,6 +994,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           num: y,
         })
       }
+      excludedByKeyword && (x = '#' + x)
     } //脚本解析结束
 
     //qx脚本解析
@@ -2179,6 +2179,10 @@ ${providers}
 //判断是否被注释
 function isNoteK(x) {
   return /^#/.test(x) ? '#' : ''
+}
+
+function hasKeyword(list, line) {
+  return list?.some(item => line.includes(item.trim()))
 }
 
 // Disabled rewrite/script lines are rules in their own right, not comments
