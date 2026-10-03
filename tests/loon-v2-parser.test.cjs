@@ -6,11 +6,14 @@ const test = require('node:test')
 
 const parser = fs.readFileSync(path.join(__dirname, '..', 'Rewrite-Parser.beta.js'), 'utf8')
 
-async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugin') {
+async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugin', queryParams = {}) {
   let doneValue
   const notifications = []
   const encoded = encodeURIComponent(source)
-  const requestUrl = `https://script.hub/file/_start_/http://local.text/_end_/?type=${sourceType}&target=${target}&localtext=${encoded}`
+  const extraQuery = Object.entries(queryParams)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&')
+  const requestUrl = `https://script.hub/file/_start_/http://local.text/_end_/?type=${sourceType}&target=${target}&localtext=${encoded}${extraQuery ? `&${extraQuery}` : ''}`
 
   const context = {
     console,
@@ -84,6 +87,99 @@ function sectionLines(body, sectionName) {
     .map(line => line.trim())
     .filter(line => line && !line.startsWith('#'))
 }
+
+test('legacy Surge Script converts to native Loon v2 Script syntax', async () => {
+  const { body, notifications } = await convert(
+    [
+      '#!name=Legacy script',
+      '#!arguments=region:CN,enabled:true',
+      '[Script]',
+      'api = type=http-request, pattern=^https?:\\/\\/example\\.com\\/api, script-path=https://example.com/a.js, timeout=15, requires-body=true, argument=region={{{region}}}, enabled={{{enabled}}}',
+    ].join('\n'),
+    'loon-plugin',
+    {},
+    'surge-module'
+  )
+  const scripts = sectionLines(body, 'Script')
+  assert.equal(scripts.length, 1)
+  assert.match(scripts[0], /^request if /)
+  assert.ok(body.includes('script("https://example.com/a.js"'))
+  assert.ok(body.includes('{$' + '{region}}'))
+  assert.ok(body.includes('with tag="api", timeout=15, enable=$' + '{enabled}, requires_body=true'))
+  assert.ok(!body.includes('script-path=https://example.com/a.js'))
+  assert.doesNotMatch(JSON.stringify(notifications), /Loon v2.*失败|无法转换/)
+})
+
+test('legacy QX body Script converts to a native Loon v2 response Script', async () => {
+  const { body } = await convert(
+    '^https?:\\/\\/example\\.com\\/api url script-response-body https://example.com/response.js',
+    'loon-plugin',
+    {},
+    'qx-rewrite'
+  )
+  assert.ok(body.includes('response if $' + '{url} ~= /^https?:\\/\\/example\\.com\\/api/i'))
+  assert.ok(body.includes('script("https://example.com/response.js")'))
+  assert.ok(!body.includes('script-path=https://example.com/response.js'))
+})
+
+test('native Loon v2 Script accepts name, timeout, and argument edits', async () => {
+  const source = [
+    '#!arguments=region:CN,enabled:true,unused:drop',
+    'request if ${url} ~= /\\/api/ then script("https://example.com/a.js", {${region}}) with tag="api", timeout=10, enable=${enabled}',
+  ].join('\n')
+  const { body } = await convert(
+    source,
+    'loon-plugin',
+    {},
+    'loon-plugin',
+    { njsnametarget: 'api', njsname: 'renamed', timeoutt: 'api', timeoutv: '25', arg: 'api', argv: '"region=US"' }
+  )
+  assert.ok(body.includes('script("https://example.com/a.js", "region=US")'))
+  assert.ok(body.includes('tag="renamed", timeout=25, enable=$' + '{enabled}'))
+  assert.match(body, /\[Argument\][\s\S]*enabled=switch/)
+  assert.doesNotMatch(body, /region=input/)
+  assert.doesNotMatch(body, /unused=/)
+
+  const preserved = await convert(source, 'loon-plugin', {}, 'loon-plugin', {
+    njsnametarget: 'api',
+    njsname: 'renamed',
+  })
+  assert.match(preserved.body, /\[Argument\][\s\S]*region=input/)
+  assert.match(preserved.body, /\[Argument\][\s\S]*enabled=switch/)
+  assert.doesNotMatch(preserved.body, /unused=/)
+})
+
+test('del=true removes commented Rewrite entries without reattaching them as marks', async () => {
+  const source = [
+    '#!name=delete commented rewrite',
+    '[Rewrite]',
+    '#https://example.com/disabled url reject',
+    'https://example.com/enabled url reject',
+  ].join('\n')
+  const preserved = await convert(source, 'surge-module', {}, 'surge-module')
+  assert.match(preserved.body, /example\.com\/disabled/)
+
+  const { body } = await convert(source, 'surge-module', {}, 'surge-module', { del: 'true' })
+  assert.doesNotMatch(body, /example\.com\/disabled/)
+  assert.match(body, /example\.com\/enabled - reject/)
+})
+
+test('del=true removes commented Script entries without reattaching them as marks', async () => {
+  const { body } = await convert(
+    [
+      '#!name=delete commented script',
+      '[Script]',
+      '#disabled = type=http-request, pattern=disabled.example, script-path=https://example.com/disabled.js',
+      'enabled = type=http-request, pattern=enabled.example, script-path=https://example.com/enabled.js',
+    ].join('\n'),
+    'loon-plugin',
+    {},
+    'surge-module',
+    { del: 'true' }
+  )
+  assert.doesNotMatch(body, /disabled\.js|disabled\.example/)
+  assert.match(body, /enabled\.js/)
+})
 
 test('Loon v2 response maps to Surge without guessing body buffering', async () => {
   const { body } = await convert(
@@ -273,6 +369,47 @@ test('Loon v2 native Rewrite is preserved in the Loon target section', async () 
   assert.doesNotMatch(body, /\[Script\][\s\S]*response if \$\{url\}/)
 })
 
+test('legacy URL rewrites upgrade to native Loon v2 actions', async () => {
+  const { body, notifications } = await convert(
+    [
+      '^https?:\\/\\/example\\.com\\/blocked url reject',
+      '^https?:\\/\\/example\\.com\\/dict url - reject-dict',
+      '^https?:\\/\\/example\\.com\\/redirect url 302 https://example.com/new',
+      '^https?:\\/\\/example\\.com\\/replace url header https://example.com/rewritten',
+    ].join('\n'),
+    'loon-plugin',
+    {},
+    'qx-rewrite'
+  )
+  const rewrites = sectionLines(body, 'Rewrite')
+  assert.ok(rewrites.some(line => line.includes('reject(200)')))
+  assert.ok(rewrites.some(line => line.includes('reject_dict(200)')))
+  assert.ok(rewrites.some(line => line.includes('redirect(302, "https://example.com/new")')))
+  assert.ok(rewrites.some(line => line.includes('url.replace("https://example.com/rewritten")')))
+  assert.doesNotMatch(body, /url reject(?:-|$)|url https:\/\/example\.com\/new 302/)
+  assert.doesNotMatch(JSON.stringify(notifications), /无法转换|不支持以下内容/)
+})
+
+test('legacy Loon body, header, and mock rewrites upgrade to native v2 actions', async () => {
+  const { body, notifications } = await convert(
+    [
+      '^https?:\\/\\/example\\.com\\/body request-body-replace-regex "old" "new"',
+      '^https?:\\/\\/example\\.com\\/header response-header-add X-Test yes',
+      '^https?:\\/\\/example\\.com\\/mock mock-response-body data-type=json data="{}" status-code=201',
+    ].join('\n'),
+    'loon-plugin',
+    {},
+    'loon-plugin',
+    { jqEnabled: 'true' }
+  )
+  const rewrites = sectionLines(body, 'Rewrite')
+  assert.ok(rewrites.some(line => line.includes('request.body.replace(/old/, "new")')))
+  assert.ok(rewrites.some(line => line.includes('response.header.add("X-Test", "yes")')))
+  assert.ok(rewrites.some(line => line.includes('response.body.mock("json", "{}", 201)')))
+  assert.doesNotMatch(body, /request-body-replace-regex|response-header-add|mock-response-body/)
+  assert.doesNotMatch(JSON.stringify(notifications), /无法转换|不支持以下内容/)
+})
+
 test('Loon v2 header.replace and body.replace support regex literals and batches', async () => {
   const { body, notifications } = await convert(
     'response if ${url} ~= /\\/api\\// then response.header.replace(["X-A", "X-B"], [/old/i, /disabled/], ["new", "enabled"]) | response.body.replace([/false/, /disabled/], ["true", "enabled"])',
@@ -316,15 +453,15 @@ test('Loon v2 request body mock converts inline text and diagnoses unsupported r
   assert.match(JSON.stringify(notifications), /request\.body\.mock_file.*资源文件无法直接转换/)
 })
 
-test('QX echo-response keeps its content type when converted to a Loon plugin', async () => {
+test('QX echo-response upgrades to a native Loon v2 response mock', async () => {
   const { body } = await convert(
     '^https?:\\/\\/example\\.com\\/script url echo-response text/json echo-response https://example.com/mock.js',
     'loon-plugin',
     {},
     'qx-rewrite'
   )
-  assert.match(body, /mock-response-body data-type=json data-path="https:\/\/example\.com\/mock\.js"/)
-  assert.doesNotMatch(body, /data-type=file/)
+  assert.match(body, /response\.body\.mock_file\("json", "https:\/\/example\.com\/mock\.js", 200\)/)
+  assert.doesNotMatch(body, /mock-response-body|data-type=file/)
 })
 
 test('Loon mock data and data-path values are always quoted', async () => {
@@ -336,10 +473,10 @@ test('Loon mock data and data-path values are always quoted', async () => {
     ].join('\n'),
     'loon-plugin'
   )
-  assert.match(body, /data-type=json data-path="https:\/\/example\.com\/data\.json"/)
-  assert.match(body, /data-type=text data="hello"/)
-  assert.match(body, /data-type=text data=""/)
-  assert.doesNotMatch(body, /data-path=https:\/\/example\.com\/data\.json/)
+  assert.match(body, /response\.body\.mock_file\("json", "https:\/\/example\.com\/data\.json", 200\)/)
+  assert.match(body, /response\.body\.mock\("text", "hello", 200\)/)
+  assert.match(body, /response\.body\.mock\("text", "", 200\)/)
+  assert.doesNotMatch(body, /mock-response-body|data-path=https:\/\/example\.com\/data\.json/)
 })
 
 test('Beta keeps Loon-supported AND rules instead of filtering them as policies', async () => {
