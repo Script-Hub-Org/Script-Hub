@@ -60,8 +60,9 @@ const scEvUrlmodi = queryObject.evUrlmodi
 
 let noNtf = queryObject.noNtf ? istrue(queryObject.noNtf) : false //默认开启通知
 
-let localsetNtf = $.lodash_get(arg, 'Notify') || $.getval('ScriptHub通知') || ''
-noNtf = localsetNtf == '开启通知' ? false : localsetNtf == '关闭通知' ? true : noNtf
+const localsetNtf = ($.lodash_get(arg, 'Notify') || $.getval('ScriptHub通知') || '').trim()
+if (/^开启(?:通知)?$/.test(localsetNtf)) noNtf = false
+else if (/^关闭(?:通知)?$/.test(localsetNtf)) noNtf = true
 
 let jqEnabled = istrue(queryObject.jqEnabled)
 let openMsgHtml = istrue(queryObject.openMsgHtml)
