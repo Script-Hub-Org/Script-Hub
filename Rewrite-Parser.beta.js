@@ -344,9 +344,21 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
   if (bodyRewrite) {
     for await (let [y, x] of bodyRewrite.match(/[^\r\n]+/g).entries()) {
-      if (/^(#|;|\/\/)\s*/.test(x)) continue
-      const [_, type, regex, value] = x.match(/^((?:http-request|http-response)(?:-jq)?)\s+?(.*?)\s+?(.*?)$/)
-      rwbodyBox.push({ type, regex, value })
+      const normalized = x
+        .trim()
+        .replace(/^(#|;|\/\/)\s*/, '#')
+      const noteK = /^#/.test(normalized) && !/^#!/.test(normalized) ? '#' : ''
+
+      // Keep the same del=true semantics as [Rewrite]/[Script]. Previously
+      // Body Rewrite comments were always discarded before the option could
+      // take effect, so toggling the option produced identical output.
+      if (delNoteSc && noteK) continue
+
+      const line = noteK ? normalized.slice(1).trim() : normalized
+      const match = line.match(/^((?:http-request|http-response)(?:-jq)?)\s+?(.*?)\s+?(.*?)$/)
+      if (!match) continue
+      const [, type, regex, value] = match
+      rwbodyBox.push({ type, regex, value, noteK })
     }
   }
 
@@ -366,6 +378,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     if (!/^(#|\/\/|;)/.test(x)) {
       x = stripLoonV2InlineComment(x)
     }
+    const isCommented = /^#/.test(x) && !/^#!/.test(x)
     //去掉注释
     if (Pin0 != null) {
       for (let i = 0; i < Pin0.length; i++) {
@@ -395,25 +408,27 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     } //增加注释结束
 
     //剔除被注释的重写
-    if (delNoteSc == true && /^#/.test(x) && !/^#!/.test(x)) {
+    if (delNoteSc == true && isCommented) {
       x = ''
     }
 
     // Loon 3.5.1+ 的 Script v2 在转换到其他应用时归一化为内部旧脚本格式，复用现有跨平台输出器。
     // 目标仍为 Loon 时直接保留原生 v2 行，避免丢失 method/status/header 等 Loon 专属组合条件。
     if (fromType === 'loon-plugin' || fromType === 'all-module') {
-      const loonV2Candidate = /^(request|response|cron|network-changed|generic)\b[\s\S]*\bthen\s+script\s*\(/i.test(x)
+      const loonV2Source = isCommented && !delNoteSc ? x.replace(/^#/, '').trim() : x
+      const loonV2Candidate = /^(request|response|cron|network-changed|generic)\b[\s\S]*\bthen\s+script\s*\(/i.test(loonV2Source)
       if (loonV2Candidate && isLooniOS) {
-        loonV2NativeLines.push({ line: applyLoonV2ScriptEdits(x), num: y })
+        const line = applyLoonV2ScriptEdits(loonV2Source)
+        loonV2NativeLines.push({ line: isCommented ? `#${line}` : line, num: y })
         continue
       }
-      const loonV2 = normalizeLoonV2ScriptLine(x, targetApp)
+      const loonV2 = normalizeLoonV2ScriptLine(loonV2Source, targetApp)
       if (loonV2Candidate && loonV2?.unsupported) {
-        otherRule.push(`${_x} [Loon v2: ${loonV2.reason}]`)
+        if (!isCommented) otherRule.push(`${_x} [Loon v2: ${loonV2.reason}]`)
         continue
       }
       if (loonV2?.line) {
-        x = loonV2.line
+        x = isCommented ? `#${loonV2.line}` : loonV2.line
         loonV2NormalizedLines.add(x)
         if (loonV2.warnings?.length > 0) {
           loonV2Warnings.push(`${_x} → ${loonV2.warnings.join('；')}`)
@@ -422,13 +437,22 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       // Loon 3.5.1+ 原生 Rewrite Action。旧解析器只认识 legacy rewrite 行，
       // 如果这里不提前消费，request/response.json.* 会被静默丢弃。
-      const loonV2Rewrite = await normalizeLoonV2RewriteLine(x, targetApp, y)
+      // A v2 `then script(...)` line is first normalized to legacy script
+      // syntax above; only native Rewrite Action lines should reach the
+      // Rewrite Action parser in their original form.
+      const loonV2RewriteSource = loonV2?.line ? x : loonV2Source
+      const loonV2Rewrite = await normalizeLoonV2RewriteLine(
+        loonV2RewriteSource,
+        targetApp,
+        y,
+        isCommented ? '#' : undefined
+      )
       if (loonV2Rewrite?.native) {
-        URLRewrite.push(x)
+        URLRewrite.push(isCommented ? `#${loonV2Source}` : x)
         continue
       }
       if (loonV2Rewrite?.unsupported) {
-        otherRule.push(`${_x} [Loon v2: ${loonV2Rewrite.reason}]`)
+        if (!isCommented) otherRule.push(`${_x} [Loon v2: ${loonV2Rewrite.reason}]`)
         continue
       }
       if (loonV2Rewrite?.handled) {
@@ -1413,9 +1437,13 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   } //reject redirect输出for
 
   for (let i = 0; i < rwbodyBox.length; i++) {
-    const { type, regex, value } = rwbodyBox[i]
+    const { type, regex, value, mark = '', noteK = '' } = rwbodyBox[i]
+    // Native Loon v2 rewrites carry their comment marker through `mark`.
+    // Legacy [Body Rewrite] entries use `noteK`; both must remain disabled
+    // when the caller keeps commented rules instead of deleting them.
+    const comment = `${mark}${noteK ? '#' : ''}`
     if (isSurgeiOS || isShadowrocket) {
-      BodyRewrite.push(`${type} ${regex} ${value}`)
+      BodyRewrite.push(`${comment}${type} ${regex} ${value}`)
     } else if (isLooniOS) {
       let type2
       switch (type) {
@@ -1432,7 +1460,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           type2 = 'response-body-json-jq'
           break
       }
-      URLRewrite.push(`${regex} ${type2} ${value}`)
+      URLRewrite.push(`${comment}${regex} ${type2} ${value}`)
     }
   }
 
@@ -1456,7 +1484,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         URLRewrite.push(mark + noteK + x)
         break
 
-      case 'stash-stoverride':
+      case 'stash-stoverride': {
+        const disabledByMark = mark === '#'
+        const stashMark = disabledByMark ? '' : mark
+        if (disabledByMark) noteK = '#'
         if (noteK != '#') {
           noteKn8 = '\n        '
           noteKn6 = '\n      '
@@ -1472,8 +1503,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         }
         let hdtype = isResponseHeaderRewrite ? ' response-' : ' request-'
         x = x.replace(/^http-(?:request|response)\s+/, '').replace(/\s+header-/, hdtype)
-        HeaderRewrite.push(mark + `${noteK4}- >-${noteKn6}` + x)
+        HeaderRewrite.push(stashMark + `${noteK4}- >-${noteKn6}` + x)
         break
+      }
     } //headerRewrite输出结束
   } //for
 
@@ -1993,14 +2025,18 @@ ${MITM}
 
       let StashBodyRewrite = []
       for (let i = 0; i < rwbodyBox.length; i++) {
-        const { type, regex, value } = rwbodyBox[i]
+        const { type, regex, value, mark = '', noteK = '' } = rwbodyBox[i]
+        const line = `${regex} ${type.replace(/^http-/, '').replace(/^(request|response)$/, '$1-replace-regex')} ${
+          value.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1')
+          //.split(' ')
+          //.map(i => i.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1'))
+          //.join(' ')
+        }`
+        const disabled = noteK === '#' || mark === '#'
         StashBodyRewrite.push(
-          `    - >-\n      ${regex} ${type.replace(/^http-/, '').replace(/^(request|response)$/, '$1-replace-regex')} ${
-            value.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1')
-            //.split(' ')
-            //.map(i => i.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1'))
-            //.join(' ')
-          }`
+          disabled
+            ? `    # - >-\n    #   ${line}`
+            : `${mark}    - >-\n      ${line}`
         )
       }
       if (StashBodyRewrite.length > 0) {
@@ -2145,13 +2181,30 @@ function isNoteK(x) {
   return /^#/.test(x) ? '#' : ''
 }
 
+// Disabled rewrite/script lines are rules in their own right, not comments
+// annotating the next active rule. Keep them from being re-attached by the
+// legacy mark mechanism when del=false preserves them in the output.
+function isCommentedRuleLine(line) {
+  const source = `${line ?? ''}`.trim().replace(/^#\s*/, '')
+  if (!source) return false
+  return (
+    /^(?:request|response)\s+if\b/i.test(source) ||
+    /^(?:cron|network-changed|generic)\s+(?:if\b|then\b)/i.test(source) ||
+    /^http-(?:request|response)(?:-jq)?\s+/i.test(source) ||
+    /^(?:\^|https?:\/\/).+\s+url\s+/i.test(source) ||
+    /\s+url\s+(?:reject|302|307|header|(?:request|response)-)/i.test(source) ||
+    /\s+(?:request|response)-(?:header|body)(?:-json)?(?:-jq)?\s+/i.test(source)
+  )
+}
+
 //获取当前内容的注释
 function getMark(index, obj) {
   // `del=true` removes commented entries before parsing. Do not re-attach the
   // raw source comment as a mark to the following active Rewrite/Script entry.
   if (delNoteSc) return ''
 
-  let mark = obj[index - 1]?.match(/^#(?!!)/) ? obj[index - 1] + '\n' : ''
+  const previous = obj[index - 1]
+  let mark = previous?.match(/^#(?!!)/) && !isCommentedRuleLine(previous) ? previous + '\n' : ''
   // let mark = ''
 
   // for (let i = index - 1; i >= 0; i--) {
@@ -3111,7 +3164,7 @@ function pushLoonV2HeaderRewrite(phase, pattern, action, args, mark = '') {
   return {}
 }
 
-async function normalizeLoonV2RewriteLine(line, targetApp, sourceNum) {
+async function normalizeLoonV2RewriteLine(line, targetApp, sourceNum, markOverride) {
   const source = `${line ?? ''}`.trim()
   if (!source || /^(#|;|\/\/)/.test(source)) return null
   const match = source.match(/^(request|response)\s+if\s+([\s\S]+?)\s+then\s+([\s\S]+)$/i)
@@ -3125,7 +3178,7 @@ async function normalizeLoonV2RewriteLine(line, targetApp, sourceNum) {
   if (condition.reason) return { unsupported: true, reason: condition.reason }
   const pattern = condition.pattern
   const phase = match[1].toLowerCase()
-  const mark = getMark(sourceNum, body)
+  const mark = markOverride === undefined ? getMark(sourceNum, body) : markOverride
   const actions = splitLoonV2ActionList(match[3])
   if (actions.some(action => !action)) return { unsupported: true, reason: 'then 后存在空 Action' }
   const parsedActions = []
