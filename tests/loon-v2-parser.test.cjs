@@ -348,8 +348,9 @@ test('Loon removes arguments only when their excluded Script is deleted', async 
 
   const preserved = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'removed.js' })
   assert.match(preserved.body, /#request if .*removed\.js/)
-  assert.match(preserved.body, /removed=input/)
-  assert.match(preserved.body, /kept=input/)
+  assert.match(preserved.body, /\n#removed=input,[^\n]*/)
+  assert.match(preserved.body, /\nkept=input,[^\n]*/)
+  assert.doesNotMatch(preserved.body, /\n#kept=input,/)
   assert.doesNotMatch(preserved.body, /unused=/)
 
   const deleted = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'removed.js', del: 'true' })
@@ -371,13 +372,28 @@ test('excluded Argument declarations stay available until del=true removes their
   ].join('\n')
 
   const preserved = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'removed' })
-  assert.match(preserved.body, /removed=input,"old"/)
+  assert.match(preserved.body, /\n#removed=input,"old"/)
   assert.match(preserved.body, /#request if .*removed\.js/)
 
   const deleted = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'removed', del: 'true' })
   assert.doesNotMatch(deleted.body, /removed=input/)
   assert.doesNotMatch(deleted.body, /removed\.js/)
   assert.match(deleted.body, /kept=input,"new"/)
+})
+
+test('active Scripts keep a shared excluded argument enabled', async () => {
+  const source = [
+    '#!name=shared argument state',
+    '[Argument]',
+    'shared=input,old,tag=shared, desc=shared',
+    '[Script]',
+    'removed = type=http-request, pattern=removed.example, script-path=https://example.com/removed.js, argument=shared={{{shared}}}',
+    'kept = type=http-request, pattern=kept.example, script-path=https://example.com/kept.js, argument=shared={{{shared}}}',
+  ].join('\n')
+
+  const { body } = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'removed' })
+  assert.match(body, /\nshared=input,"old"/)
+  assert.doesNotMatch(body, /\n#shared=input,/)
 })
 
 test('Loon v2 cron preserves dynamic cron and timeout parameters', async () => {
