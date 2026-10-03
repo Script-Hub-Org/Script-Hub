@@ -313,6 +313,49 @@ test('Loon v2 response maps to Stash and Generic maps to a tile', async () => {
   assert.match(body, /providers:/)
 })
 
+test('Loon removes arguments only when their excluded Script is deleted', async () => {
+  const source = [
+    '#!name=script argument pruning',
+    '#!arguments=removed:old,kept:new,unused:drop',
+    '[Script]',
+    'removed = type=http-request, pattern=removed.example, script-path=https://example.com/removed.js, argument=removed={{{removed}}}',
+    'kept = type=http-request, pattern=kept.example, script-path=https://example.com/kept.js, argument=kept={{{kept}}}',
+  ].join('\n')
+
+  const preserved = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'removed.js' })
+  assert.match(preserved.body, /#request if .*removed\.js/)
+  assert.match(preserved.body, /removed=input/)
+  assert.match(preserved.body, /kept=input/)
+  assert.doesNotMatch(preserved.body, /unused=/)
+
+  const deleted = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'removed.js', del: 'true' })
+  assert.doesNotMatch(deleted.body, /removed\.js/)
+  assert.doesNotMatch(deleted.body, /removed=input/)
+  assert.match(deleted.body, /kept=input/)
+  assert.doesNotMatch(deleted.body, /unused=/)
+})
+
+test('excluded Argument declarations stay available until del=true removes their Script', async () => {
+  const source = [
+    '#!name=argument declaration pruning',
+    '[Argument]',
+    'removed=input,old,tag=removed, desc=removed',
+    'kept=input,new,tag=kept, desc=kept',
+    '[Script]',
+    'removed = type=http-request, pattern=removed.example, script-path=https://example.com/removed.js, argument=removed={{{removed}}}',
+    'kept = type=http-request, pattern=kept.example, script-path=https://example.com/kept.js, argument=kept={{{kept}}}',
+  ].join('\n')
+
+  const preserved = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'removed' })
+  assert.match(preserved.body, /removed=input,"old"/)
+  assert.match(preserved.body, /#request if .*removed\.js/)
+
+  const deleted = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'removed', del: 'true' })
+  assert.doesNotMatch(deleted.body, /removed=input/)
+  assert.doesNotMatch(deleted.body, /removed\.js/)
+  assert.match(deleted.body, /kept=input,"new"/)
+})
+
 test('Loon v2 cron preserves dynamic cron and timeout parameters', async () => {
   const { body } = await convert(
     'cron ${cron_expr} then script("https://example.com/cron.js") with timeout=${timeout_seconds}, enable=${cron_enabled}',

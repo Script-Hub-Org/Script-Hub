@@ -602,8 +602,15 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
 
     //#!arguments参数
-    if (/^#!arguments\s*=\s*.+/.test(x) || /^[^#].+?=\s*(input|select|switch)\s*,/.test(x)) {
-      parseArguments(x)
+    // x-filtered Argument declarations are still metadata for a preserved
+    // commented Script. Parse the original declaration while del=false;
+    // del=true has already blanked x and therefore removes it from sgArg.
+    const argumentSource = excludedByKeyword && !delNoteSc ? x.replace(/^#/, '').trim() : x
+    if (
+      /^#!arguments\s*=\s*.+/.test(argumentSource) ||
+      /^[^#].+?=\s*(input|select|switch)\s*,/.test(argumentSource)
+    ) {
+      parseArguments(argumentSource)
     }
 
     //hostname
