@@ -3580,7 +3580,10 @@ function filterLoonArguments(args, jsBox, hnBox = [], nativeLines = []) {
       const keys = [sourceKey, targetKey]
       const active = keys.some(key => usage.active.has(key))
       const commented = keys.some(key => usage.commented.has(key))
-      const noteK = active ? '' : item.noteK == '#' || commented ? '#' : ''
+      // An explicit exclusion on the Argument declaration takes precedence
+      // over usage discovered in an active Script. Otherwise x can target
+      // only the Argument line and the retained declaration loses its '#'.
+      const noteK = item.noteK == '#' ? '#' : active ? '' : commented ? '#' : ''
       return { ...item, noteK }
     })
 }

@@ -217,6 +217,9 @@ test('Notify keeps force-on, force-off, and follow-link modes distinct', async (
   const followLink = await convert(source, 'surge-module', {}, 'loon-plugin', query, { argument: 'Notify=跟随链接' })
   assert.equal(followLink.notifications.length, 0)
 
+  const followLinkDefault = await convert(source, 'surge-module', {}, 'loon-plugin', { x: 'v0.6.0' }, { argument: 'Notify=跟随链接' })
+  assert.equal(followLinkDefault.notifications.length, 1)
+
   const followLinkOn = await convert(source, 'surge-module', {}, 'loon-plugin', { ...query, noNtf: 'false' }, { argument: 'Notify=跟随链接' })
   assert.equal(followLinkOn.notifications.length, 1)
 
@@ -394,6 +397,24 @@ test('active Scripts keep a shared excluded argument enabled', async () => {
   const { body } = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'removed' })
   assert.match(body, /\nshared=input,"old"/)
   assert.doesNotMatch(body, /\n#shared=input,/)
+})
+
+test('an explicitly excluded Argument stays commented when its Script is active', async () => {
+  const source = [
+    '#!name=argument-only filter',
+    '[Argument]',
+    'shared=input,old,tag=manual-only, desc=manual-only',
+    '[Script]',
+    'kept = type=http-request, pattern=kept.example, script-path=https://example.com/kept.js, argument=shared={{{shared}}}',
+  ].join('\n')
+
+  const preserved = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'manual-only' })
+  assert.match(preserved.body, /\n#shared=input,"old"/)
+  assert.match(preserved.body, /request if .*kept\.js/)
+
+  const deleted = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: 'manual-only', del: 'true' })
+  assert.doesNotMatch(deleted.body, /shared=input/)
+  assert.match(deleted.body, /request if .*kept\.js/)
 })
 
 test('Loon v2 cron preserves dynamic cron and timeout parameters', async () => {
