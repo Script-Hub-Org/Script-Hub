@@ -2147,6 +2147,10 @@ function isNoteK(x) {
 
 //获取当前内容的注释
 function getMark(index, obj) {
+  // `del=true` removes commented entries before parsing. Do not re-attach the
+  // raw source comment as a mark to the following active Rewrite/Script entry.
+  if (delNoteSc) return ''
+
   let mark = obj[index - 1]?.match(/^#(?!!)/) ? obj[index - 1] + '\n' : ''
   // let mark = ''
 

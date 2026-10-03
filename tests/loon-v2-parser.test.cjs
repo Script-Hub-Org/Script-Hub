@@ -149,6 +149,38 @@ test('native Loon v2 Script accepts name, timeout, and argument edits', async ()
   assert.doesNotMatch(preserved.body, /unused=/)
 })
 
+test('del=true removes commented Rewrite entries without reattaching them as marks', async () => {
+  const source = [
+    '#!name=delete commented rewrite',
+    '[Rewrite]',
+    '#https://example.com/disabled url reject',
+    'https://example.com/enabled url reject',
+  ].join('\n')
+  const preserved = await convert(source, 'surge-module', {}, 'surge-module')
+  assert.match(preserved.body, /example\.com\/disabled/)
+
+  const { body } = await convert(source, 'surge-module', {}, 'surge-module', { del: 'true' })
+  assert.doesNotMatch(body, /example\.com\/disabled/)
+  assert.match(body, /example\.com\/enabled - reject/)
+})
+
+test('del=true removes commented Script entries without reattaching them as marks', async () => {
+  const { body } = await convert(
+    [
+      '#!name=delete commented script',
+      '[Script]',
+      '#disabled = type=http-request, pattern=disabled.example, script-path=https://example.com/disabled.js',
+      'enabled = type=http-request, pattern=enabled.example, script-path=https://example.com/enabled.js',
+    ].join('\n'),
+    'loon-plugin',
+    {},
+    'surge-module',
+    { del: 'true' }
+  )
+  assert.doesNotMatch(body, /disabled\.js|disabled\.example/)
+  assert.match(body, /enabled\.js/)
+})
+
 test('Loon v2 response maps to Surge without guessing body buffering', async () => {
   const { body } = await convert(
     'response if ${url} ~= /\\/api\\/v1\\/data/i then script("https://example.com/a.js") with requires_body=true, binary_body_mode=true, timeout=12',
