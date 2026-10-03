@@ -12,9 +12,6 @@
 #!input=Parser_body_max
 #!input=Parser_http_timeout
 
-[General]
-force-http-engine-hosts = script.hub, *.script.hub
-
 [Rule]
 DOMAIN,scripthub.vercel.app,PROXY
 
