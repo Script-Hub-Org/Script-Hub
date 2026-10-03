@@ -401,3 +401,15 @@ test('Beta host modules route the Shadowrocket target into the converter', () =>
     assert.match(moduleText, /Rewrite-Parser\.beta\.js/, relative)
   }
 })
+
+test('Beta Loon module uses native Loon v2 Script syntax', () => {
+  const moduleText = fs.readFileSync(path.join(__dirname, '../modules/script-hub.beta.loon.plugin'), 'utf8')
+  const scriptLines = moduleText
+    .split(/\r?\n/)
+    .filter(line => /^request if \$\{url\}/.test(line))
+  assert.equal(scriptLines.length, 4)
+  assert.ok(scriptLines.every(line => / then script\(".*\.beta\.js"\) with /.test(line)))
+  assert.ok(scriptLines.some(line => /shadowrocket-module/.test(line)))
+  assert.doesNotMatch(moduleText, /^http-request .*script-path=/m)
+  assert.doesNotMatch(moduleText, /force-http-engine-hosts\s*=/)
+})
