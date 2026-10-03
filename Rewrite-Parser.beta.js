@@ -2207,6 +2207,7 @@ function splitLoonV2TopLevel(str, sep = ',') {
   const arr = []
   let current = ''
   let quote = ''
+  let regex = false
   let escaped = false
   let braceDepth = 0
   let bracketDepth = 0
@@ -2224,8 +2225,20 @@ function splitLoonV2TopLevel(str, sep = ',') {
       }
       continue
     }
+    if (regex) {
+      current += char
+      if (escaped) escaped = false
+      else if (char === '\\') escaped = true
+      else if (char === '/') regex = false
+      continue
+    }
     if (char === '"' || char === "'" || char === '`') {
       quote = char
+      current += char
+      continue
+    }
+    if (char === '/' && /(?:\(|,|\[)\s*$/.test(str.slice(0, i))) {
+      regex = true
       current += char
       continue
     }
@@ -2653,7 +2666,7 @@ function splitLoonV2ActionList(str) {
       current += char
       continue
     }
-    if (char === '/' && /(?:\(|,)\s*$/.test(str.slice(0, i))) {
+    if (char === '/' && /(?:\(|,|\[)\s*$/.test(str.slice(0, i))) {
       regex = true
       current += char
       continue
@@ -2748,7 +2761,7 @@ function findLoonV2ActionClosingParen(str, openIndex) {
       quote = char
       continue
     }
-    if (char === '/' && /(?:\(|,)\s*$/.test(str.slice(0, i))) {
+    if (char === '/' && /(?:\(|,|\[)\s*$/.test(str.slice(0, i))) {
       regex = true
       continue
     }
@@ -2793,17 +2806,154 @@ function parseLoonV2LiteralList(value, field) {
   const raw = `${value ?? ''}`.trim()
   if (!raw.startsWith('[') || !raw.endsWith(']')) {
     const item = parseLoonV2Literal(raw, field)
-    return item.reason ? item : { values: [item.value] }
+    return item.reason ? item : { values: [item.value], isArray: false }
   }
   const inner = raw.slice(1, -1).trim()
-  if (!inner) return { values: [] }
+  if (!inner) return { values: [], isArray: true }
   const values = []
   for (const item of splitLoonV2TopLevel(inner)) {
     const parsed = parseLoonV2Literal(item, field)
     if (parsed.reason) return parsed
     values.push(parsed.value)
   }
-  return { values }
+  return { values, isArray: true }
+}
+
+function parseLoonV2RegexLiteral(value, field) {
+  const raw = `${value ?? ''}`.trim()
+  if (!raw.startsWith('/')) return { reason: `${field} 必须是正则字面量` }
+
+  let escaped = false
+  let closing = -1
+  for (let i = 1; i < raw.length; i++) {
+    const char = raw[i]
+    if (char === '/' && !escaped) {
+      closing = i
+      break
+    }
+    if (escaped) escaped = false
+    else if (char === '\\') escaped = true
+  }
+  if (closing === -1) return { reason: `${field} 正则缺少结束分隔符 /` }
+
+  const pattern = raw.slice(1, closing)
+  const flags = raw.slice(closing + 1).trim()
+  if (/[^ims]/.test(flags) || new Set(flags).size !== flags.length) {
+    return { reason: `${field} 仅支持 Loon v2 的 i、m、s 正则标记` }
+  }
+  if (/\r|\n/.test(pattern)) return { reason: `${field} 正则不能跨行` }
+  return { value: flags ? `(?${flags})${pattern}` : pattern }
+}
+
+function parseLoonV2RegexList(value, field) {
+  const raw = `${value ?? ''}`.trim()
+  if (!raw.startsWith('[') || !raw.endsWith(']')) {
+    const parsed = parseLoonV2RegexLiteral(raw, field)
+    return parsed.reason ? parsed : { values: [parsed.value], isArray: false }
+  }
+  const inner = raw.slice(1, -1).trim()
+  if (!inner) return { values: [], isArray: true }
+  const values = []
+  for (const item of splitLoonV2TopLevel(inner)) {
+    const parsed = parseLoonV2RegexLiteral(item, field)
+    if (parsed.reason) return parsed
+    values.push(parsed.value)
+  }
+  return { values, isArray: true }
+}
+
+function parseLoonV2StringList(value, field) {
+  const parsed = parseLoonV2LiteralList(value, field)
+  if (parsed.reason) return parsed
+  if (parsed.values.some(item => typeof item !== 'string')) {
+    return { reason: `${field} 必须是字符串` }
+  }
+  return parsed
+}
+
+function validateLoonV2PairedLists(first, second, label) {
+  if (first.isArray !== second.isArray) {
+    return { reason: `${label} 不能混用单值和数组` }
+  }
+  if (first.values.length === 0 || first.values.length !== second.values.length) {
+    return { reason: `${label} 的批量参数不能为空或长度不一致` }
+  }
+  return {}
+}
+
+function loonV2MockContentTypeHeader(contentType) {
+  const headers = {
+    json: 'Content-Type:application/json',
+    text: 'Content-Type:text/plain',
+    css: 'Content-Type:text/css',
+    html: 'Content-Type:text/html',
+    javascript: 'Content-Type:text/javascript',
+    plain: 'Content-Type:text/plain',
+    png: 'Content-Type:image/png',
+    gif: 'Content-Type:image/gif',
+    jpeg: 'Content-Type:image/jpeg',
+    tiff: 'Content-Type:image/tiff',
+    svg: 'Content-Type:image/svg+xml',
+    mp4: 'Content-Type:video/mp4',
+    'form-data': 'Content-Type:application/x-www-form-urlencoded',
+  }
+  return headers[contentType] || ''
+}
+
+function parseLoonV2BodyMockAction(name, phase, args) {
+  const contentType = parseLoonV2Literal(args[0], `${name} 内容类型`)
+  const source = parseLoonV2Literal(args[1], `${name} Body 或资源路径`)
+  const supportedTypes = new Set([
+    'json',
+    'text',
+    'css',
+    'html',
+    'javascript',
+    'plain',
+    'png',
+    'gif',
+    'jpeg',
+    'tiff',
+    'svg',
+    'mp4',
+    'form-data',
+  ])
+  if (contentType.reason || source.reason) return { reason: contentType.reason || source.reason }
+  if (typeof contentType.value !== 'string' || !supportedTypes.has(contentType.value)) {
+    return { reason: `${name} 内容类型不受支持` }
+  }
+  if (typeof source.value !== 'string' || !source.value) {
+    return { reason: `${name} Body 或资源路径必须是非空字符串` }
+  }
+
+  const isFile = name.endsWith('_file')
+  let status = 200
+  let base64 = false
+  if (phase === 'request') {
+    if (args.length > 3) return { reason: `${name} 最多接受三个参数` }
+    if (args.length === 3) {
+      const encoded = parseLoonV2Literal(args[2], `${name} Base64 标记`)
+      if (encoded.reason || typeof encoded.value !== 'boolean') {
+        return { reason: `${name} 的第三个参数必须是 Boolean` }
+      }
+      base64 = encoded.value
+    }
+  } else {
+    if (args.length > 4 || args.length < 2) return { reason: `${name} 参数数量无效` }
+    if (args.length >= 3) {
+      const parsedStatus = parseLoonV2Status(args[2], name)
+      if (parsedStatus.reason) return parsedStatus
+      status = parsedStatus.value
+    }
+    if (args.length === 4) {
+      const encoded = parseLoonV2Literal(args[3], `${name} Base64 标记`)
+      if (encoded.reason || typeof encoded.value !== 'boolean') {
+        return { reason: `${name} 的第四个参数必须是 Boolean` }
+      }
+      base64 = encoded.value
+    }
+  }
+  return { contentType: contentType.value, source: source.value, isFile, status, base64 }
 }
 
 function parseLoonV2JsonPaths(value) {
@@ -2919,14 +3069,18 @@ function pushLoonV2HeaderRewrite(phase, pattern, action, args, mark = '') {
     return {}
   }
 
-  if (name === 'replace_regex') {
-    if (args.length !== 3) return { reason: 'header.replace_regex 需要名称、正则和替换值' }
+  if (name === 'replace' || name === 'replace_regex') {
+    if (args.length !== 3) return { reason: `header.${name} 需要名称、正则和替换值` }
     const fields = parseLoonV2LiteralList(args[0], 'Header 名称')
-    const regexes = parseLoonV2LiteralList(args[1], 'Header 正则')
-    const replacements = parseLoonV2LiteralList(args[2], 'Header 替换值')
+    const regexes = parseLoonV2RegexList(args[1], 'Header 正则')
+    const replacements = parseLoonV2StringList(args[2], 'Header 替换值')
     if (fields.reason || regexes.reason || replacements.reason) return { reason: fields.reason || regexes.reason || replacements.reason }
-    if (fields.values.length !== regexes.values.length || fields.values.length !== replacements.values.length) {
-      return { reason: 'header.replace_regex 的批量参数长度不一致' }
+    const paired = validateLoonV2PairedLists(fields, regexes, `header.${name}`)
+    if (paired.reason) return paired
+    const pairedReplacements = validateLoonV2PairedLists(fields, replacements, `header.${name}`)
+    if (pairedReplacements.reason) return pairedReplacements
+    if (fields.values.some(item => typeof item !== 'string')) {
+      return { reason: `header.${name} 的名称必须是字符串` }
     }
     fields.values.forEach((field, i) =>
       addLine('header-replace-regex', [quoteSurgeField(field), quoteSurgeField(regexes.values[i]), quoteSurgeField(replacements.values[i])])
@@ -2978,6 +3132,28 @@ async function normalizeLoonV2RewriteLine(line, targetApp, sourceNum) {
   }
   // 混合 legacy script 与原生 Action 时交还旧解析器，避免先写入一半转换结果。
   if (parsedActions.some(action => action.name === 'script')) return null
+
+  const mockActions = parsedActions.filter(action => new RegExp(`^${phase}\\.body\\.mock(?:_file)?$`).test(action.name))
+  if (mockActions.length > 0) {
+    if (phase === 'response') {
+      if (mockActions.length !== 1) {
+        return { unsupported: true, reason: 'response.body.mock 与 mock_file 只能在一条 Rewrite 中使用一次' }
+      }
+      const invalidResponseAction = parsedActions.find(
+        action =>
+          !/^response\.header\.(?:add|set|del|replace|replace_regex)$/.test(action.name) &&
+          !/^response\.body\.mock(?:_file)?$/.test(action.name)
+      )
+      if (invalidResponseAction) {
+        return {
+          unsupported: true,
+          reason: 'response.body.mock 除 response.header.* 外不能与其他 Action 组合',
+        }
+      }
+    } else if (mockActions.length !== 1) {
+      return { unsupported: true, reason: 'request.body.mock 与 mock_file 只能在一条 Rewrite 中使用一次' }
+    }
+  }
   const warnings = []
 
   for (const parsed of parsedActions) {
@@ -3055,19 +3231,59 @@ async function normalizeLoonV2RewriteLine(line, targetApp, sourceNum) {
       continue
     }
 
-    const bodyMatch = name.match(/^(request|response)\.body\.(replace|mock)$/)
+    const bodyMatch = name.match(/^(request|response)\.body\.(replace|mock|mock_file)$/)
     if (bodyMatch) {
       if (bodyMatch[1] !== phase) return { unsupported: true, reason: `${name} 与 ${phase} 阶段不匹配` }
-      if (args.length !== 2) return { unsupported: true, reason: `${name} 当前需要正则和替换值两个参数` }
-      const regex = parseLoonV2Literal(args[0], `${name} 正则`)
-      const replacement = parseLoonV2Literal(args[1], `${name} 替换值`)
-      if (regex.reason || replacement.reason) return { unsupported: true, reason: regex.reason || replacement.reason }
-      rwbodyBox.push({
-        type: `http-${phase}`,
-        regex: pattern,
-        value: `${quoteSurgeField(regex.value)} ${quoteSurgeField(replacement.value)}`,
-        mark,
-      })
+      if (bodyMatch[2] === 'replace') {
+        if (args.length !== 2) return { unsupported: true, reason: `${name} 需要正则和替换值两个参数` }
+        const regexes = parseLoonV2RegexList(args[0], `${name} 正则`)
+        const replacements = parseLoonV2StringList(args[1], `${name} 替换值`)
+        if (regexes.reason || replacements.reason) {
+          return { unsupported: true, reason: regexes.reason || replacements.reason }
+        }
+        const paired = validateLoonV2PairedLists(regexes, replacements, name)
+        if (paired.reason) return { unsupported: true, reason: paired.reason }
+        for (let i = 0; i < regexes.values.length; i++) {
+          rwbodyBox.push({
+            type: `http-${phase}`,
+            regex: pattern,
+            value: `${quoteSurgeField(regexes.values[i])} ${quoteSurgeField(replacements.values[i])}`,
+            mark,
+          })
+        }
+        continue
+      }
+
+      const mock = parseLoonV2BodyMockAction(name, phase, args)
+      if (mock.reason) return { unsupported: true, reason: mock.reason }
+      if (phase === 'response') {
+        if (mock.isFile && mock.base64) {
+          return { unsupported: true, reason: `${name} 的远程/资源文件 Base64 模式无法由 Surge Map Local 等价表示` }
+        }
+        const mapType = mock.base64 ? 'base64' : mock.isFile ? 'file' : 'text'
+        pushLoonV2MapLocal(
+          pattern,
+          mapType,
+          mock.source,
+          mock.status,
+          loonV2MockContentTypeHeader(mock.contentType),
+          mark
+        )
+      } else {
+        if (mock.isFile) {
+          return { unsupported: true, reason: `${name} 的资源文件无法直接转换为 Surge 请求 Body` }
+        }
+        if (mock.base64) {
+          return { unsupported: true, reason: `${name} 的 Base64 请求 Body 没有等价的 Surge Body Rewrite 输出` }
+        }
+        rwbodyBox.push({
+          type: 'http-request',
+          regex: pattern,
+          value: `${quoteSurgeField('(?s)^.*$')} ${quoteSurgeField(mock.source)}`,
+          mark,
+        })
+        warnings.push(`${name} 已转换为请求 Body 全量替换；目标客户端不保留原始 Content-Type 声明`)
+      }
       continue
     }
 

@@ -273,6 +273,49 @@ test('Loon v2 native Rewrite is preserved in the Loon target section', async () 
   assert.doesNotMatch(body, /\[Script\][\s\S]*response if \$\{url\}/)
 })
 
+test('Loon v2 header.replace and body.replace support regex literals and batches', async () => {
+  const { body, notifications } = await convert(
+    'response if ${url} ~= /\\/api\\// then response.header.replace(["X-A", "X-B"], [/old/i, /disabled/], ["new", "enabled"]) | response.body.replace([/false/, /disabled/], ["true", "enabled"])',
+    'surge-module'
+  )
+  assert.equal(sectionLines(body, 'Body Rewrite').length, 2)
+  assert.equal(sectionLines(body, 'Header Rewrite').length, 2)
+  assert.match(body, /"\(\?i\)old" "new"/)
+  assert.match(body, /"disabled" "enabled"/)
+  assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|暂不支持 Loon v2 Action/)
+})
+
+test('Loon v2 response body mock and mock_file map to Surge Map Local', async () => {
+  const { body, notifications } = await convert(
+    [
+      'response if ${url} ~= /\\/inline\\// then response.body.mock("json", `{"code":0}`, 201)',
+      'response if ${url} ~= /\\/asset\\// then response.body.mock_file("png", "https://example.com/a.png", 204)',
+      'response if ${url} ~= /\\/base64\\// then response.body.mock("png", "iVBORw0KGgo=", 200, true)',
+    ].join('\n'),
+    'surge-module'
+  )
+  const mapLines = sectionLines(body, 'Map Local')
+  assert.equal(mapLines.length, 3)
+  assert.ok(mapLines.some(line => line.includes('data-type=text') && line.includes('data="{\\"code\\":0}"') && line.includes('status-code=201')))
+  assert.ok(mapLines.some(line => line.includes('data-type=file') && line.includes('data="https://example.com/a.png"') && line.includes('status-code=204')))
+  assert.ok(mapLines.some(line => line.includes('data-type=base64') && line.includes('data="iVBORw0KGgo="')))
+  assert.match(body, /Content-Type:application\/json/)
+  assert.match(body, /Content-Type:image\/png/)
+  assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|暂不支持 Loon v2 Action/)
+})
+
+test('Loon v2 request body mock converts inline text and diagnoses unsupported resources', async () => {
+  const { body, notifications } = await convert(
+    [
+      'request if ${url} ~= /\\/inline\\// then request.body.mock("json", `{"ok":true}`)',
+      'request if ${url} ~= /\\/resource\\// then request.body.mock_file("json", "request.json")',
+    ].join('\n'),
+    'surge-module'
+  )
+  assert.match(body, /http-request .*"\(\?s\)\^\.\*\$" "\{\\"ok\\":true\}"/)
+  assert.match(JSON.stringify(notifications), /request\.body\.mock_file.*资源文件无法直接转换/)
+})
+
 test('QX echo-response keeps its content type when converted to a Loon plugin', async () => {
   const { body } = await convert(
     '^https?:\\/\\/example\\.com\\/script url echo-response text/json echo-response https://example.com/mock.js',
