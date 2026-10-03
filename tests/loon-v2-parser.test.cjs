@@ -181,6 +181,25 @@ test('del=true removes commented Script entries without reattaching them as mark
   assert.match(body, /enabled\.js/)
 })
 
+test('x-filtered Rewrite and Script entries remain commented in Loon preview until del=true', async () => {
+  const source = [
+    '#!name=filter preview',
+    '[Rewrite]',
+    'response if \${url} ~= /\\/settings/ then response.body.mock("text", "https://example.com/v0.6.0/disabled")',
+    '[Script]',
+    'http-response ^https:\\/\\/example\\.com\\/api requires-body=1, script-path=https://example.com/v0.6.0/disabled.js',
+  ].join('\n')
+
+  const preserved = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: '0.6.0' })
+  assert.match(preserved.body, /#response if .*v0\.6\.0\/disabled/)
+  assert.match(preserved.body, /#response if .*script\("https:\/\/example\.com\/v0\.6\.0\/disabled\.js"/)
+  assert.match(JSON.stringify(preserved.notifications), /已根据关键词排除以下内容/)
+
+  const removed = await convert(source, 'loon-plugin', {}, 'loon-plugin', { x: '0.6.0', del: 'true' })
+  assert.doesNotMatch(removed.body, /v0\.6\.0\/disabled/)
+  assert.match(JSON.stringify(removed.notifications), /已根据关键词排除以下内容/)
+})
+
 test('del toggles commented Body Rewrite entries consistently', async () => {
   const source = [
     '#!name=delete commented body rewrite',
@@ -192,6 +211,9 @@ test('del toggles commented Body Rewrite entries consistently', async () => {
   const preserved = await convert(source, 'surge-module', {}, 'surge-module')
   assert.match(preserved.body, /#http-response \^disabled url reject/)
   assert.match(preserved.body, /http-response \^enabled url reject/)
+
+  const filtered = await convert(source, 'surge-module', {}, 'surge-module', { x: 'enabled' })
+  assert.match(filtered.body, /#http-response \^enabled url reject/)
 
   const removed = await convert(source, 'surge-module', {}, 'surge-module', { del: 'true' })
   assert.doesNotMatch(removed.body, /disabled/)
@@ -567,6 +589,20 @@ test('Loon v2 keeps jq fallback operators inside quoted actions', async () => {
   assert.equal(sectionLines(body, 'Body Rewrite').length, 1)
   assert.ok(body.includes('.template.name? //'))
   assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容|Action 缺少结束括号/)
+})
+
+test('real 什么值得买 Loon plugin converts all native actions for Surge', async () => {
+  const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'smzdm_remove_ads.lpx'), 'utf8')
+  const jqUrl = 'https://kelee.one/Resource/JQLang/smzdm/home_smzdm_remove_ads.jq'
+  const jq = fs.readFileSync(path.join(__dirname, 'fixtures', 'smzdm_home_remove_ads.jq'), 'utf8')
+  const { body, notifications } = await convert(source, 'surge-module', { [jqUrl]: jq })
+  assert.equal(sectionLines(body, 'Rule').length, 1)
+  assert.equal(sectionLines(body, 'Body Rewrite').length, 28)
+  assert.equal(sectionLines(body, 'Map Local').length, 7)
+  assert.equal(sectionLines(body, 'MITM').length, 1)
+  assert.match(body, /zz_content/)
+  assert.match(body, /Content-Type:application\/json/)
+  assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|不支持以下内容|失败/)
 })
 
 test('Beta host modules route the Shadowrocket target into the converter', () => {
