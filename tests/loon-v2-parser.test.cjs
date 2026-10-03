@@ -181,6 +181,52 @@ test('del=true removes commented Script entries without reattaching them as mark
   assert.match(body, /enabled\.js/)
 })
 
+test('del toggles commented Body Rewrite entries consistently', async () => {
+  const source = [
+    '#!name=delete commented body rewrite',
+    '[Body Rewrite]',
+    '#http-response ^disabled url reject',
+    'http-response ^enabled url reject',
+  ].join('\n')
+
+  const preserved = await convert(source, 'surge-module', {}, 'surge-module')
+  assert.match(preserved.body, /#http-response \^disabled url reject/)
+  assert.match(preserved.body, /http-response \^enabled url reject/)
+
+  const removed = await convert(source, 'surge-module', {}, 'surge-module', { del: 'true' })
+  assert.doesNotMatch(removed.body, /disabled/)
+  assert.match(removed.body, /http-response \^enabled url reject/)
+
+  const loon = await convert(source, 'loon-plugin', {}, 'loon-plugin')
+  assert.match(loon.body, /disabled/)
+  const loonRemoved = await convert(source, 'loon-plugin', {}, 'loon-plugin', { del: 'true' })
+  assert.doesNotMatch(loonRemoved.body, /disabled/)
+})
+
+test('commented native Loon v2 Rewrite stays independent from the next rule', async () => {
+  const source = [
+    '#!name=delete commented native rewrite',
+    '[Rewrite]',
+    '#response if ${url} ~= /disabled/ then response.body.mock("text", "off")',
+    'response if ${url} ~= /enabled/ then response.body.mock("text", "on")',
+  ].join('\n')
+
+  const surge = await convert(source, 'surge-module')
+  assert.equal((surge.body.match(/disabled/g) || []).length, 1)
+  assert.match(surge.body, /#disabled data-type/)
+  assert.doesNotMatch(surge.body, /#response if .*disabled/)
+
+  const surgeRemoved = await convert(source, 'surge-module', {}, 'loon-plugin', { del: 'true' })
+  assert.doesNotMatch(surgeRemoved.body, /disabled/)
+
+  const loon = await convert(source, 'loon-plugin')
+  assert.equal((loon.body.match(/disabled/g) || []).length, 1)
+  assert.match(loon.body, /#response if .*disabled/)
+
+  const loonRemoved = await convert(source, 'loon-plugin', {}, 'loon-plugin', { del: 'true' })
+  assert.doesNotMatch(loonRemoved.body, /disabled/)
+})
+
 test('Loon v2 response maps to Surge without guessing body buffering', async () => {
   const { body } = await convert(
     'response if ${url} ~= /\\/api\\/v1\\/data/i then script("https://example.com/a.js") with requires_body=true, binary_body_mode=true, timeout=12',
