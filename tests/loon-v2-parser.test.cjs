@@ -493,6 +493,17 @@ test('rule-set empty keyword selectors do not filter every rule', async () => {
   assert.doesNotMatch(body, /;#DOMAIN,api\.example\.com/)
 })
 
+test('Beta keeps equivalent Clash logical rules in Loon rule sets', async () => {
+  const source = 'AND,((DOMAIN-SUFFIX,bc.googleusercontent.com),(DST-PORT,7100),(NETWORK,UDP))'
+  const { body } = await convert(source, 'loon-rule-set', {}, 'rule-set', {}, { parser: ruleParser })
+  const { body: surgeBody } = await convert(source, 'surge-rule-set', {}, 'rule-set', {}, { parser: ruleParser })
+
+  assert.match(body, /#规则数量:1/)
+  assert.match(body, /#不支持的规则数量:0/)
+  assert.match(body, /AND,\(\(DOMAIN-SUFFIX,bc\.googleusercontent\.com\),\(DEST-PORT,7100\),\(PROTOCOL,UDP\)\)/)
+  assert.match(surgeBody, /AND,\(\(DOMAIN-SUFFIX,bc\.googleusercontent\.com\),\(DST-PORT,7100\),\(NETWORK,UDP\)\)/)
+})
+
 test('rule-set notification modes suppress source 404 notices consistently', async () => {
   const runtime = { parser: ruleParser, sourceUrl: 'https://example.com/missing.list', httpStatus: 404 }
 

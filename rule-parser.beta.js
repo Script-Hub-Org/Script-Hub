@@ -211,6 +211,12 @@ let ruleValue //规则
       .replace(/^dest-port/i, 'DST-PORT')
       .replace(/^ip6-cidr/i, 'IP-CIDR6')
 
+    if (isLooniOS) {
+      x = x
+        .replace(/(^|[,(]\s*)DST-PORT(?=\s*,)/gi, '$1DEST-PORT')
+        .replace(/(^|[,(]\s*)NETWORK(?=\s*,)/gi, '$1PROTOCOL')
+    }
+
     if (isStashiOS || isStashdomainset || isStashdomainset2) {
       if (x.match(/^;#/)) {
         outRules.push(x.replace(/^;#/, '').replace(/^HO-ST/i, 'HOST'))
@@ -231,9 +237,13 @@ let ruleValue //规则
     } else if (isLooniOS) {
       if (x.match(/^;#/)) {
         outRules.push(x.replace(/^;#/, '').replace(/^HO-ST/i, 'HOST'))
-      } else if (x.match(/^(HO-ST|DST-PORT|PROTOCOL|PROCESS-NAME|OR|AND|NOT)/i)) {
+      } else if (/(^|[,(]\s*)(?:HO-ST|PROCESS-NAME)(?=\s*,)/i.test(x)) {
         other.push(x.replace(/^HO-ST/i, 'HOST'))
       } else if (x != '') {
+        if (/^(?:AND|OR|NOT)\s*,/i.test(x)) {
+          ruleSet.push(x)
+          continue
+        }
         noResolve = x.replace(/\x20/g, '').match(/,no-resolve/i) ? ',no-resolve' : ''
 
         ruleType = x.split(/ *, */)[0].toUpperCase()
