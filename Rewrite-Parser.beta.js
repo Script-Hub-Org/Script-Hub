@@ -1402,7 +1402,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             : isLooniOS && /-tinygif/.test(rwtype)
               ? 'reject-img'
               : rwtype
-        URLRewrite.push(mark + noteK + rwptn + ' ' + rwvalue + ' ' + rwtype)
+        URLRewrite.push(mark + noteK + normalizeTargetUrlPattern(rwptn) + ' ' + rwvalue + ' ' + rwtype)
         break
 
       case 'stash-stoverride':
@@ -1424,7 +1424,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             noteK4 +
             '- >-' +
             noteKn6 +
-            rwptn +
+            normalizeTargetUrlPattern(rwptn) +
             ' ' +
             rwvalue +
             ' ' +
@@ -1434,16 +1434,20 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 
       case 'surge-module':
         if (/(?:reject|302|307|header)$/.test(rwtype))
-          URLRewrite.push(mark + noteK + rwptn + ' ' + rwvalue + ' ' + rwtype)
+          URLRewrite.push(mark + noteK + normalizeTargetUrlPattern(rwptn) + ' ' + rwvalue + ' ' + rwtype)
         if (/reject-dict/.test(rwtype))
           MapLocal.push(
-            mark + noteK + rwptn + ' data-type=text data="{}" status-code=200 header="Content-Type:application/json"'
+            mark +
+              noteK +
+              normalizeTargetUrlPattern(rwptn) +
+              ' data-type=text data="{}" status-code=200 header="Content-Type:application/json"'
           )
         if (/reject-array/.test(rwtype))
-          MapLocal.push(mark + noteK + rwptn + ' data-type=text data="[]" status-code=200')
-        if (/reject-200/.test(rwtype)) MapLocal.push(mark + noteK + rwptn + ' data-type=text data=" " status-code=200')
+          MapLocal.push(mark + noteK + normalizeTargetUrlPattern(rwptn) + ' data-type=text data="[]" status-code=200')
+        if (/reject-200/.test(rwtype))
+          MapLocal.push(mark + noteK + normalizeTargetUrlPattern(rwptn) + ' data-type=text data=" " status-code=200')
         if (/reject-(?:img|tinygif|video)/.test(rwtype))
-          MapLocal.push(mark + noteK + rwptn + ' data-type=tiny-gif status-code=200')
+          MapLocal.push(mark + noteK + normalizeTargetUrlPattern(rwptn) + ' data-type=tiny-gif status-code=200')
         break
     } //switch
   } //reject redirect输出for
@@ -1455,7 +1459,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     // when the caller keeps commented rules instead of deleting them.
     const comment = `${mark}${noteK ? '#' : ''}`
     if (isSurgeiOS || isShadowrocket) {
-      BodyRewrite.push(`${comment}${type} ${regex} ${value}`)
+      BodyRewrite.push(`${comment}${type} ${normalizeTargetUrlPattern(regex)} ${value}`)
     } else if (isLooniOS) {
       let type2
       switch (type) {
@@ -1485,7 +1489,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     switch (targetApp) {
       case 'surge-module':
       case 'shadowrocket-module':
-        HeaderRewrite.push(mark + noteK + x)
+        HeaderRewrite.push(mark + noteK + normalizeTargetRewriteLine(x))
         break
 
       case 'loon-plugin':
@@ -1558,7 +1562,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           mockBox[i].mockheader && !/&contentType=/.test(mockBox[i].mockheader)
             ? ' header="' + mockBox[i].mockheader + '"'
             : ''
-        MapLocal.push(mark + noteK + mockptn + mocktype + mockurl + mockstatus + mockheader)
+        MapLocal.push(mark + noteK + normalizeTargetUrlPattern(mockptn) + mocktype + mockurl + mockstatus + mockheader)
         break
 
       case 'shadowrocket-module':
@@ -1566,7 +1570,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           mockBox[i].mockheader && !/&contentType=/.test(mockBox[i].mockheader)
             ? ' header="' + mockBox[i].mockheader + '"'
             : ''
-        MapLocal.push(mark + noteK + mockptn + mocktype + mockurl + mockheader)
+        MapLocal.push(mark + noteK + normalizeTargetUrlPattern(mockptn) + mocktype + mockurl + mockheader)
         break
 
       case 'loon-plugin':
@@ -1634,6 +1638,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       mark = jsBox[i].mark ? jsBox[i].mark : ''
       jstype = jsBox[i].jstype
       jsptn = /generic|event|dns|rule|network-changed/.test(jstype) ? '' : jsBox[i].jsptn
+      jsptn = normalizeTargetUrlPattern(jsptn)
       jsptn = isLooniOS && jsptn ? ' ' + jsptn : jsptn
       if (/,/.test(jsptn) && isSurgeiOS) jsptn = '"' + jsptn + '"'
       if ((isSurgeiOS || isShadowrocket) && jsptn != '') jsptn = ', pattern=' + jsptn
@@ -2038,7 +2043,7 @@ ${MITM}
       let StashBodyRewrite = []
       for (let i = 0; i < rwbodyBox.length; i++) {
         const { type, regex, value, mark = '', noteK = '' } = rwbodyBox[i]
-        const line = `${regex} ${type.replace(/^http-/, '').replace(/^(request|response)$/, '$1-replace-regex')} ${
+        const line = `${normalizeTargetUrlPattern(regex)} ${type.replace(/^http-/, '').replace(/^(request|response)$/, '$1-replace-regex')} ${
           value.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1')
           //.split(' ')
           //.map(i => i.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1'))
@@ -3195,7 +3200,7 @@ async function normalizeLoonV2RewriteLine(line, targetApp, sourceNum, markOverri
 
   const condition = parseLoonV2UrlCondition(match[2])
   if (condition.reason) return { unsupported: true, reason: condition.reason }
-  const pattern = condition.pattern
+  const pattern = normalizeTargetUrlPattern(condition.pattern, targetApp)
   const phase = match[1].toLowerCase()
   const mark = markOverride === undefined ? getMark(sourceNum, body) : markOverride
   const actions = splitLoonV2ActionList(match[3])
@@ -3643,6 +3648,26 @@ function normalizeScriptArgument(jsarg, targetApp) {
   }
   if (targetApp == 'loon-plugin') return normalizeTemplateValue(jsarg, targetApp)
   return jsarg
+}
+
+// URL query parameter order is not part of an HTTP endpoint's identity.  A
+// number of Loon plugins write `\\?key` as shorthand for "the query starts
+// with key", while real clients routinely prepend tracking/auth parameters.
+// Surge, Shadowrocket, and Stash match the converted regex directly, so
+// preserve the original pattern for Loon and make that shorthand
+// order-insensitive only in those outputs. The narrow key-shaped match avoids
+// rewriting regex operators or arbitrary escaped question marks.
+function normalizeTargetUrlPattern(pattern, target = targetApp) {
+  if (!pattern || !['surge-module', 'shadowrocket-module', 'stash-stoverride'].includes(target)) return pattern
+  return `${pattern}`.replace(/\\\?([A-Za-z_][A-Za-z0-9_.-]*)(?![A-Za-z0-9_.-])/g, '\\?(?:[^#?&]+&)*$1')
+}
+
+function normalizeTargetRewriteLine(line, target = targetApp) {
+  if (!line || !['surge-module', 'shadowrocket-module', 'stash-stoverride'].includes(target)) return line
+  return `${line}`.replace(
+    /^(#?)(http-(?:request|response)\s+)(\S+)/,
+    (_, comment, prefix, pattern) => comment + prefix + normalizeTargetUrlPattern(pattern, target)
+  )
 }
 
 function takeLeadingTemplate(str) {

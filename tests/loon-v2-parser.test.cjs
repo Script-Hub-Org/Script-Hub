@@ -859,6 +859,39 @@ test('Loon v2 keeps jq fallback operators inside quoted actions', async () => {
   assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容|Action 缺少结束括号/)
 })
 
+test('Beta makes query-key URL matching order-insensitive across converted regex targets', async () => {
+  const pattern = String.raw`^https:\/\/poi\.map\.xiaojukeji\.com\/mapapi\/startinfo\?api_version`
+  const normalized = String.raw`^https:\/\/poi\.map\.xiaojukeji\.com\/mapapi\/startinfo\?(?:[^#?&]+&)*api_version`
+  const source = [
+    '#!name=query order compatibility',
+    '[Rewrite]',
+    `response if \${url} ~= /${pattern}/i then response.json.delete("rec_destination")`,
+    '[URL Rewrite]',
+    `${pattern} url reject`,
+    '[Header Rewrite]',
+    `${pattern} response-header-del X-Test`,
+    '[Body Rewrite]',
+    `http-response-jq ${pattern} '.'`,
+    '[Script]',
+    `http-response ${pattern} requires-body=true, script-path=https://example.com/a.js`,
+  ].join('\n')
+
+  const shuffledUrl =
+    'https://poi.map.xiaojukeji.com/mapapi/startinfo?acc_key=redacted&access_key_id=1&api_version=1.0.4'
+  const matcher = new RegExp(normalized, 'i')
+  assert.ok(matcher.test(shuffledUrl))
+  assert.ok(!matcher.test('https://poi.map.xiaojukeji.com/mapapi/startinfo?not_api_version=1'))
+
+  for (const target of ['surge-module', 'shadowrocket-module', 'stash-stoverride']) {
+    const { body } = await convert(source, target)
+    assert.ok(body.includes(normalized), `${target} did not normalize the query matcher`)
+  }
+
+  const loon = await convert(source, 'loon-plugin')
+  assert.ok(loon.body.includes(pattern))
+  assert.ok(!loon.body.includes(normalized))
+})
+
 test('real 什么值得买 Loon plugin converts all native actions for Surge', async () => {
   const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'smzdm_remove_ads.lpx'), 'utf8')
   const jqUrl = 'https://kelee.one/Resource/JQLang/smzdm/home_smzdm_remove_ads.jq'
