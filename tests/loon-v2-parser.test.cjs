@@ -118,6 +118,36 @@ test('legacy Surge Script converts to native Loon v2 Script syntax', async () =>
   assert.doesNotMatch(JSON.stringify(notifications), /Loon v2.*失败|无法转换/)
 })
 
+test('Loon dynamic enable uses an explicit Surge module toggle convention', async () => {
+  const { body, notifications } = await convert(
+    [
+      '#!name=Dynamic enable',
+      '[Argument]',
+      'UnblockURLinWeChat_script=switch, false, true, tag=微信外链脚本, desc=控制微信外链脚本是否启用',
+      'MainTabFilter=switch, true, false, tag=微博顶部脚本, desc=控制微博顶部脚本是否启用',
+      '[Script]',
+      'response if ${url} ~= /^https:\\/\\/(?:weixin110\\.qq|security\\.wechat)\\/cgi-bin\\/mmspamsupport-bin\\/newredirectconfirmcgi\\?/i then script("https://kelee.one/Resource/JavaScript/Weixin/Weixin_external_links_unlock.js") with enable=${UnblockURLinWeChat_script}, tag="[微信]外部链接解锁", requires_body=true',
+      'response if ${url} ~= /^https:\\/\\/m?api\\.weibo\\.c(n|om)\\/2\\/groups\\/allgroups\\/v2\\?/i then script("https://raw.githubusercontent.com/fmz200/wool_scripts/main/Scripts/weibo/weibo_ads.js") with enable=${MainTabFilter}, tag="[微博]顶部Tab页分组", timeout=60, requires_body=true',
+    ].join('\n'),
+    'surge-module'
+  )
+
+  assert.match(body, /#!arguments=UnblockURLinWeChat_script:#,MainTabFilter:/)
+  assert.match(body, /UnblockURLinWeChat_script: 微信外链脚本\\n控制微信外链脚本是否启用\\n可选值: 留空启用, # 禁用/)
+  assert.match(body, /MainTabFilter: 微博顶部脚本\\n控制微博顶部脚本是否启用\\n可选值: 留空启用, # 禁用/)
+  assert.ok(body.includes('{{{UnblockURLinWeChat_script}}}[微信]外部链接解锁 = type=http-response'))
+  assert.ok(body.includes('{{{MainTabFilter}}}[微博]顶部Tab页分组 = type=http-response'))
+  assert.ok(!body.includes('enable={{{UnblockURLinWeChat_script}}}'))
+  assert.ok(!body.includes('enable={{{MainTabFilter}}}'))
+  assert.match(JSON.stringify(notifications), /跨目标转换提示/)
+
+  const sourceDefaultsApplied = body
+    .replaceAll('{{{UnblockURLinWeChat_script}}}', '#')
+    .replaceAll('{{{MainTabFilter}}}', '')
+  assert.ok(sourceDefaultsApplied.includes('#[微信]外部链接解锁 = type=http-response'))
+  assert.ok(sourceDefaultsApplied.includes('[微博]顶部Tab页分组 = type=http-response'))
+})
+
 test('legacy QX body Script converts to a native Loon v2 response Script', async () => {
   const { body } = await convert(
     '^https?:\\/\\/example\\.com\\/api url script-response-body https://example.com/response.js',

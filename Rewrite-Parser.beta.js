@@ -263,6 +263,7 @@ let loonSgArg = [] //转换为 Loon 时实际需要保留的参数
 let surgeRuleToggleArgs = new Map() //Surge 用行首 # 注释控制脚本启停的参数
 let argumentKeyRenameMap = new Map() //Surge 模板参数名 -> 脚本实际读取的 $argument key
 let loonV2Warnings = [] //Loon v2 转换时无法完全表达的能力
+let targetCompatibilityWarnings = [] //跨目标转换的语义差异提示
 let loonV2NormalizedLines = new Set() //已归一化的 Loon v2 行，用于保留可转换的 Generic Script
 let loonV2NativeLines = [] //目标仍为 Loon 时保留原生 v2 语法，避免丢失组合条件
 
@@ -1206,7 +1207,15 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       sgargArr.push(a)
     }
     modInfoObj['arguments'] = (sgargArr[0] || '') && `${sgargArr.join(',')}`
-    modInfoObj['arguments-desc'] = modInfoObj['arguments-desc'] || buildSurgeArgumentsDesc(sgArg)
+    modInfoObj['arguments-desc'] =
+      modInfoObj['arguments-desc'] || buildSurgeArgumentsDesc(sgArg, surgeRuleToggleArgs)
+  }
+
+  if ((isSurgeiOS || isShadowrocket) && surgeRuleToggleArgs.size > 0) {
+    const keys = [...surgeRuleToggleArgs.keys()].join(', ')
+    targetCompatibilityWarnings.push(
+      `Loon enable 动态布尔值无法由 ${app} 原生表达；已映射为模块行首占位符。相关参数：${keys}；留空启用，填 # 禁用。`
+    )
   }
 
   if (isLooniOS) {
@@ -2135,6 +2144,11 @@ ${providers}
   const loonV2WarningText =
     loonV2Warnings.length > 0 ? `Loon v2 转换提示:\n${loonV2Warnings.join('\n')}` : ''
 
+  const targetCompatibilityWarningText =
+    targetCompatibilityWarnings.length > 0
+      ? `跨目标转换提示:\n${targetCompatibilityWarnings.join('\n')}`
+      : ''
+
   otherRule = (otherRule[0] || '') && `${app}不支持以下内容:\n${otherRule.join('\n')}`
 
   notBuildInPolicy =
@@ -2142,6 +2156,7 @@ ${providers}
 
   shNotify(otherRule)
   shNotify(loonV2WarningText)
+  shNotify(targetCompatibilityWarningText)
   shNotify(notBuildInPolicy)
 
   if (openMsgHtml) {
@@ -4318,19 +4333,20 @@ function getArgumentOptions(item) {
   return normalizeArgumentOptions(splitTopLevel(`${item?.value ?? ''}`, ','))
 }
 
-function formatArgumentOptionsDesc(item) {
+function formatArgumentOptionsDesc(item, isRuleToggle = false) {
+  if (isRuleToggle) return '可选值: 留空启用, # 禁用'
   const options = getArgumentOptions(item)
   if (options.length <= 1) return ''
   return `可选值: ${options.map(quoteIfNeeded).join(', ')}`
 }
 
-function buildSurgeArgumentsDesc(args) {
+function buildSurgeArgumentsDesc(args, ruleToggleArgs = new Map()) {
   return args
     .map(item => {
       const { tag, desc } = parseArgumentTagFields(item.tag)
       const title = tag && tag !== item.key ? tag : item.key
       const detail = desc && desc !== item.key ? desc : ''
-      const options = formatArgumentOptionsDesc(item)
+      const options = formatArgumentOptionsDesc(item, ruleToggleArgs.has(item.key))
       return `${item.key}: ${escapeArgumentDesc([title, detail, options].filter(Boolean).join('\n'))}`
     })
     .filter(Boolean)
