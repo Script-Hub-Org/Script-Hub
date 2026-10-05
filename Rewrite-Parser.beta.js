@@ -1203,7 +1203,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     for (let i = 0; i < sgArg.length; i++) {
       let key = sgArg[i].key
       let value = getSurgeArgumentDefault(sgArg[i], surgeRuleToggleArgs.has(key))
-      let a = value === '' ? key : key + ':' + value
+      let a = key + ':' + (value === '' ? '""' : value)
       sgargArr.push(a)
     }
     modInfoObj['arguments'] = (sgargArr[0] || '') && `${sgargArr.join(',')}`

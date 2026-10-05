@@ -132,7 +132,7 @@ test('Loon dynamic enable uses an explicit Surge module toggle convention', asyn
     'surge-module'
   )
 
-  assert.ok(body.includes('#!arguments=UnblockURLinWeChat_script:#,MainTabFilter\n'))
+  assert.ok(body.includes('#!arguments=UnblockURLinWeChat_script:#,MainTabFilter:""\n'))
   assert.match(body, /UnblockURLinWeChat_script: 微信外链脚本\\n控制微信外链脚本是否启用\\n可选值: 留空启用, # 禁用/)
   assert.match(body, /MainTabFilter: 微博顶部脚本\\n控制微博顶部脚本是否启用\\n可选值: 留空启用, # 禁用/)
   assert.ok(body.includes('{{{UnblockURLinWeChat_script}}}[微信]外部链接解锁 = type=http-response'))
