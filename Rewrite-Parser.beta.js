@@ -2482,7 +2482,7 @@ function readLoonV2Regex(value) {
 
 function normalizeLoonV2Template(value, targetApp) {
   const raw = `${value ?? ''}`.trim()
-  const matched = raw.match(/^\$\{\s*([^{}]+?)\s*\}$/)
+  const matched = raw.match(/^\$\{([^{}]+)\}$/)
   if (!matched) return null
   const key = matched[1].trim()
   return targetApp == 'surge-module' || targetApp == 'shadowrocket-module' ? `{{{${key}}}}` : `{${key}}`
@@ -2516,7 +2516,7 @@ function normalizeLoonV2Argument(value) {
   if (/^\{[\s\S]*\}$/.test(raw)) {
     const keys = splitLoonV2TopLevel(raw.slice(1, -1))
       .filter(Boolean)
-      .map(item => item.match(/^\$\{\s*([^{}]+?)\s*\}$/)?.[1]?.trim() || '')
+      .map(item => item.match(/^\$\{([^{}]+)\}$/)?.[1]?.trim() || '')
     if (keys.length === 0 || keys.some(key => !key)) return null
     if (new Set(keys).size !== keys.length) return null
     return `[${keys.map(key => `{${key}}`).join(',')}]`
@@ -2656,7 +2656,7 @@ function normalizeLoonV2ScriptLine(line, targetApp) {
       if (type !== 'request' && type !== 'response') {
         return { unsupported: true, reason: `${key} 只适用于 Request/Response Script` }
       }
-      if (/^\$\{\s*[^{}]+?\s*\}$/.test(value)) {
+      if (/^\$\{[^{}]+\}$/.test(value)) {
         return { unsupported: true, reason: `${key} 必须是固定 Boolean，不能引用动态参数` }
       }
       const flag = normalizeLoonV2Boolean(value, targetApp)
