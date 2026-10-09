@@ -339,6 +339,15 @@ test('Loon v2 response maps to Surge without guessing body buffering', async () 
   assert.doesNotMatch(body, /engine=webview/)
 })
 
+test('Loon v2 malformed Boolean placeholder is rejected by the parser', async () => {
+  const malformedValue = '${' + ' '.repeat(20000) + 'x}y'
+  const { notifications } = await convert(
+    'response if ${url} ~= /\\/api\\/v1\\/data/i then script("https://example.com/a.js") with requires_body=' + malformedValue,
+    'surge-module'
+  )
+  assert.match(JSON.stringify(notifications), /requires_body 必须是 Boolean/)
+})
+
 test('Loon v2 response maps to Shadowrocket without Surge-only engine', async () => {
   const { body } = await convert(
     'response if ${url} ~= /\\/api\\/v1\\/data/i then script("https://example.com/a.js") with requires_body=true, binary_body_mode=true',
