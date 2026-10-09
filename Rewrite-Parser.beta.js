@@ -2656,7 +2656,7 @@ function normalizeLoonV2ScriptLine(line, targetApp) {
       if (type !== 'request' && type !== 'response') {
         return { unsupported: true, reason: `${key} 只适用于 Request/Response Script` }
       }
-      if (/^\$\{\s*[^{}]+?\s*\}$/.test(value)) {
+      if (/^\$\{[^{}]+\}$/.test(value)) {
         return { unsupported: true, reason: `${key} 必须是固定 Boolean，不能引用动态参数` }
       }
       const flag = normalizeLoonV2Boolean(value, targetApp)
