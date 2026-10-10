@@ -16,6 +16,8 @@ https://github.com/Script-Hub-Org/Script-Hub
 
 const script_start = Date.now()
 const JS_NAME = 'Script Hub: 重写转换'
+const ENCRYPTED_LPX_MESSAGE =
+  '⚠️ 读取不到 Loon 插件头内容，判定为 Loon 加密的私有插件(.lpx)，Script Hub 无法处理'
 const $ = new Env(JS_NAME)
 
 let arg
@@ -344,7 +346,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
   }
 
   if (unreadableLpxSources.length > 0) {
-    throw new Error('读取不到 Loon 插件头内容，判定为加密私有插件(.lpx)，Script Hub 无法处理')
+    throw new Error(ENCRYPTED_LPX_MESSAGE)
   }
 
   eval(evJsori)
@@ -2199,10 +2201,13 @@ ${providers}
     done($.isQuanX() ? result : { response: result })
   }
 })().catch(e => {
-  noNtf == false ? $.msg(JS_NAME, `${notifyName}：${e}\n${url}`, '', 'https://t.me/zhetengsha_group') : $.log(e)
+  const errorMessage = e?.message || String(e)
+  noNtf == false
+    ? $.msg(JS_NAME, `${notifyName}：${errorMessage}\n${url}`, '', 'https://t.me/zhetengsha_group')
+    : $.log(errorMessage)
 
   result = {
-    body: `${notifyName}：${e}\n\n\n\n\n\nScript Hub 重写转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
+    body: `${notifyName}：${errorMessage}\n\n\n\n\n\nScript Hub 重写转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
 `,
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',

@@ -940,8 +940,8 @@ test('Loon .lpx source without a readable header is identified as encrypted', as
     { sourceUrl }
   )
 
-  assert.match(body, /读取不到 Loon 插件头内容，判定为加密私有插件\(.lpx\)/)
-  assert.match(JSON.stringify(notifications), /读取不到 Loon 插件头内容|加密私有插件/)
+  assert.match(body, /⚠️ 读取不到 Loon 插件头内容，判定为 Loon 加密的私有插件\(.lpx\)/)
+  assert.match(JSON.stringify(notifications), /⚠️ 读取不到 Loon 插件头内容|加密的私有插件/)
 })
 
 test('Beta host modules route the Shadowrocket target into the converter', () => {
