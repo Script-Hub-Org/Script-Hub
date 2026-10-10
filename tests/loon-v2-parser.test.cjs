@@ -912,6 +912,38 @@ test('real 什么值得买 Loon plugin converts all native actions for Surge', a
   assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|不支持以下内容|失败/)
 })
 
+test('readable Loon .lpx source is not mistaken for an encrypted plugin', async () => {
+  const sourceUrl = 'https://example.com/plain.lpx?token=1'
+  const source = ['#!name=Plain Loon plugin', '[Rule]', 'DOMAIN-SUFFIX,example.com,DIRECT'].join('\n')
+  const { body, notifications } = await convert(
+    '',
+    'surge-module',
+    { [sourceUrl]: source },
+    'loon-plugin',
+    {},
+    { sourceUrl }
+  )
+
+  assert.match(body, /example\.com/)
+  assert.doesNotMatch(body, /Script Hub 重写转换: ❌/)
+  assert.doesNotMatch(JSON.stringify(notifications), /加密私有插件|插件头内容/)
+})
+
+test('Loon .lpx source without a readable header is identified as encrypted', async () => {
+  const sourceUrl = 'https://example.com/private.lpx'
+  const { body, notifications } = await convert(
+    '',
+    'surge-module',
+    { [sourceUrl]: 'encrypted payload' },
+    'loon-plugin',
+    {},
+    { sourceUrl }
+  )
+
+  assert.match(body, /读取不到 Loon 插件头内容，判定为加密私有插件\(.lpx\)/)
+  assert.match(JSON.stringify(notifications), /读取不到 Loon 插件头内容|加密私有插件/)
+})
+
 test('Beta host modules route the Shadowrocket target into the converter', () => {
   const moduleFiles = [
     '../modules/script-hub.beta.surge.sgmodule',

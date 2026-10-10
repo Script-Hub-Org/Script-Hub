@@ -238,6 +238,7 @@ let modInfoObj = {
 
 //信息中转站
 let bodyBox = [] //存储待转换的内容
+let unreadableLpxSources = [] //读取不到 Loon 插件头的 .lpx 来源
 let otherRule = [] //不支持的规则&脚本
 let notBuildInPolicy = [] //不是内置策略的规则
 let inBox = [] //被释放的重写或规则
@@ -328,6 +329,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       body = reStatus == 200 ? res.body : reStatus == 404 ? '#!error=404: Not Found' : ''
       reStatus == 404 && noNtf == false && $.msg(JS_NAME, '来源链接已失效', '404: Not Found ---> ' + reqArr[i], '')
 
+      if (reStatus == 200 && isLpxSource(reqArr[i]) && !hasReadableLoonPluginHeader(body)) {
+        unreadableLpxSources.push(reqArr[i])
+      }
+
       if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)) {
         body = body.match(/^(?:\n|\r)*\/\*([\s\S]*?)(?:\r|\n)\s*\*+\//)[1]
         bodyBox.push(body)
@@ -336,6 +341,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       }
     } //for
     body = bodyBox.join('\n\n') + localText
+  }
+
+  if (unreadableLpxSources.length > 0) {
+    throw new Error('读取不到 Loon 插件头内容，判定为加密私有插件(.lpx)，Script Hub 无法处理')
   }
 
   eval(evJsori)
@@ -2205,6 +2214,14 @@ ${providers}
   $.isQuanX() ? (result.status = 'HTTP/1.1 500') : (result.status = 500)
   done($.isQuanX() ? result : { response: result })
 })
+
+function isLpxSource(sourceUrl) {
+  return /\.lpx(?:[?#]|$)/i.test(String(sourceUrl ?? ''))
+}
+
+function hasReadableLoonPluginHeader(source) {
+  return /(?:^|\r?\n)\s*#!(?!error(?:\s|=))[a-z][\w-]*\s*=/i.test(String(source ?? ''))
+}
 
 //判断是否被注释
 function isNoteK(x) {
