@@ -522,6 +522,35 @@ test('empty keyword selectors do not filter every line', async () => {
   assert.doesNotMatch(body, /#DOMAIN,example\.com,DIRECT/)
 })
 
+test('Loon 3.5.3 DOMAIN-WILDCARD rules are preserved for Loon and Surge targets', async () => {
+  const source = [
+    '#!name=domain wildcard',
+    '[Rule]',
+    'DOMAIN-WILDCARD,*.example.com,DIRECT',
+    'DOMAIN-WILDCARD,api?.example.com,REJECT',
+    'DOMAIN-WILDCARD,node[0-9].example.com,DIRECT',
+  ].join('\n')
+
+  const loon = await convert(source, 'loon-plugin')
+  assert.match(loon.body, /DOMAIN-WILDCARD,\*\.example\.com,DIRECT/)
+  assert.match(loon.body, /DOMAIN-WILDCARD,api\?\.example\.com,REJECT/)
+  assert.match(loon.body, /DOMAIN-WILDCARD,node\[0-9\]\.example\.com,DIRECT/)
+  assert.doesNotMatch(JSON.stringify(loon.notifications), /不支持以下内容|DOMAIN-WILDCARD/)
+
+  const surge = await convert(source, 'surge-module')
+  assert.match(surge.body, /DOMAIN-WILDCARD,\*\.example\.com,DIRECT/)
+  assert.match(surge.body, /DOMAIN-WILDCARD,api\?\.example\.com,REJECT/)
+  assert.match(surge.body, /DOMAIN-WILDCARD,node\[0-9\]\.example\.com,DIRECT/)
+  assert.doesNotMatch(JSON.stringify(surge.notifications), /不支持以下内容|DOMAIN-WILDCARD/)
+
+  for (const target of ['shadowrocket-module', 'stash-stoverride']) {
+    const unsupported = await convert(source, target)
+    assert.doesNotMatch(unsupported.body, /DOMAIN-WILDCARD/)
+    assert.match(JSON.stringify(unsupported.notifications), new RegExp(`${target.split('-')[0]}不支持以下内容`))
+    assert.match(JSON.stringify(unsupported.notifications), /DOMAIN-WILDCARD/)
+  }
+})
+
 test('rule-set empty keyword selectors do not filter every rule', async () => {
   const source = 'example.com\napi.example.com'
 
