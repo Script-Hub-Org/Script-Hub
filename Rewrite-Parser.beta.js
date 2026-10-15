@@ -16,6 +16,8 @@ https://github.com/Script-Hub-Org/Script-Hub
 
 const script_start = Date.now()
 const JS_NAME = 'Script Hub: 重写转换'
+const ENCRYPTED_LPX_MESSAGE =
+  '⚠️ 读取不到 Loon 插件头内容，判定为 Loon 加密的私有插件(.lpx)，Script Hub 无法处理'
 const $ = new Env(JS_NAME)
 
 let arg
@@ -238,6 +240,7 @@ let modInfoObj = {
 
 //信息中转站
 let bodyBox = [] //存储待转换的内容
+let unreadableLpxSources = [] //读取不到 Loon 插件头的 .lpx 来源
 let otherRule = [] //不支持的规则&脚本
 let notBuildInPolicy = [] //不是内置策略的规则
 let inBox = [] //被释放的重写或规则
@@ -328,6 +331,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       body = reStatus == 200 ? res.body : reStatus == 404 ? '#!error=404: Not Found' : ''
       reStatus == 404 && noNtf == false && $.msg(JS_NAME, '来源链接已失效', '404: Not Found ---> ' + reqArr[i], '')
 
+      if (reStatus == 200 && isLpxSource(reqArr[i]) && !hasReadableLoonPluginHeader(body)) {
+        unreadableLpxSources.push(reqArr[i])
+      }
+
       if (body.match(/^(?:\s)*\/\*[\s\S]*?(?:\r|\n)\s*\*+\//)) {
         body = body.match(/^(?:\n|\r)*\/\*([\s\S]*?)(?:\r|\n)\s*\*+\//)[1]
         bodyBox.push(body)
@@ -336,6 +343,10 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       }
     } //for
     body = bodyBox.join('\n\n') + localText
+  }
+
+  if (unreadableLpxSources.length > 0) {
+    throw new Error(ENCRYPTED_LPX_MESSAGE)
   }
 
   eval(evJsori)
@@ -1346,7 +1357,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       notBuildInPolicy.push(ori)
     } else if (!policyRegex.test(rulepolicy) && !/^proxy$/i.test(rulepolicy) && modistatus == 'no') {
       notBuildInPolicy.push(ori)
-    } else if (/^in-port|domain-wildcard$/i.test(ruletype) && isSurgeiOS) {
+    } else if (/^in-port$/i.test(ruletype) && isSurgeiOS) {
+      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
+    } else if (/^domain-wildcard$/i.test(ruletype) && (isSurgeiOS || isLooniOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
     } else if (/^protocol$/i.test(ruletype) && (isLooniOS || isSurgeiOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
@@ -2195,10 +2208,13 @@ ${providers}
     done($.isQuanX() ? result : { response: result })
   }
 })().catch(e => {
-  noNtf == false ? $.msg(JS_NAME, `${notifyName}：${e}\n${url}`, '', 'https://t.me/zhetengsha_group') : $.log(e)
+  const errorMessage = e?.message || String(e)
+  noNtf == false
+    ? $.msg(JS_NAME, `${notifyName}：${errorMessage}\n${url}`, '', 'https://t.me/zhetengsha_group')
+    : $.log(errorMessage)
 
   result = {
-    body: `${notifyName}：${e}\n\n\n\n\n\nScript Hub 重写转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
+    body: `${notifyName}：${errorMessage}\n\n\n\n\n\nScript Hub 重写转换: ❌  可自行翻译错误信息或复制错误信息后点击通知进行反馈
 `,
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
@@ -2210,6 +2226,14 @@ ${providers}
   $.isQuanX() ? (result.status = 'HTTP/1.1 500') : (result.status = 500)
   done($.isQuanX() ? result : { response: result })
 })
+
+function isLpxSource(sourceUrl) {
+  return /\.lpx(?:[?#]|$)/i.test(String(sourceUrl ?? ''))
+}
+
+function hasReadableLoonPluginHeader(source) {
+  return /(?:^|\r?\n)\s*#!(?!error(?:\s|=))[a-z][\w-]*\s*=/i.test(String(source ?? ''))
+}
 
 //判断是否被注释
 function isNoteK(x) {
@@ -2487,7 +2511,7 @@ function readLoonV2Regex(value) {
 
 function normalizeLoonV2Template(value, targetApp) {
   const raw = `${value ?? ''}`.trim()
-  const matched = raw.match(/^\$\{\s*([^{}]+?)\s*\}$/)
+  const matched = raw.match(/^\$\{([^{}]+)\}$/)
   if (!matched) return null
   const key = matched[1].trim()
   return targetApp == 'surge-module' || targetApp == 'shadowrocket-module' ? `{{{${key}}}}` : `{${key}}`
@@ -2521,7 +2545,7 @@ function normalizeLoonV2Argument(value) {
   if (/^\{[\s\S]*\}$/.test(raw)) {
     const keys = splitLoonV2TopLevel(raw.slice(1, -1))
       .filter(Boolean)
-      .map(item => item.match(/^\$\{\s*([^{}]+?)\s*\}$/)?.[1]?.trim() || '')
+      .map(item => item.match(/^\$\{([^{}]+)\}$/)?.[1]?.trim() || '')
     if (keys.length === 0 || keys.some(key => !key)) return null
     if (new Set(keys).size !== keys.length) return null
     return `[${keys.map(key => `{${key}}`).join(',')}]`
@@ -2661,7 +2685,7 @@ function normalizeLoonV2ScriptLine(line, targetApp) {
       if (type !== 'request' && type !== 'response') {
         return { unsupported: true, reason: `${key} 只适用于 Request/Response Script` }
       }
-      if (/^\$\{\s*[^{}]+?\s*\}$/.test(value)) {
+      if (/^\$\{[^{}]+\}$/.test(value)) {
         return { unsupported: true, reason: `${key} 必须是固定 Boolean，不能引用动态参数` }
       }
       const flag = normalizeLoonV2Boolean(value, targetApp)

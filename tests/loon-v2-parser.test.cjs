@@ -339,6 +339,15 @@ test('Loon v2 response maps to Surge without guessing body buffering', async () 
   assert.doesNotMatch(body, /engine=webview/)
 })
 
+test('Loon v2 malformed Boolean placeholder is rejected by the parser', async () => {
+  const malformedValue = '${' + ' '.repeat(20000) + 'x}y'
+  const { notifications } = await convert(
+    'response if ${url} ~= /\\/api\\/v1\\/data/i then script("https://example.com/a.js") with requires_body=' + malformedValue,
+    'surge-module'
+  )
+  assert.match(JSON.stringify(notifications), /requires_body 必须是 Boolean/)
+})
+
 test('Loon v2 response maps to Shadowrocket without Surge-only engine', async () => {
   const { body } = await convert(
     'response if ${url} ~= /\\/api\\/v1\\/data/i then script("https://example.com/a.js") with requires_body=true, binary_body_mode=true',
@@ -511,6 +520,35 @@ test('empty keyword selectors do not filter every line', async () => {
   const { body } = await convert(source, 'surge-module', {}, 'surge-module', { x: '', y: '' })
   assert.match(body, /DOMAIN,example\.com,DIRECT/)
   assert.doesNotMatch(body, /#DOMAIN,example\.com,DIRECT/)
+})
+
+test('Loon 3.5.3 DOMAIN-WILDCARD rules are preserved for Loon and Surge targets', async () => {
+  const source = [
+    '#!name=domain wildcard',
+    '[Rule]',
+    'DOMAIN-WILDCARD,*.example.com,DIRECT',
+    'DOMAIN-WILDCARD,api?.example.com,REJECT',
+    'DOMAIN-WILDCARD,node[0-9].example.com,DIRECT',
+  ].join('\n')
+
+  const loon = await convert(source, 'loon-plugin')
+  assert.match(loon.body, /DOMAIN-WILDCARD,\*\.example\.com,DIRECT/)
+  assert.match(loon.body, /DOMAIN-WILDCARD,api\?\.example\.com,REJECT/)
+  assert.match(loon.body, /DOMAIN-WILDCARD,node\[0-9\]\.example\.com,DIRECT/)
+  assert.doesNotMatch(JSON.stringify(loon.notifications), /不支持以下内容|DOMAIN-WILDCARD/)
+
+  const surge = await convert(source, 'surge-module')
+  assert.match(surge.body, /DOMAIN-WILDCARD,\*\.example\.com,DIRECT/)
+  assert.match(surge.body, /DOMAIN-WILDCARD,api\?\.example\.com,REJECT/)
+  assert.match(surge.body, /DOMAIN-WILDCARD,node\[0-9\]\.example\.com,DIRECT/)
+  assert.doesNotMatch(JSON.stringify(surge.notifications), /不支持以下内容|DOMAIN-WILDCARD/)
+
+  for (const target of ['shadowrocket-module', 'stash-stoverride']) {
+    const unsupported = await convert(source, target)
+    assert.doesNotMatch(unsupported.body, /DOMAIN-WILDCARD/)
+    assert.match(JSON.stringify(unsupported.notifications), new RegExp(`${target.split('-')[0]}不支持以下内容`))
+    assert.match(JSON.stringify(unsupported.notifications), /DOMAIN-WILDCARD/)
+  }
 })
 
 test('rule-set empty keyword selectors do not filter every rule', async () => {
@@ -934,6 +972,38 @@ test('real 什么值得买 Loon plugin converts all native actions for Surge', a
   assert.match(body, /zz_content/)
   assert.match(body, /Content-Type:application\/json/)
   assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|不支持以下内容|失败/)
+})
+
+test('readable Loon .lpx source is not mistaken for an encrypted plugin', async () => {
+  const sourceUrl = 'https://example.com/plain.lpx?token=1'
+  const source = ['#!name=Plain Loon plugin', '[Rule]', 'DOMAIN-SUFFIX,example.com,DIRECT'].join('\n')
+  const { body, notifications } = await convert(
+    '',
+    'surge-module',
+    { [sourceUrl]: source },
+    'loon-plugin',
+    {},
+    { sourceUrl }
+  )
+
+  assert.match(body, /example\.com/)
+  assert.doesNotMatch(body, /Script Hub 重写转换: ❌/)
+  assert.doesNotMatch(JSON.stringify(notifications), /加密私有插件|插件头内容/)
+})
+
+test('Loon .lpx source without a readable header is identified as encrypted', async () => {
+  const sourceUrl = 'https://example.com/private.lpx'
+  const { body, notifications } = await convert(
+    '',
+    'surge-module',
+    { [sourceUrl]: 'encrypted payload' },
+    'loon-plugin',
+    {},
+    { sourceUrl }
+  )
+
+  assert.match(body, /⚠️ 读取不到 Loon 插件头内容，判定为 Loon 加密的私有插件\(.lpx\)/)
+  assert.match(JSON.stringify(notifications), /⚠️ 读取不到 Loon 插件头内容|加密的私有插件/)
 })
 
 test('Beta host modules route the Shadowrocket target into the converter', () => {
