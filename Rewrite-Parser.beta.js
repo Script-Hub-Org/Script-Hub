@@ -1357,7 +1357,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       notBuildInPolicy.push(ori)
     } else if (!policyRegex.test(rulepolicy) && !/^proxy$/i.test(rulepolicy) && modistatus == 'no') {
       notBuildInPolicy.push(ori)
-    } else if (/^in-port|domain-wildcard$/i.test(ruletype) && isSurgeiOS) {
+    } else if (/^in-port$/i.test(ruletype) && isSurgeiOS) {
+      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
+    } else if (/^domain-wildcard$/i.test(ruletype) && (isSurgeiOS || isLooniOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
     } else if (/^protocol$/i.test(ruletype) && (isLooniOS || isSurgeiOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
