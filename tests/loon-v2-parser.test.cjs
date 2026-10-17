@@ -188,6 +188,22 @@ test('Stash maps canonical Loon reject_dict, reject_array, and empty reject to n
   assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
 })
 
+test('Stash uses native reject only for exact empty text 404 mocks', async () => {
+  const source = [
+    'request if ${url} ~= /empty-404/ then reject(404)',
+    'request if ${url} ~= /text-404/ then reject(404, "")',
+    'response if ${url} ~= /space-404/ then response.body.mock("text", " ", 404)',
+    'response if ${url} ~= /json-404/ then response.body.mock("json", "{}", 404)',
+    'response if ${url} ~= /body-404/ then response.body.mock("text", "custom", 404)',
+  ].join('\n')
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  assert.match(body, /empty-404 - reject\n/)
+  assert.match(body, /text-404 - reject\n/)
+  for (const name of ['space-404', 'json-404', 'body-404']) assert.ok(body.includes(`match: ${name}`))
+  assert.equal((body.match(/argument: \|-/g) || []).length, 3)
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+})
+
 test('real CosmosPodcast Loon plugin maps reject_dict and jq across every supported target', async () => {
   const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'cosmospodcast_remove_ads.lpx'), 'utf8')
   const jqFragment = '.data |= map(select('

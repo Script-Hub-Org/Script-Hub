@@ -4713,14 +4713,14 @@ function getMockInfo(x, mark, y, exact = false) {
     const status = field('status-code')
     const header = field('header')
     const contentType = header.replace(/^Content-Type:/i, '')
-    if (type === 'text' && status === '200') {
-      // Canonical Surge Map Local shapes for Loon reject_dict/reject_array/reject(200).
+    if (type === 'text' && (status === '200' || status === '404')) {
+      // Canonical Surge Map Local shapes for Loon reject_dict/reject_array/empty reject.
       // Match the exact data string; never trim (a space is a real body) or guess from names.
       const isJson = contentType === 'application/json'
       const rejectType =
-        isJson && data === '{}' ? 'reject-dict' :
-        isJson && data === '[]' ? 'reject-array' :
-        data === '' && (!header || contentType === 'text/plain') ? 'reject-200' : ''
+        status === '200' && isJson && data === '{}' ? 'reject-dict' :
+        status === '200' && isJson && data === '[]' ? 'reject-array' :
+        data === '' && (!header || contentType === 'text/plain') ? (status === '404' ? 'reject' : 'reject-200') : ''
       if (rejectType) {
         rwBox.push({ mark: mark === '#' ? '' : mark, noteK: mark === '#' ? '#' : '', rwptn: pattern, rwvalue: '-', rwtype: rejectType })
         return
