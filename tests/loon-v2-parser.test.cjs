@@ -204,6 +204,81 @@ test('Stash uses native reject only for exact empty text 404 mocks', async () =>
   assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
 })
 
+test('real TestFlight source retains its sole body replacement and missing-policy notice', async () => {
+  const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'testflight_region_unlock.lpx'), 'utf8')
+  for (const target of ['stash-stoverride', 'surge-module', 'shadowrocket-module']) {
+    const { body, notifications } = await convert(source, target)
+    assert.ok(body.includes('storefrontId'))
+    assert.ok(body.includes('143441-19,29'))
+    assert.doesNotMatch(JSON.stringify(notifications), /正则缺少|Loon v2:/)
+    if (target === 'stash-stoverride') assert.match(JSON.stringify(notifications), /未指定策略/)
+    if (target === 'stash-stoverride') assert.equal((body.match(/request-replace-regex/g) || []).length, 1)
+    else assert.equal(sectionLines(body, 'Body Rewrite').length, 1)
+  }
+})
+
+test('body regex arguments preserve commas, quotes, classes, escapes, and paired arrays', async () => {
+  const patterns = [String.raw`/"a",/`, String.raw`/[/'",()|]+\/[\]a]/`, String.raw`/\[a\],\"x\"/i`]
+  for (const regex of patterns) {
+    const source = `request if \${url} ~= /install/ then request.body.replace(${regex}, "replacement")`
+    for (const target of ['stash-stoverride', 'surge-module']) {
+      const { body, notifications } = await convert(source, target)
+      assert.ok(body.includes('replacement'), `${regex}: ${JSON.stringify(notifications)}`)
+      assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+    }
+  }
+  const source = String.raw`request if ${'${url}'} ~= /install/ then request.body.replace([/"a",/, /[/'",()|]+/], ["one", "two"])`
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  assert.equal((body.match(/request-replace-regex/g) || []).length, 2)
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+})
+
+test('real Tieba object argument retains its key and enables the downstream video option', async () => {
+  const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'tieba_remove_ads.lpx'), 'utf8')
+  const stash = await convert(source, 'stash-stoverride')
+  const argument = [...stash.body.matchAll(/argument: \|-\n\s+([^\n]+)/g)].map(match => match[1]).find(value => value.startsWith('per_filter_video_thread='))
+  const options = Object.fromEntries(argument.split('&').map(item => {
+    const [key, value] = item.split('=')
+    return [key, value === 'true' ? true : value === 'false' ? false : value]
+  }))
+  assert.equal(options.per_filter_video_thread, true)
+  assert.doesNotMatch(JSON.stringify(stash.notifications), /不支持以下内容/)
+  for (const target of ['surge-module', 'shadowrocket-module']) {
+    const { body } = await convert(source, target)
+    assert.ok(body.includes('per_filter_video_thread="{{{per_filter_video_thread}}}"'))
+  }
+  const loon = await convert(source, 'loon-plugin')
+  assert.ok(loon.body.includes('{${per_filter_video_thread}}'))
+})
+
+test('Stash encodes object defaults without changing literal string arguments', async () => {
+  const source = [
+    '[Argument]',
+    'first=input, "a&b=c%20, d", tag=First',
+    'second=input, "引号\\\"/空 格", tag=Second',
+    '[Script]',
+    'request if ${url} ~= /object/ then script("https://example.com/object.js", {${first}, ${second}})',
+    'request if ${url} ~= /literal/ then script("https://example.com/literal.js", "first=literal&second=x")',
+  ].join('\n')
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  const args = [...body.matchAll(/argument: \|-\n\s+([^\n]+)/g)].map(match => match[1])
+  assert.equal(args[0], `first=${encodeURIComponent('a&b=c%20, d')}&second=${encodeURIComponent('引号"/空 格')}`)
+  assert.equal(new URLSearchParams(args[0]).get('first'), 'a&b=c%20, d')
+  assert.equal(args[1], 'first=literal&second=x')
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+})
+
+test('real HTTPDNS source preserves all four top-level USER-AGENT and logical rules', async () => {
+  const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'block_httpdns.lpx'), 'utf8')
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  for (const agent of ['httpdns*', 'httpsdns*', 'Httpdns*', 'Httpsdns*']) assert.ok(body.includes(`USER-AGENT,${agent},REJECT`))
+  assert.equal((body.match(/- USER-AGENT,/g) || []).length, 4)
+  assert.equal((body.match(/- AND,/g) || []).length, 2)
+  assert.doesNotMatch(JSON.stringify(notifications), /USER-AGENT/)
+  const variant = await convert('[Rule]\nuser-agent,"Agent With Space*",REJECT', 'stash-stoverride')
+  assert.ok(variant.body.includes('USER-AGENT,Agent With Space*,REJECT'))
+})
+
 test('real CosmosPodcast Loon plugin maps reject_dict and jq across every supported target', async () => {
   const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'cosmospodcast_remove_ads.lpx'), 'utf8')
   const jqFragment = '.data |= map(select('

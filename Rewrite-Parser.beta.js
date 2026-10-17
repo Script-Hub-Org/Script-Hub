@@ -403,6 +403,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
     let isCommented = /^#/.test(x) && !/^#!/.test(x)
     let excludedByKeyword = false
+    let loonV2ObjectArgument = false
     //去掉注释
     if (hasKeyword(Pin0, x) && /^#/.test(x) && !/^#!/.test(x)) {
       x = x.replace(/^#/, '')
@@ -443,6 +444,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         continue
       }
       if (loonV2?.line) {
+        loonV2ObjectArgument = loonV2.objectArgument
         x = isCommented ? `#${loonV2.line}` : loonV2.line
         loonV2NormalizedLines.add(x)
         if (loonV2.warnings?.length > 0) {
@@ -997,6 +999,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           mark,
           noteK,
           loonV2: loonV2NormalizedLines.has(x),
+          loonV2ObjectArgument,
           jsname,
           img,
           jstype,
@@ -1381,7 +1384,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rules.push(ori)
     } else if (/^(?:and|or|not)$/i.test(ruletype) && isStashiOS) {
       rules.push(mark + noteK2 + '- ' + ori)
-    } else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|de?st-port)/i.test(ruletype) && isStashiOS) {
+    } else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|de?st-port|^user-agent$)/i.test(ruletype) && isStashiOS) {
       rules.push(mark + noteK2 + '- ' + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
     } else if (/src-port/i.test(ruletype) && (isSurgeiOS || isLooniOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulepm)
@@ -1906,6 +1909,17 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         .replace(/t;amp;/g, '&')
         .replace(/t;add;/g, '+')
 
+      if (jsBox[i].loonV2ObjectArgument) {
+        const pairs = parseSurgeTemplateArgumentPairs(jsarg)
+        if (pairs.length > 0) {
+          jsarg = pairs.map(({ scriptKey, templateKey }) => {
+            const item = sgArg.find(item => item.key === templateKey)
+            const value = unwrapLoonV2String(splitTopLevel(item?.value || '', ',')[0]) ?? getArgumentDefaultValue(item)
+            return `${scriptKey}=${encodeURIComponent(value)}`
+          }).join('&')
+        }
+      }
+
       cronexp = reJsValue(nCron || 'null', ncronexp, jsname, ori, cronexp)
 
       jsname = reJsValue(njsnametarget || 'null', njsname, jsname, ori, jsname)
@@ -2326,6 +2340,7 @@ function splitLoonV2TopLevel(str, sep = ',') {
   let current = ''
   let quote = ''
   let regex = false
+  let regexClass = false
   let escaped = false
   let braceDepth = 0
   let bracketDepth = 0
@@ -2347,7 +2362,9 @@ function splitLoonV2TopLevel(str, sep = ',') {
       current += char
       if (escaped) escaped = false
       else if (char === '\\') escaped = true
-      else if (char === '/') regex = false
+      else if (char === '[') regexClass = true
+      else if (char === ']') regexClass = false
+      else if (char === '/' && !regexClass) regex = false
       continue
     }
     if (char === '"' || char === "'" || char === '`') {
@@ -2355,7 +2372,7 @@ function splitLoonV2TopLevel(str, sep = ',') {
       current += char
       continue
     }
-    if (char === '/' && /(?:\(|,|\[)\s*$/.test(str.slice(0, i))) {
+    if (char === '/' && /(?:^|\(|,|\[)\s*$/.test(str.slice(0, i))) {
       regex = true
       current += char
       continue
@@ -2385,6 +2402,7 @@ function splitFirstLoonV2TopLevel(str, sep) {
 function findLoonV2MatchingParen(str, openIndex) {
   let quote = ''
   let regex = false
+  let regexClass = false
   let escaped = false
   let depth = 0
   for (let i = openIndex; i < str.length; i++) {
@@ -2404,7 +2422,11 @@ function findLoonV2MatchingParen(str, openIndex) {
         escaped = false
       } else if (char === '\\') {
         escaped = true
-      } else if (char === '/') {
+      } else if (char === '[') {
+        regexClass = true
+      } else if (char === ']') {
+        regexClass = false
+      } else if (char === '/' && !regexClass) {
         regex = false
       }
       continue
@@ -2473,10 +2495,11 @@ function readLoonV2Regex(value) {
   if (!raw.startsWith('/')) return { reason: 'URL 条件右值必须是正则字面量' }
 
   let escaped = false
+  let regexClass = false
   let closing = -1
   for (let i = 1; i < raw.length; i++) {
     const char = raw[i]
-    if (char === '/' && !escaped) {
+    if (char === '/' && !escaped && !regexClass) {
       closing = i
       break
     }
@@ -2484,6 +2507,10 @@ function readLoonV2Regex(value) {
       escaped = false
     } else if (char === '\\') {
       escaped = true
+    } else if (char === '[') {
+      regexClass = true
+    } else if (char === ']') {
+      regexClass = false
     }
   }
   if (closing === -1) return { reason: 'URL 正则缺少结束分隔符 /' }
@@ -2533,7 +2560,7 @@ function normalizeLoonV2Timeout(value, targetApp) {
   return scalar
 }
 
-function normalizeLoonV2Argument(value) {
+function normalizeLoonV2Argument(value, targetApp) {
   const raw = `${value ?? ''}`.trim()
   if (!raw) return ''
 
@@ -2546,6 +2573,7 @@ function normalizeLoonV2Argument(value) {
       .map(item => item.match(/^\$\{([^{}]+)\}$/)?.[1]?.trim() || '')
     if (keys.length === 0 || keys.some(key => !key)) return null
     if (new Set(keys).size !== keys.length) return null
+    if (targetApp === 'stash-stoverride') return JSON.stringify(keys.map(key => `${encodeURIComponent(key)}={${key}}`).join('&'))
     return `[${keys.map(key => `{${key}}`).join(',')}]`
   }
 
@@ -2629,7 +2657,7 @@ function normalizeLoonV2ScriptLine(line, targetApp) {
   }
   const jsurl = jsurlResult.value
 
-  const jsarg = actionParts.length === 2 ? normalizeLoonV2Argument(actionParts[1]) : ''
+  const jsarg = actionParts.length === 2 ? normalizeLoonV2Argument(actionParts[1], targetApp) : ''
   if (jsarg == null) {
     return { unsupported: true, reason: '暂只支持字符串参数或插件对象参数 {${name}, ...}' }
   }
@@ -2741,6 +2769,7 @@ function normalizeLoonV2ScriptLine(line, targetApp) {
   const argument = jsarg ? `, argument=${jsarg}` : ''
   return {
     line: `${legacyTrigger} script-path=${jsurl}${options}${argument}`,
+    objectArgument: actionParts[1]?.trim().startsWith('{') || false,
     warnings,
   }
 }
@@ -2750,6 +2779,7 @@ function splitLoonV2ActionList(str) {
   let current = ''
   let quote = ''
   let regex = false
+  let regexClass = false
   let escaped = false
   let braceDepth = 0
   let bracketDepth = 0
@@ -2774,7 +2804,11 @@ function splitLoonV2ActionList(str) {
         escaped = false
       } else if (char === '\\') {
         escaped = true
-      } else if (char === '/') {
+      } else if (char === '[') {
+        regexClass = true
+      } else if (char === ']') {
+        regexClass = false
+      } else if (char === '/' && !regexClass) {
         regex = false
       }
       continue
@@ -2809,6 +2843,7 @@ function splitLoonV2ActionList(str) {
 function stripLoonV2InlineComment(source) {
   let quote = ''
   let regex = false
+  let regexClass = false
   let escaped = false
   for (let i = 0; i < source.length; i++) {
     const char = source[i]
@@ -2827,7 +2862,11 @@ function stripLoonV2InlineComment(source) {
         escaped = false
       } else if (char === '\\') {
         escaped = true
-      } else if (char === '/') {
+      } else if (char === '[') {
+        regexClass = true
+      } else if (char === ']') {
+        regexClass = false
+      } else if (char === '/' && !regexClass) {
         regex = false
       }
       continue
@@ -2851,6 +2890,7 @@ function stripLoonV2InlineComment(source) {
 function findLoonV2ActionClosingParen(str, openIndex) {
   let quote = ''
   let regex = false
+  let regexClass = false
   let escaped = false
   let depth = 0
   for (let i = openIndex; i < str.length; i++) {
@@ -2870,7 +2910,11 @@ function findLoonV2ActionClosingParen(str, openIndex) {
         escaped = false
       } else if (char === '\\') {
         escaped = true
-      } else if (char === '/') {
+      } else if (char === '[') {
+        regexClass = true
+      } else if (char === ']') {
+        regexClass = false
+      } else if (char === '/' && !regexClass) {
         regex = false
       }
       continue
@@ -2942,15 +2986,18 @@ function parseLoonV2RegexLiteral(value, field) {
   if (!raw.startsWith('/')) return { reason: `${field} 必须是正则字面量` }
 
   let escaped = false
+  let regexClass = false
   let closing = -1
   for (let i = 1; i < raw.length; i++) {
     const char = raw[i]
-    if (char === '/' && !escaped) {
+    if (char === '/' && !escaped && !regexClass) {
       closing = i
       break
     }
     if (escaped) escaped = false
     else if (char === '\\') escaped = true
+    else if (char === '[') regexClass = true
+    else if (char === ']') regexClass = false
   }
   if (closing === -1) return { reason: `${field} 正则缺少结束分隔符 /` }
 
