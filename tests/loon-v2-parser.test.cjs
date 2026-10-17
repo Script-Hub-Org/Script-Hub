@@ -96,6 +96,149 @@ function sectionLines(body, sectionName) {
     .filter(line => line && !line.startsWith('#'))
 }
 
+test('native Rewrite actions use the supported target matrix without losing rules', async () => {
+  const source = [
+    'request if ${url} ~= /move/ then redirect(302, "https://example.com/new")',
+    'response if ${url} ~= /json/ then response.json.delete("ad")',
+    'response if ${url} ~= /body/ then response.body.replace(/old/, "new")',
+    'response if ${url} ~= /header/ then response.header.set("X-Test", "yes")',
+    'request if ${url} ~= /mock/ then reject_dict(201)',
+  ].join('\n')
+  for (const target of ['surge-module', 'shadowrocket-module', 'loon-plugin', 'stash-stoverride']) {
+    const { body, notifications } = await convert(source, target)
+    assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+    if (target === 'loon-plugin') {
+      for (const line of source.split('\n')) assert.ok(body.includes(line))
+    } else if (target === 'stash-stoverride') {
+      assert.match(body, /url-rewrite:[\s\S]*https:\/\/example.com\/new 302/)
+      assert.match(body, /body-rewrite:[\s\S]*response-jq.*delpaths/)
+      assert.match(body, /response-replace-regex.*old.*new/)
+      assert.match(body, /header-rewrite:[\s\S]*response-add/)
+      assert.match(body, /body response-replace-regex old new/)
+      assert.match(body, /echoResponse/)
+      assert.doesNotMatch(body, /reject-dict/)
+    } else {
+      assert.equal(sectionLines(body, 'Map Local').length, 1)
+      assert.equal(sectionLines(body, 'Body Rewrite').length, 2)
+      assert.equal(sectionLines(body, 'Header Rewrite').length, 2)
+    }
+  }
+  const unknown = await convert(source, 'unknown-module')
+  assert.match(JSON.stringify(unknown.notifications), /当前目标不支持转换：unknown-module/)
+})
+
+test('Stash Map Local preserves exact status, escaped text, and remote URLs in executable echo arguments', async () => {
+  const entries = [
+    ['reject_dict(200)', '{}', 'text', 200, 'application/json'],
+    ['reject_array(404)', '[]', 'text', 404, 'application/json'],
+    ['reject(503, "x")', 'x', 'text', 503, 'text/plain'],
+    ['reject(204)', '', 'text', 204, 'text/plain'],
+    ['response.body.mock("json", "a status-code=503 header=evil data-type=file b", 201)', 'a status-code=503 header=evil data-type=file b', 'text', 201, 'application/json'],
+    ['response.body.mock("text", "first\\tsecond\\rthird\\r\\nend", 203)', 'first\tsecond\rthird\r\nend', 'text', 203, 'text/plain'],
+    ['response.body.mock("json", `{"s":"a&b=c%20", "n":"quote\\""}`, 201)', '{"s":"a&b=c%20", "n":"quote\\""}', 'text', 201, 'application/json'],
+    ['response.body.mock("text", "first\\nsecond\\\\end", 202)', 'first\nsecond\\end', 'text', 202, 'text/plain'],
+    ['response.body.mock_file("png", "https://example.com/blank200.png?a=1&b=2", 206)', 'https://example.com/blank200.png?a=1&b=2', 'url', 206, 'image/png'],
+  ]
+  const source = entries.map(([action], i) => `${action.startsWith('response.') ? 'response' : 'request'} if \${url} ~= /mock${i}/ then ${action}`).join('\n')
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+  const args = [...body.matchAll(/argument: \|-\n\s+([^\n]+)/g)].map(match => match[1])
+  assert.equal(args.length, entries.length)
+  const echo = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'echo-response.js'), 'utf8')
+  for (let i = 0; i < entries.length; i++) {
+    const [, value, kind, status, type] = entries[i]
+    const decoded = new URLSearchParams(decodeURIComponent(args[i]))
+    assert.equal(decoded.get(kind), value)
+    assert.equal(decoded.get('status-code'), String(status))
+    assert.equal(decoded.get('type'), type)
+    let output
+    vm.runInNewContext(echo, {
+      $argument: args[i], $environment: { 'stash-version': 'test' },
+      console: { log() {} }, $done: result => { output = result },
+      $notification: { post() {} },
+      $httpClient: { get: (options, callback) => {
+        assert.equal(options.url, value)
+        callback(null, { status: 200, headers: { 'content-type': type } }, 'remote-body')
+      } },
+    })
+    for (let j = 0; j < 100 && !output; j++) await new Promise(resolve => setTimeout(resolve, 5))
+    assert.equal(output?.response?.status, status)
+    assert.equal(output.response.body, kind === 'url' ? 'remote-body' : value)
+    assert.ok(Object.values(output.response.headers).some(header => header.startsWith(type)))
+  }
+})
+
+test('failed multi-action rewrites roll back every intermediate output', async () => {
+  const source = [
+    'request if ${url} ~= /partial-map/ then reject_dict(200) | unknown()',
+    'request if ${url} ~= /partial-url/ then redirect(302, "https://example.com/new") | unknown()',
+    'response if ${url} ~= /partial-body/ then response.json.delete("ad") | response.header.set("X-Test", "yes") | unknown()',
+    'request if ${url} ~= /kept/ then redirect(302, "https://example.com/kept")',
+  ].join('\n')
+  for (const target of ['surge-module', 'shadowrocket-module', 'stash-stoverride']) {
+    const { body, notifications } = await convert(source, target)
+    assert.doesNotMatch(body, /partial-map|partial-url|partial-body/)
+    assert.match(body, /example.com\/kept/)
+    assert.match(JSON.stringify(notifications), /暂不支持 Loon v2 Action：unknown/)
+  }
+})
+
+test('Stash rejects control characters in body replacements without aborting later rules', async () => {
+  for (const control of ['\\t', '\\r', '\\r\\n']) {
+    const { body, notifications } = await convert([
+      `response if \${url} ~= /bad-control/ then response.body.replace(/old/, "first${control}second")`,
+      'request if ${url} ~= /kept/ then redirect(302, "https://example.com/kept")',
+    ].join('\n'), 'stash-stoverride')
+    assert.doesNotMatch(body, /bad-control/)
+    assert.match(body, /example.com\/kept/)
+    assert.match(JSON.stringify(notifications), /包含空白/)
+    assert.doesNotMatch(JSON.stringify(notifications), /JSON|SyntaxError/)
+  }
+})
+
+test('Stash adapter failure rolls back mocks already converted from the same line', async () => {
+  const { body, notifications } = await convert([
+    'request if ${url} ~= /partial-adapter/ then reject(201, "ok") | reject_img(404)',
+    'response if ${url} ~= /partial-base64/ then response.header.add("X-Test", "yes") | response.body.mock("png", "YWJj", 200, true)',
+    'request if ${url} ~= /kept/ then redirect(302, "https://example.com/kept")',
+  ].join('\n'), 'stash-stoverride')
+  assert.doesNotMatch(body, /partial-adapter|partial-base64|echoResponse|X-Test/)
+  assert.match(body, /example.com\/kept/)
+  assert.match(JSON.stringify(notifications), /非 200 状态码/)
+  assert.match(JSON.stringify(notifications), /Base64/)
+})
+
+test('Stash keeps commented intermediate mocks disabled and preserves their source notes', async () => {
+  const source = '#request if ${url} ~= /disabled-mock/ then reject(404, "off")\n# retained note\nrequest if ${url} ~= /enabled-mock/ then reject(201, "on")'
+  const { body } = await convert(source, 'stash-stoverride')
+  assert.match(body, /# retained note/)
+  assert.match(body, /#\s+- match: disabled-mock/)
+  assert.match(body, /\n    - match: enabled-mock/)
+  const removed = await convert(source, 'stash-stoverride', {}, 'loon-plugin', { del: 'true' })
+  assert.doesNotMatch(removed.body, /disabled-mock/)
+})
+
+test('Stash keeps real Rewrite and trigger limitations explicit', async () => {
+  const { body, notifications } = await convert([
+    'request if ${url} ~= /bad-gif/ then reject_img(404)',
+    'response if ${url} ~= /bad-base64/ then response.body.mock("png", "YWJj", 200, true)',
+    'response if ${url} ~= /bad-file/ then response.body.mock_file("json", "local.json", 200)',
+    'response if ${url} ~= /bad-condition/ && ${response.status} == 200 then response.json.delete("ad")',
+    'response if ${url} ~= /bad-space/ then response.body.replace(/old/, "two words")',
+    'network-changed then script("https://example.com/event.js")',
+    'request if ${url} ~= /good-gif/ then reject_img(200)',
+  ].join('\n'), 'stash-stoverride')
+  assert.doesNotMatch(body, /bad-gif|bad-base64|bad-file|bad-condition|bad-space|event.js/)
+  assert.match(body, /good-gif - reject-img/)
+  const text = JSON.stringify(notifications)
+  assert.match(text, /非 200 状态码/)
+  assert.match(text, /Base64/)
+  assert.match(text, /本地 Map Local/)
+  assert.match(text, /包含空白/)
+  assert.match(text, /无法等价转换|只转换单一/)
+  assert.match(text, /Stash 不支持该触发器/)
+})
+
 test('legacy Surge Script converts to native Loon v2 Script syntax', async () => {
   const { body, notifications } = await convert(
     [

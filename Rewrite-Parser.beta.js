@@ -315,6 +315,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 }
 
 !(async () => {
+  if (!['surge-module', 'shadowrocket-module', 'loon-plugin', 'stash-stoverride'].includes(targetApp)) {
+    throw new Error(`当前目标不支持转换：${targetApp || '未知目标'}`)
+  }
   if (evUrlori) {
     evUrlori = (await $.http.get(evUrlori)).body
   }
@@ -2059,9 +2062,9 @@ ${MITM}
 
       let StashBodyRewrite = []
       for (let i = 0; i < rwbodyBox.length; i++) {
-        const { type, regex, value, mark = '', noteK = '' } = rwbodyBox[i]
+        const { type, regex, value, stashValue, mark = '', noteK = '' } = rwbodyBox[i]
         const line = `${regex} ${type.replace(/^http-/, '').replace(/^(request|response)$/, '$1-replace-regex')} ${
-          value.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1')
+          stashValue ?? value.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1')
           //.split(' ')
           //.map(i => i.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1'))
           //.join(' ')
@@ -3103,7 +3106,13 @@ function quoteSurgeField(value) {
   return `"${`${value ?? ''}`
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
-    .replace(/\r?\n/g, '\\n')}"`
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')}"`
+}
+
+function decodeSurgeQuotedField(value) {
+  // Surge fields can contain literal controls that JSON strings must escape.
+  return JSON.parse(value.replace(/[\x00-\x1f]/g, char => JSON.stringify(char).slice(1, -1)))
 }
 
 function quoteSurgeJq(value) {
@@ -3223,6 +3232,48 @@ function pushLoonV2HeaderRewrite(phase, pattern, action, args, mark = '') {
 }
 
 async function normalizeLoonV2RewriteLine(line, targetApp, sourceNum, markOverride) {
+  if (targetApp === 'loon-plugin') return normalizeLoonV2RewriteToSurge(line, targetApp, sourceNum, markOverride)
+  if (!['surge-module', 'shadowrocket-module', 'stash-stoverride'].includes(targetApp)) {
+    return normalizeLoonV2RewriteToSurge(line, targetApp, sourceNum, markOverride)
+  }
+  // Commit all intermediate rules together; a failed later Action must not leave an active prefix.
+  const boxes = [MapLocal, rwBox, rwbodyBox, rwhdBox, jsBox]
+  const lengths = boxes.map(box => box.length)
+  let result
+  try {
+    result = await normalizeLoonV2RewriteToSurge(line, 'surge-module', sourceNum, markOverride)
+    if (result?.handled && targetApp !== 'surge-module' && targetApp !== 'shadowrocket-module') {
+      for (const rule of rwbodyBox.slice(lengths[2])) {
+        if (rule.type.endsWith('-jq')) {
+          rule.stashValue = rule.value.startsWith('"') ? decodeSurgeQuotedField(rule.value) : rule.value.slice(1, -1)
+          continue
+        }
+        const fields = splitLegacyLoonV2Fields(rule.value).map(decodeSurgeQuotedField)
+        if (fields?.length !== 2 || fields.some(value => !value || /\s/.test(value))) {
+          result = { unsupported: true, reason: 'Stash 正则 Body Rewrite 无法可靠表示空参数或包含空白的参数' }
+          return result
+        }
+        rule.stashValue = fields.join(' ')
+      }
+      const mark = markOverride === undefined ? getMark(sourceNum, body) : markOverride
+      for (const map of MapLocal.splice(lengths[0])) {
+        const reason = getMockInfo(map.slice(mark.length), mark, sourceNum, true)
+        if (reason) {
+          result = { unsupported: true, reason }
+          break
+        }
+      }
+    }
+    return result
+  } catch (error) {
+    result = null
+    throw error
+  } finally {
+    if (!result?.handled) boxes.forEach((box, i) => { box.length = lengths[i] })
+  }
+}
+
+async function normalizeLoonV2RewriteToSurge(line, targetApp, sourceNum, markOverride) {
   const source = `${line ?? ''}`.trim()
   if (!source || /^(#|;|\/\/)/.test(source)) return null
   const match = source.match(/^(request|response)\s+if\s+([\s\S]+?)\s+then\s+([\s\S]+)$/i)
@@ -4647,7 +4698,44 @@ function getLoonMockType(contentType) {
 }
 
 //获取mock参数
-function getMockInfo(x, mark, y) {
+function getMockInfo(x, mark, y, exact = false) {
+  if (exact && isStashiOS) {
+    // Read our canonical Surge fields without legacy filename/body heuristics or escape loss.
+    const [pattern, ...tokens] = splitLegacyLoonV2Fields(x)
+    const fields = Object.fromEntries(tokens.map(token => {
+      const index = token.indexOf('=')
+      const value = token.slice(index + 1)
+      return [token.slice(0, index), value.startsWith('"') ? decodeSurgeQuotedField(value) : value]
+    }))
+    const field = name => fields[name] || ''
+    const type = field('data-type')
+    const data = field('data')
+    const status = field('status-code')
+    const header = field('header')
+    if (type === 'tiny-gif') {
+      if (status !== '200') return 'Stash reject-img 无法保留非 200 状态码'
+      rwBox.push({ mark: mark === '#' ? '' : mark, noteK: mark === '#' ? '#' : '', rwptn: pattern, rwvalue: '-', rwtype: 'reject-img' })
+      return
+    }
+    if (type === 'base64') return 'Stash echo-response 不支持解码 Base64 正文'
+    if (type === 'file' && !/^https?:\/\//i.test(data)) return 'Stash 无法读取本地 Map Local 资源文件'
+    const contentType = header.replace(/^Content-Type:/i, '')
+    const argument = `${type === 'file' ? 'url' : 'text'}=${encodeURIComponent(data)}&status-code=${status}` +
+      `&type=${encodeURIComponent(contentType || 'text/plain')}`
+    jsBox.push({
+      mark: mark === '#' ? '' : mark,
+      noteK: mark === '#' ? '#' : '',
+      jsname: `echoResponse${y}`,
+      jstype: 'http-request',
+      jsptn: pattern,
+      jsurl: 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js',
+      jsarg: encodeURIComponent(argument),
+      timeout: '60',
+      ori: x,
+      num: y,
+    })
+    return
+  }
   let noteK = isNoteK(x)
   let mockptn, mockurl, mockheader, mocktype, mockstatus, oritype, datapath, data, mockbase64
   let hasDataPath = false
