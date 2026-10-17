@@ -1,0 +1,24 @@
+#!name=小宇宙去广告
+#!desc=移除开屏广告、搜索框推荐词和AI总结。
+#!openUrl=https://apps.apple.com/app/id1488894313
+#!author=wish
+#!tag=去广告
+#!system=
+#!system_version=
+#!loon_version=3.5.1(998)
+#!homepage=https://hub.kelee.one
+#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/CosmosPodcast.png
+#!date=2026-10-02 13:57:49
+
+[Rewrite]
+response if ${url} ~= /^https:\/\/api\.xiaoyuzhoufm\.com\/v1\/discovery-feed\/list/i then response.json.jq(".data |= map(select(.type != \"DISCOVERY_HEADER\" and .type != \"DISCOVERY_BANNER\"))")
+
+request if ${url} ~= /^https:\/\/api\.xiaoyuzhoufm\.com\/v\d\/flash/i then reject_dict(200)
+
+request if ${url} ~= /^https:\/\/api\.xiaoyuzhoufm\.com\/v\d\/ai/i then reject_dict(200)
+
+request if ${url} ~= /^https:\/\/api\.xiaoyuzhoufm\.com\/v\d\/search\/get/i then reject_dict(200)
+request if ${url} ~= /^https?:\/\/api\.xiaoyuzhoufm\.com\/v\d\/category/i then reject_dict(200)
+
+[MitM]
+hostname=api.xiaoyuzhoufm.com

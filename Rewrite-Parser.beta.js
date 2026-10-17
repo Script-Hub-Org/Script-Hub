@@ -315,6 +315,9 @@ if (binaryInfo != null && binaryInfo.length > 0) {
 }
 
 !(async () => {
+  if (!['surge-module', 'shadowrocket-module', 'loon-plugin', 'stash-stoverride'].includes(targetApp)) {
+    throw new Error(`当前目标不支持转换：${targetApp || '未知目标'}`)
+  }
   if (evUrlori) {
     evUrlori = (await $.http.get(evUrlori)).body
   }
@@ -400,6 +403,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
     let isCommented = /^#/.test(x) && !/^#!/.test(x)
     let excludedByKeyword = false
+    let loonV2ObjectArgument = false
     //去掉注释
     if (hasKeyword(Pin0, x) && /^#/.test(x) && !/^#!/.test(x)) {
       x = x.replace(/^#/, '')
@@ -440,6 +444,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         continue
       }
       if (loonV2?.line) {
+        loonV2ObjectArgument = loonV2.objectArgument
         x = isCommented ? `#${loonV2.line}` : loonV2.line
         loonV2NormalizedLines.add(x)
         if (loonV2.warnings?.length > 0) {
@@ -994,6 +999,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           mark,
           noteK,
           loonV2: loonV2NormalizedLines.has(x),
+          loonV2ObjectArgument,
           jsname,
           img,
           jstype,
@@ -1378,7 +1384,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rules.push(ori)
     } else if (/^(?:and|or|not)$/i.test(ruletype) && isStashiOS) {
       rules.push(mark + noteK2 + '- ' + ori)
-    } else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|de?st-port)/i.test(ruletype) && isStashiOS) {
+    } else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|de?st-port|^user-agent$)/i.test(ruletype) && isStashiOS) {
       rules.push(mark + noteK2 + '- ' + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
     } else if (/src-port/i.test(ruletype) && (isSurgeiOS || isLooniOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulepm)
@@ -1903,6 +1909,17 @@ if (binaryInfo != null && binaryInfo.length > 0) {
         .replace(/t;amp;/g, '&')
         .replace(/t;add;/g, '+')
 
+      if (jsBox[i].loonV2ObjectArgument) {
+        const pairs = parseSurgeTemplateArgumentPairs(jsarg)
+        if (pairs.length > 0) {
+          jsarg = pairs.map(({ scriptKey, templateKey }) => {
+            const item = sgArg.find(item => item.key === templateKey)
+            const value = unwrapLoonV2String(splitTopLevel(item?.value || '', ',')[0]) ?? getArgumentDefaultValue(item)
+            return `${scriptKey}=${encodeURIComponent(value)}`
+          }).join('&')
+        }
+      }
+
       cronexp = reJsValue(nCron || 'null', ncronexp, jsname, ori, cronexp)
 
       jsname = reJsValue(njsnametarget || 'null', njsname, jsname, ori, jsname)
@@ -2059,9 +2076,9 @@ ${MITM}
 
       let StashBodyRewrite = []
       for (let i = 0; i < rwbodyBox.length; i++) {
-        const { type, regex, value, mark = '', noteK = '' } = rwbodyBox[i]
+        const { type, regex, value, stashValue, mark = '', noteK = '' } = rwbodyBox[i]
         const line = `${regex} ${type.replace(/^http-/, '').replace(/^(request|response)$/, '$1-replace-regex')} ${
-          value.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1')
+          stashValue ?? value.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1')
           //.split(' ')
           //.map(i => i.replace(/^"(.+)"$/, '$1').replace(/^'(.+)'$/, '$1'))
           //.join(' ')
@@ -2323,6 +2340,7 @@ function splitLoonV2TopLevel(str, sep = ',') {
   let current = ''
   let quote = ''
   let regex = false
+  let regexClass = false
   let escaped = false
   let braceDepth = 0
   let bracketDepth = 0
@@ -2344,7 +2362,9 @@ function splitLoonV2TopLevel(str, sep = ',') {
       current += char
       if (escaped) escaped = false
       else if (char === '\\') escaped = true
-      else if (char === '/') regex = false
+      else if (char === '[') regexClass = true
+      else if (char === ']') regexClass = false
+      else if (char === '/' && !regexClass) regex = false
       continue
     }
     if (char === '"' || char === "'" || char === '`') {
@@ -2352,7 +2372,7 @@ function splitLoonV2TopLevel(str, sep = ',') {
       current += char
       continue
     }
-    if (char === '/' && /(?:\(|,|\[)\s*$/.test(str.slice(0, i))) {
+    if (char === '/' && /(?:^|\(|,|\[)\s*$/.test(str.slice(0, i))) {
       regex = true
       current += char
       continue
@@ -2382,6 +2402,7 @@ function splitFirstLoonV2TopLevel(str, sep) {
 function findLoonV2MatchingParen(str, openIndex) {
   let quote = ''
   let regex = false
+  let regexClass = false
   let escaped = false
   let depth = 0
   for (let i = openIndex; i < str.length; i++) {
@@ -2401,7 +2422,11 @@ function findLoonV2MatchingParen(str, openIndex) {
         escaped = false
       } else if (char === '\\') {
         escaped = true
-      } else if (char === '/') {
+      } else if (char === '[') {
+        regexClass = true
+      } else if (char === ']') {
+        regexClass = false
+      } else if (char === '/' && !regexClass) {
         regex = false
       }
       continue
@@ -2470,10 +2495,11 @@ function readLoonV2Regex(value) {
   if (!raw.startsWith('/')) return { reason: 'URL 条件右值必须是正则字面量' }
 
   let escaped = false
+  let regexClass = false
   let closing = -1
   for (let i = 1; i < raw.length; i++) {
     const char = raw[i]
-    if (char === '/' && !escaped) {
+    if (char === '/' && !escaped && !regexClass) {
       closing = i
       break
     }
@@ -2481,6 +2507,10 @@ function readLoonV2Regex(value) {
       escaped = false
     } else if (char === '\\') {
       escaped = true
+    } else if (char === '[') {
+      regexClass = true
+    } else if (char === ']') {
+      regexClass = false
     }
   }
   if (closing === -1) return { reason: 'URL 正则缺少结束分隔符 /' }
@@ -2530,7 +2560,7 @@ function normalizeLoonV2Timeout(value, targetApp) {
   return scalar
 }
 
-function normalizeLoonV2Argument(value) {
+function normalizeLoonV2Argument(value, targetApp) {
   const raw = `${value ?? ''}`.trim()
   if (!raw) return ''
 
@@ -2543,6 +2573,7 @@ function normalizeLoonV2Argument(value) {
       .map(item => item.match(/^\$\{([^{}]+)\}$/)?.[1]?.trim() || '')
     if (keys.length === 0 || keys.some(key => !key)) return null
     if (new Set(keys).size !== keys.length) return null
+    if (targetApp === 'stash-stoverride') return JSON.stringify(keys.map(key => `${encodeURIComponent(key)}={${key}}`).join('&'))
     return `[${keys.map(key => `{${key}}`).join(',')}]`
   }
 
@@ -2626,7 +2657,7 @@ function normalizeLoonV2ScriptLine(line, targetApp) {
   }
   const jsurl = jsurlResult.value
 
-  const jsarg = actionParts.length === 2 ? normalizeLoonV2Argument(actionParts[1]) : ''
+  const jsarg = actionParts.length === 2 ? normalizeLoonV2Argument(actionParts[1], targetApp) : ''
   if (jsarg == null) {
     return { unsupported: true, reason: '暂只支持字符串参数或插件对象参数 {${name}, ...}' }
   }
@@ -2738,6 +2769,7 @@ function normalizeLoonV2ScriptLine(line, targetApp) {
   const argument = jsarg ? `, argument=${jsarg}` : ''
   return {
     line: `${legacyTrigger} script-path=${jsurl}${options}${argument}`,
+    objectArgument: actionParts[1]?.trim().startsWith('{') || false,
     warnings,
   }
 }
@@ -2747,6 +2779,7 @@ function splitLoonV2ActionList(str) {
   let current = ''
   let quote = ''
   let regex = false
+  let regexClass = false
   let escaped = false
   let braceDepth = 0
   let bracketDepth = 0
@@ -2771,7 +2804,11 @@ function splitLoonV2ActionList(str) {
         escaped = false
       } else if (char === '\\') {
         escaped = true
-      } else if (char === '/') {
+      } else if (char === '[') {
+        regexClass = true
+      } else if (char === ']') {
+        regexClass = false
+      } else if (char === '/' && !regexClass) {
         regex = false
       }
       continue
@@ -2806,6 +2843,7 @@ function splitLoonV2ActionList(str) {
 function stripLoonV2InlineComment(source) {
   let quote = ''
   let regex = false
+  let regexClass = false
   let escaped = false
   for (let i = 0; i < source.length; i++) {
     const char = source[i]
@@ -2824,7 +2862,11 @@ function stripLoonV2InlineComment(source) {
         escaped = false
       } else if (char === '\\') {
         escaped = true
-      } else if (char === '/') {
+      } else if (char === '[') {
+        regexClass = true
+      } else if (char === ']') {
+        regexClass = false
+      } else if (char === '/' && !regexClass) {
         regex = false
       }
       continue
@@ -2848,6 +2890,7 @@ function stripLoonV2InlineComment(source) {
 function findLoonV2ActionClosingParen(str, openIndex) {
   let quote = ''
   let regex = false
+  let regexClass = false
   let escaped = false
   let depth = 0
   for (let i = openIndex; i < str.length; i++) {
@@ -2867,7 +2910,11 @@ function findLoonV2ActionClosingParen(str, openIndex) {
         escaped = false
       } else if (char === '\\') {
         escaped = true
-      } else if (char === '/') {
+      } else if (char === '[') {
+        regexClass = true
+      } else if (char === ']') {
+        regexClass = false
+      } else if (char === '/' && !regexClass) {
         regex = false
       }
       continue
@@ -2939,15 +2986,18 @@ function parseLoonV2RegexLiteral(value, field) {
   if (!raw.startsWith('/')) return { reason: `${field} 必须是正则字面量` }
 
   let escaped = false
+  let regexClass = false
   let closing = -1
   for (let i = 1; i < raw.length; i++) {
     const char = raw[i]
-    if (char === '/' && !escaped) {
+    if (char === '/' && !escaped && !regexClass) {
       closing = i
       break
     }
     if (escaped) escaped = false
     else if (char === '\\') escaped = true
+    else if (char === '[') regexClass = true
+    else if (char === ']') regexClass = false
   }
   if (closing === -1) return { reason: `${field} 正则缺少结束分隔符 /` }
 
@@ -3103,7 +3153,13 @@ function quoteSurgeField(value) {
   return `"${`${value ?? ''}`
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
-    .replace(/\r?\n/g, '\\n')}"`
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')}"`
+}
+
+function decodeSurgeQuotedField(value) {
+  // Surge fields can contain literal controls that JSON strings must escape.
+  return JSON.parse(value.replace(/[\x00-\x1f]/g, char => JSON.stringify(char).slice(1, -1)))
 }
 
 function quoteSurgeJq(value) {
@@ -3223,6 +3279,48 @@ function pushLoonV2HeaderRewrite(phase, pattern, action, args, mark = '') {
 }
 
 async function normalizeLoonV2RewriteLine(line, targetApp, sourceNum, markOverride) {
+  if (targetApp === 'loon-plugin') return normalizeLoonV2RewriteToSurge(line, targetApp, sourceNum, markOverride)
+  if (!['surge-module', 'shadowrocket-module', 'stash-stoverride'].includes(targetApp)) {
+    return normalizeLoonV2RewriteToSurge(line, targetApp, sourceNum, markOverride)
+  }
+  // Commit all intermediate rules together; a failed later Action must not leave an active prefix.
+  const boxes = [MapLocal, rwBox, rwbodyBox, rwhdBox, jsBox]
+  const lengths = boxes.map(box => box.length)
+  let result
+  try {
+    result = await normalizeLoonV2RewriteToSurge(line, 'surge-module', sourceNum, markOverride)
+    if (result?.handled && targetApp !== 'surge-module' && targetApp !== 'shadowrocket-module') {
+      for (const rule of rwbodyBox.slice(lengths[2])) {
+        if (rule.type.endsWith('-jq')) {
+          rule.stashValue = rule.value.startsWith('"') ? decodeSurgeQuotedField(rule.value) : rule.value.slice(1, -1)
+          continue
+        }
+        const fields = splitLegacyLoonV2Fields(rule.value).map(decodeSurgeQuotedField)
+        if (fields?.length !== 2 || fields.some(value => !value || /\s/.test(value))) {
+          result = { unsupported: true, reason: 'Stash 正则 Body Rewrite 无法可靠表示空参数或包含空白的参数' }
+          return result
+        }
+        rule.stashValue = fields.join(' ')
+      }
+      const mark = markOverride === undefined ? getMark(sourceNum, body) : markOverride
+      for (const map of MapLocal.splice(lengths[0])) {
+        const reason = getMockInfo(map.slice(mark.length), mark, sourceNum, true)
+        if (reason) {
+          result = { unsupported: true, reason }
+          break
+        }
+      }
+    }
+    return result
+  } catch (error) {
+    result = null
+    throw error
+  } finally {
+    if (!result?.handled) boxes.forEach((box, i) => { box.length = lengths[i] })
+  }
+}
+
+async function normalizeLoonV2RewriteToSurge(line, targetApp, sourceNum, markOverride) {
   const source = `${line ?? ''}`.trim()
   if (!source || /^(#|;|\/\/)/.test(source)) return null
   const match = source.match(/^(request|response)\s+if\s+([\s\S]+?)\s+then\s+([\s\S]+)$/i)
@@ -4647,7 +4745,57 @@ function getLoonMockType(contentType) {
 }
 
 //获取mock参数
-function getMockInfo(x, mark, y) {
+function getMockInfo(x, mark, y, exact = false) {
+  if (exact && isStashiOS) {
+    // Read our canonical Surge fields without legacy filename/body heuristics or escape loss.
+    const [pattern, ...tokens] = splitLegacyLoonV2Fields(x)
+    const fields = Object.fromEntries(tokens.map(token => {
+      const index = token.indexOf('=')
+      const value = token.slice(index + 1)
+      return [token.slice(0, index), value.startsWith('"') ? decodeSurgeQuotedField(value) : value]
+    }))
+    const field = name => fields[name] || ''
+    const type = field('data-type')
+    const data = field('data')
+    const status = field('status-code')
+    const header = field('header')
+    const contentType = header.replace(/^Content-Type:/i, '')
+    if (type === 'text' && (status === '200' || status === '404')) {
+      // Canonical Surge Map Local shapes for Loon reject_dict/reject_array/empty reject.
+      // Match the exact data string; never trim (a space is a real body) or guess from names.
+      const isJson = contentType === 'application/json'
+      const rejectType =
+        status === '200' && isJson && data === '{}' ? 'reject-dict' :
+        status === '200' && isJson && data === '[]' ? 'reject-array' :
+        data === '' && (!header || contentType === 'text/plain') ? (status === '404' ? 'reject' : 'reject-200') : ''
+      if (rejectType) {
+        rwBox.push({ mark: mark === '#' ? '' : mark, noteK: mark === '#' ? '#' : '', rwptn: pattern, rwvalue: '-', rwtype: rejectType })
+        return
+      }
+    }
+    if (type === 'tiny-gif') {
+      if (status !== '200') return 'Stash reject-img 无法保留非 200 状态码'
+      rwBox.push({ mark: mark === '#' ? '' : mark, noteK: mark === '#' ? '#' : '', rwptn: pattern, rwvalue: '-', rwtype: 'reject-img' })
+      return
+    }
+    if (type === 'base64') return 'Stash echo-response 不支持解码 Base64 正文'
+    if (type === 'file' && !/^https?:\/\//i.test(data)) return 'Stash 无法读取本地 Map Local 资源文件'
+    const argument = `${type === 'file' ? 'url' : 'text'}=${encodeURIComponent(data)}&status-code=${status}` +
+      `&type=${encodeURIComponent(contentType || 'text/plain')}`
+    jsBox.push({
+      mark: mark === '#' ? '' : mark,
+      noteK: mark === '#' ? '#' : '',
+      jsname: `echoResponse${y}`,
+      jstype: 'http-request',
+      jsptn: pattern,
+      jsurl: 'https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/scripts/echo-response.js',
+      jsarg: encodeURIComponent(argument),
+      timeout: '60',
+      ori: x,
+      num: y,
+    })
+    return
+  }
   let noteK = isNoteK(x)
   let mockptn, mockurl, mockheader, mocktype, mockstatus, oritype, datapath, data, mockbase64
   let hasDataPath = false

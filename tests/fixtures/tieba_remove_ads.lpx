@@ -1,0 +1,52 @@
+#!name=百度贴吧去广告
+#!desc=移除开屏广告、信息流广告和帖内广告，精简侧拉抽屉及我的页面。
+#!openUrl=https://apps.apple.com/app/id477927812
+#!author=可莉🅥[https://github.com/luestr/ProxyResource/blob/main/README.md], app2smile[https://github.com/app2smile]
+#!tag=去广告
+#!system=
+#!system_version=15
+#!loon_version=3.5.1(998)
+#!homepage=https://hub.kelee.one
+#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Tieba.png
+#!date=2026-10-02 13:57:49
+
+[Argument]
+per_filter_video_thread=select, "true", "false", tag=拦截推荐页面视频帖, desc=此项决定是否拦截首页推荐标签下的视频帖
+
+[Rule]
+DOMAIN, 180.76.76.200, REJECT
+IP-CIDR, 180.76.76.200/32, REJECT, no-resolve
+
+[Rewrite]
+response if ${url} ~= /^https?:\/\/tiebac\.baidu\.com\/c\/s\/sync$/i then response.json.delete(["activity_switch", "video_report_config", "advertisement_config", "next_start", "push_strategy_new", "live_activity_guide", "h5_pop_ups", "duxiaoman_url", "is_need_remind_live_rooms", "floating_icon", "ad_stlog_switch", "first_time_motivate", "windowStrategyList", "ad_adsense", "ad_config", "videoup_guide_pop", "ad_origin_config_switch", "needNewUserLead", "h5_pop_ups_config", "alaTabColor", "search_guide", "ad_sdk_priority", "low_version_pop_config", "ad_num_competition_frs", "live_new_user_guide_day", "screen_fill_data_result", "yy_live_tab", "ad_num_competition_personalize", "complete_apk_url", "user_activity", "homepage_guide", "bottom_bubble_config", "home_screen_ad", "afSearch_tab", "recent_client_info", "video_activity", "namoaixud_url", "yy_live_config", "user_growth_task_list", "cloud_control_data_info", "wl_config.pb_banner_funad_cache_strategy", "wl_config.pb_comment_asyncafd_cache_strategy", "wl_config.download_edge_float", "wl_config.download_pause_retain_dialog_conf", "wl_config.download_mobile_dialog_conf", "wl_config.download_fake_progress_config_a", "wl_config.download_fake_progress_config_b", "scheme_whitelist"])
+
+response if ${url} ~= /^https?:\/\/tiebac\.baidu\.com\/c\/s\/sync$/i then response.json.replace(["wl_config.home_ad_num", "wl_config.frs_ad_num", "wl_config.pb_comment_ad_num", "wl_config.index_bear_density", "wl_config.frs_bear_density", "wl_config.index_bear_first_floor_max", "wl_config.index_bear_first_floor_min"], [0, 0, 0, 0, 0, 999999999, 999999999])
+
+response if ${url} ~= /^https?:\/\/tiebac\.baidu\.com\/c\/s\/sync$/i then response.json.jq(".index_tab_info |= map(select(.tab_name == \"推荐\")) | .top_level_navi |= {\"推荐\": .[\"推荐\"], \"侧边栏\": .[\"侧边栏\"], \"关注\": .[\"关注\"]}")
+
+request if ${url} ~= /^https?:\/\/tiebac\.baidu\.com\/c\/f\/forum\/getInterestClassList$/i then reject_dict(200)
+
+request if ${url} ~= /^https?:\/\/tiebac\.baidu\.com\/c\/f\/search\/discover$/i then reject_dict(200)
+response if ${url} ~= /^https?:\/\/tieba\.baidu\.com\/mo\/q\/search\/startPage\?/i then response.body.mock("json", "{\"no\":0,\"error\":\"success\"}", 200)
+
+response if ${url} ~= /^https?:\/\/tiebac\.baidu\.com\/c\/u\/user\/profile$/i then response.json.delete(["url_map", "user_agent_info", "bubble_info", "duxiaoman_entry", "uc_card", "finance_tab", "vip_banner", "ala_live_info", "recom_naws_list", "duxiaoman", "user.consume_info", "namoaixud_entry"])
+response if ${url} ~= /^https?:\/\/tiebac\.baidu\.com\/c\/u\/user\/profile$/i then response.json.replace("user.shake_ad_switch.is_show", 0)
+response if ${url} ~= /^https?:\/\/tiebac\.baidu\.com\/c\/u\/user\/profile$/i then response.json.jq(".custom_grid |= map(select(.title != \"游戏大厅\" and .title != \"预约管理\" and .title != \"领话费\" and .title != \"短故事\")) | .zone_info |= map(.common_func |= (if .common_func_noraml then .common_func_noraml |= map(select(.name != \"创建智能体\")) else . end)) | .zone_info |= map(select(.type != \"commerce\" and .type != \"banner\" and .type != \"game\"))")
+
+response if ${url} ~= /^https?:\/\/tieba\.baidu\.com\/c\/f\/forum\/forumGuide$/i then response.json.delete("hot_search")
+request if ${url} ~= /^https?:\/\/tieba\.baidu\.com\/c\/f\/search\/discover$/i then reject_dict(200)
+
+request if ${url} ~= /^https:\/\/tieba\.baidu\.com\/c\/f\/forum\/getForumAlbum$/i then reject_dict(200)
+
+response if ${url} ~= /^https?:\/\/tieba\.baidu\.com\/c\/f\/frs\/frsBottom\?/i then response.json.delete("card_activity")
+response if ${url} ~= /^https?:\/\/tiebac\.baidu\.com\/c\/f\/frs\/frsBottom$/i then response.json.delete("card_activity")
+
+request if ${url} ~= /^http:\/\/c\.tieba\.baidu\.com\/c\/f\/forum\/hotforum$/i then reject_dict(200)
+
+response if ${url} ~= /^https?:\/\/tiebac\.baidu\.com\/c\/f\/sidebar\/home$/i then response.json.delete(["game_center", "tools", "task_list", "vip_banner"])
+
+[Script]
+response if ${url} ~= /^https?:\/\/tieba(?:c)?\.baidu\.com\/c\/(f\/excellent\/personalized|f\/frs\/page|b\/ad\/adBid|f\/ad\/getFeedAd|f\/pb\/page|f\/frs\/generalTabList)\?cmd=\d+&format=protobuf/i then script("https://kelee.one/Resource/JavaScript/Tieba/tieba-proto.js", {${per_filter_video_thread}}) with tag="ProtoBuf处理", timeout=10, requires_body=true, binary_body_mode=true
+
+[MitM]
+hostname=tiebac.baidu.com, tieba.baidu.com
