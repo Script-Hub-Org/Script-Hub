@@ -1230,7 +1230,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rules.push(ori)
     } else if (/^(?:and|or|not)$/i.test(ruletype) && isStashiOS) {
       rules.push(mark + noteK2 + '- ' + ori)
-    } else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|de?st-port)/i.test(ruletype) && isStashiOS) {
+    } else if (/(?:^domain$|domain-suffix|domain-keyword|ip-|de?st-port|^user-agent$)/i.test(ruletype) && isStashiOS) {
       rules.push(mark + noteK2 + '- ' + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
     } else if (/src-port/i.test(ruletype) && (isSurgeiOS || isLooniOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulepm)

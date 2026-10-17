@@ -80,6 +80,24 @@ async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugi
   return { body, notifications, logs }
 }
 
+test('stable parser preserves top-level USER-AGENT rules for Stash', async () => {
+  const stableParser = fs.readFileSync(path.join(__dirname, '..', 'Rewrite-Parser.js'), 'utf8')
+  const source = [
+    '#!name=User-Agent rules',
+    '[Rule]',
+    'USER-AGENT,AppleNews*,REJECT',
+    'user-agent,"Example App?",DIRECT',
+    'AND,((USER-AGENT,Example*),(DOMAIN,example.com)),REJECT',
+    'DOMAIN,example.org,DIRECT',
+  ].join('\n')
+  const { body, notifications } = await convert(source, 'stash-stoverride', {}, 'loon-plugin', {}, { parser: stableParser })
+  assert.match(body, /- USER-AGENT,AppleNews\*,REJECT/)
+  assert.match(body, /- USER-AGENT,Example App\?,DIRECT/)
+  assert.match(body, /- AND,\(\(USER-AGENT,"Example\*"\),\(DOMAIN,example\.com\)\),REJECT/)
+  assert.match(body, /- DOMAIN,example\.org,DIRECT/)
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+})
+
 function sectionLines(body, sectionName) {
   const headers = ['[Rule]', '[Rewrite]', '[Script]', '[Body Rewrite]', '[Header Rewrite]', '[Map Local]', '[MITM]']
   const header = `[${sectionName}]`
