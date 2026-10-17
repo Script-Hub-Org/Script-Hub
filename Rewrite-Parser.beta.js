@@ -4712,6 +4712,20 @@ function getMockInfo(x, mark, y, exact = false) {
     const data = field('data')
     const status = field('status-code')
     const header = field('header')
+    const contentType = header.replace(/^Content-Type:/i, '')
+    if (type === 'text' && status === '200') {
+      // Canonical Surge Map Local shapes for Loon reject_dict/reject_array/reject(200).
+      // Match the exact data string; never trim (a space is a real body) or guess from names.
+      const isJson = contentType === 'application/json'
+      const rejectType =
+        isJson && data === '{}' ? 'reject-dict' :
+        isJson && data === '[]' ? 'reject-array' :
+        data === '' && (!header || contentType === 'text/plain') ? 'reject-200' : ''
+      if (rejectType) {
+        rwBox.push({ mark: mark === '#' ? '' : mark, noteK: mark === '#' ? '#' : '', rwptn: pattern, rwvalue: '-', rwtype: rejectType })
+        return
+      }
+    }
     if (type === 'tiny-gif') {
       if (status !== '200') return 'Stash reject-img 无法保留非 200 状态码'
       rwBox.push({ mark: mark === '#' ? '' : mark, noteK: mark === '#' ? '#' : '', rwptn: pattern, rwvalue: '-', rwtype: 'reject-img' })
@@ -4719,7 +4733,6 @@ function getMockInfo(x, mark, y, exact = false) {
     }
     if (type === 'base64') return 'Stash echo-response 不支持解码 Base64 正文'
     if (type === 'file' && !/^https?:\/\//i.test(data)) return 'Stash 无法读取本地 Map Local 资源文件'
-    const contentType = header.replace(/^Content-Type:/i, '')
     const argument = `${type === 'file' ? 'url' : 'text'}=${encodeURIComponent(data)}&status-code=${status}` +
       `&type=${encodeURIComponent(contentType || 'text/plain')}`
     jsBox.push({

@@ -129,7 +129,6 @@ test('native Rewrite actions use the supported target matrix without losing rule
 
 test('Stash Map Local preserves exact status, escaped text, and remote URLs in executable echo arguments', async () => {
   const entries = [
-    ['reject_dict(200)', '{}', 'text', 200, 'application/json'],
     ['reject_array(404)', '[]', 'text', 404, 'application/json'],
     ['reject(503, "x")', 'x', 'text', 503, 'text/plain'],
     ['reject(204)', '', 'text', 204, 'text/plain'],
@@ -166,6 +165,61 @@ test('Stash Map Local preserves exact status, escaped text, and remote URLs in e
     assert.equal(output.response.body, kind === 'url' ? 'remote-body' : value)
     assert.ok(Object.values(output.response.headers).some(header => header.startsWith(type)))
   }
+})
+
+test('Stash maps canonical Loon reject_dict, reject_array, and empty reject to native actions', async () => {
+  const source = [
+    'request if ${url} ~= /dict-200/i then reject_dict(200)',
+    'request if ${url} ~= /array-200/i then reject_array(200)',
+    'request if ${url} ~= /empty-200/i then reject(200)',
+    'request if ${url} ~= /dict-404/i then reject_dict(404)',
+    'response if ${url} ~= /space-200/i then response.body.mock("text", " ", 200)',
+  ].join('\n')
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  assert.match(body, /- >-[\s\S]*dict-200 - reject-dict/)
+  assert.match(body, /- >-[\s\S]*array-200 - reject-array/)
+  assert.match(body, /- >-[\s\S]*empty-200 - reject-200/)
+  assert.doesNotMatch(body, /match: \(\?i\)(?:dict-200|array-200|empty-200)/)
+  // Non-200 and a real single-space body keep the exact echo-response path.
+  assert.match(body, /match: \(\?i\)dict-404/)
+  assert.match(body, /status-code%3D404/)
+  assert.match(body, /match: \(\?i\)space-200/)
+  assert.match(body, /text%3D%2520/)
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+})
+
+test('real CosmosPodcast Loon plugin maps reject_dict and jq across every supported target', async () => {
+  const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'cosmospodcast_remove_ads.lpx'), 'utf8')
+  const jqFragment = '.data |= map(select('
+
+  const stash = await convert(source, 'stash-stoverride')
+  assert.equal((stash.body.match(/- reject-dict/g) || []).length, 4)
+  assert.ok(stash.body.includes(jqFragment) && stash.body.includes('DISCOVERY_HEADER') && stash.body.includes('DISCOVERY_BANNER'))
+  assert.doesNotMatch(stash.body, /echoResponse/)
+  assert.doesNotMatch(JSON.stringify(stash.notifications), /不支持以下内容/)
+
+  for (const target of ['surge-module', 'shadowrocket-module']) {
+    const { body, notifications } = await convert(source, target)
+    const maps = sectionLines(body, 'Map Local')
+    assert.equal(maps.length, 4)
+    assert.ok(
+      maps.every(
+        line =>
+          line.includes('data-type=text') &&
+          line.includes('data="{}"') &&
+          line.includes('status-code=200') &&
+          line.includes('Content-Type:application/json')
+      )
+    )
+    assert.equal(sectionLines(body, 'Body Rewrite').length, 1)
+    assert.ok(body.includes(jqFragment))
+    assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+  }
+
+  const loon = await convert(source, 'loon-plugin')
+  assert.equal((loon.body.match(/then reject_dict\(200\)/g) || []).length, 4)
+  assert.ok(loon.body.includes(jqFragment) && loon.body.includes('DISCOVERY_BANNER'))
+  assert.doesNotMatch(JSON.stringify(loon.notifications), /不支持以下内容/)
 })
 
 test('failed multi-action rewrites roll back every intermediate output', async () => {
