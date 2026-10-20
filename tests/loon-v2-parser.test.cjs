@@ -48,7 +48,7 @@ async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugi
     isFinite,
     setTimeout,
     clearTimeout,
-    $request: { url: requestUrl, method: 'GET', headers: {} },
+    $request: { url: requestUrl, method: 'GET', headers: runtime.requestHeaders || {} },
     $response: { body: '' },
     $done: value => {
       doneValue = value
@@ -837,6 +837,49 @@ test('Loon 3.5.3 DOMAIN-WILDCARD rules are preserved for Loon and Surge targets'
     assert.match(JSON.stringify(unsupported.notifications), new RegExp(`${target.split('-')[0]}不支持以下内容`))
     assert.match(JSON.stringify(unsupported.notifications), /DOMAIN-WILDCARD/)
   }
+})
+
+test('Loon Mac process rules are preserved only when the Loon Mac UA is present', async () => {
+  const source = [
+    'PROCESS-NAME,Xcode,DIRECT',
+    'AND,((PROCESS-NAME,*Helper*),(DOMAIN-SUFFIX,example.com)),PROXY',
+    'DOMAIN-SUFFIX,example.com,DIRECT',
+  ].join('\n')
+  const macHeaders = { 'User-Agent': 'Loon/991 CFNetwork/3896.100.1.1.1 Darwin/27.0.0 Platform/macOS' }
+  const iosHeaders = { 'User-Agent': 'Loon/991 CFNetwork/3896.100.1.1.1 Darwin/27.0.0' }
+
+  const mac = await convert(source, 'loon-rule-set', {}, 'rule-set', {}, { parser: ruleParser, requestHeaders: macHeaders })
+  assert.match(mac.body, /#不支持的规则数量:0/)
+  assert.match(mac.body, /PROCESS-NAME,Xcode(?:\n|$)/)
+  assert.match(mac.body, /AND,\(\(PROCESS-NAME,\*Helper\*\),\(DOMAIN-SUFFIX,example\.com\)\),PROXY/)
+
+  const genericMac = await convert(source, 'rule-set', {}, 'rule-set', {}, { parser: ruleParser, requestHeaders: macHeaders })
+  assert.match(genericMac.body, /PROCESS-NAME,Xcode(?:\n|$)/)
+
+  const ios = await convert(source, 'loon-rule-set', {}, 'rule-set', {}, { parser: ruleParser, requestHeaders: iosHeaders })
+  const iosActiveRules = ios.body.slice(ios.body.indexOf('#-----------------以下为解析后的规则-----------------#'))
+  assert.match(ios.body, /#不支持的规则数量:2/)
+  assert.match(ios.body, /#PROCESS-NAME,Xcode,DIRECT(?:\n|$)/)
+  assert.match(ios.body, /#AND,\(\(PROCESS-NAME,\*Helper\*\),\(DOMAIN-SUFFIX,example\.com\)\),PROXY/)
+  assert.doesNotMatch(iosActiveRules, /PROCESS-NAME|AND,\(\(PROCESS-NAME/)
+
+  const plugin = await convert([
+    '#!name=Loon Mac process rules',
+    '[Rule]',
+    'PROCESS-NAME,Xcode,DIRECT',
+    'AND,((PROCESS-NAME,*Helper*),(DOMAIN-SUFFIX,example.com)),PROXY',
+  ].join('\n'), 'loon-plugin')
+  assert.match(plugin.body, /PROCESS-NAME,Xcode,DIRECT/)
+  assert.match(plugin.body, /AND,\(\(PROCESS-NAME,\*Helper\*\),\(DOMAIN-SUFFIX,example\.com\)\),PROXY/)
+  assert.doesNotMatch(JSON.stringify(plugin.notifications), /Loon不支持以下内容/)
+
+  const surge = await convert([
+    '#!name=Loon Mac process rules',
+    '[Rule]',
+    'PROCESS-NAME,Xcode,DIRECT',
+  ].join('\n'), 'surge-module')
+  assert.match(surge.body, /PROCESS-NAME,Xcode,DIRECT/)
+  assert.doesNotMatch(JSON.stringify(surge.notifications), /surge不支持以下内容|PROCESS-NAME,Xcode,DIRECT/)
 })
 
 test('rule-set empty keyword selectors do not filter every rule', async () => {

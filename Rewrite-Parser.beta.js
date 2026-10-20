@@ -1369,6 +1369,11 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
     } else if (/^protocol$/i.test(ruletype) && (isLooniOS || isSurgeiOS)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
+    } else if (/^process-name$/i.test(ruletype) && (isLooniOS || isSurgeiOS)) {
+      // Loon and Surge process rules are valid on macOS. Their iOS/tvOS
+      // runtimes ignore them, but dropping a valid rule during conversion
+      // would make the same module unusable on the corresponding Mac client.
+      rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore)
     } else if (/^(?:domain-set|rule-set)$/i.test(ruletype) && (isSurgeiOS || isShadowrocket)) {
       rules.push(mark + noteK + ruletype + ',' + rulevalue + ',' + rulepolicy + rulenore + rulesni + rulepm)
     } else if (
