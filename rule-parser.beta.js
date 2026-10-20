@@ -32,7 +32,7 @@ let resFile = urlArg.split('?')[0]
 let resFileName = resFile.substring(0, resFile.lastIndexOf('.'))
 
 //通过请求头中的UA识别app
-const appUa = $request.headers['user-agent'] || $request.headers['User-Agent']
+const appUa = $request.headers['user-agent'] || $request.headers['User-Agent'] || ''
 
 //获取参数
 const queryObject = parseQueryString(urlArg)
@@ -57,23 +57,27 @@ if (/^开启(?:通知)?$/.test(localsetNtf)) noNtf = false
 else if (/^关闭(?:通知)?$/.test(localsetNtf)) noNtf = true
 
 let bodyBox = []
+let isLoonMac = false
 
 if (queryObject.target == 'rule-set') {
   if (appUa.search(/Surge|LanceX|Egern|Stash|Loon|Shadowrocket/i) != -1) {
     isSurgeiOS = appUa.search(/Surge|LanceX|Egern/i) != -1
     isStashiOS = appUa.search(/Stash/i) != -1
     isLooniOS = appUa.search(/Loon/i) != -1
+    isLoonMac = isLooniOS && /Platform\/macOS\b/i.test(appUa)
     isShadowrocket = appUa.search(/Shadowrocket/i) != -1
   } else {
     isSurgeiOS = $.isSurge()
     isStashiOS = $.isStash()
     isLooniOS = $.isLoon()
+    isLoonMac = false
     isShadowrocket = $.isShadowrocket()
   }
 } else {
   isSurgeiOS = isSurgetarget
   isStashiOS = isStashtarget
   isLooniOS = isLoontarget
+  isLoonMac = isLooniOS && /Platform\/macOS\b/i.test(appUa)
   isShadowrocket = isRockettarget
 }
 
@@ -237,7 +241,10 @@ let ruleValue //规则
     } else if (isLooniOS) {
       if (x.match(/^;#/)) {
         outRules.push(x.replace(/^;#/, '').replace(/^HO-ST/i, 'HOST'))
-      } else if (/(^|[,(]\s*)(?:HO-ST|PROCESS-NAME)(?=\s*,)/i.test(x)) {
+      } else if (
+        /(^|[,(]\s*)HO-ST(?=\s*,)/i.test(x) ||
+        (!isLoonMac && /(^|[,(]\s*)PROCESS-NAME(?=\s*,)/i.test(x))
+      ) {
         other.push(x.replace(/^HO-ST/i, 'HOST'))
       } else if (x != '') {
         if (/^(?:AND|OR|NOT)\s*,/i.test(x)) {
