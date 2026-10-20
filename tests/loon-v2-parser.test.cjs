@@ -48,7 +48,7 @@ async function convert(source, target, httpBodies = {}, sourceType = 'loon-plugi
     isFinite,
     setTimeout,
     clearTimeout,
-    $request: { url: requestUrl, method: 'GET', headers: {} },
+    $request: { url: requestUrl, method: 'GET', headers: runtime.requestHeaders || {} },
     $response: { body: '' },
     $done: value => {
       doneValue = value
@@ -95,6 +95,294 @@ function sectionLines(body, sectionName) {
     .map(line => line.trim())
     .filter(line => line && !line.startsWith('#'))
 }
+
+test('native Rewrite actions use the supported target matrix without losing rules', async () => {
+  const source = [
+    'request if ${url} ~= /move/ then redirect(302, "https://example.com/new")',
+    'response if ${url} ~= /json/ then response.json.delete("ad")',
+    'response if ${url} ~= /body/ then response.body.replace(/old/, "new")',
+    'response if ${url} ~= /header/ then response.header.set("X-Test", "yes")',
+    'request if ${url} ~= /mock/ then reject_dict(201)',
+  ].join('\n')
+  for (const target of ['surge-module', 'shadowrocket-module', 'loon-plugin', 'stash-stoverride']) {
+    const { body, notifications } = await convert(source, target)
+    assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+    if (target === 'loon-plugin') {
+      for (const line of source.split('\n')) assert.ok(body.includes(line))
+    } else if (target === 'stash-stoverride') {
+      assert.match(body, /url-rewrite:[\s\S]*https:\/\/example.com\/new 302/)
+      assert.match(body, /body-rewrite:[\s\S]*response-jq.*delpaths/)
+      assert.match(body, /response-replace-regex.*old.*new/)
+      assert.match(body, /header-rewrite:[\s\S]*response-add/)
+      assert.match(body, /body response-replace-regex old new/)
+      assert.match(body, /echoResponse/)
+      assert.doesNotMatch(body, /reject-dict/)
+    } else {
+      assert.equal(sectionLines(body, 'Map Local').length, 1)
+      assert.equal(sectionLines(body, 'Body Rewrite').length, 2)
+      assert.equal(sectionLines(body, 'Header Rewrite').length, 2)
+    }
+  }
+  const unknown = await convert(source, 'unknown-module')
+  assert.match(JSON.stringify(unknown.notifications), /当前目标不支持转换：unknown-module/)
+})
+
+test('Stash Map Local preserves exact status, escaped text, and remote URLs in executable echo arguments', async () => {
+  const entries = [
+    ['reject_array(404)', '[]', 'text', 404, 'application/json'],
+    ['reject(503, "x")', 'x', 'text', 503, 'text/plain'],
+    ['reject(204)', '', 'text', 204, 'text/plain'],
+    ['response.body.mock("json", "a status-code=503 header=evil data-type=file b", 201)', 'a status-code=503 header=evil data-type=file b', 'text', 201, 'application/json'],
+    ['response.body.mock("text", "first\\tsecond\\rthird\\r\\nend", 203)', 'first\tsecond\rthird\r\nend', 'text', 203, 'text/plain'],
+    ['response.body.mock("json", `{"s":"a&b=c%20", "n":"quote\\""}`, 201)', '{"s":"a&b=c%20", "n":"quote\\""}', 'text', 201, 'application/json'],
+    ['response.body.mock("text", "first\\nsecond\\\\end", 202)', 'first\nsecond\\end', 'text', 202, 'text/plain'],
+    ['response.body.mock_file("png", "https://example.com/blank200.png?a=1&b=2", 206)', 'https://example.com/blank200.png?a=1&b=2', 'url', 206, 'image/png'],
+  ]
+  const source = entries.map(([action], i) => `${action.startsWith('response.') ? 'response' : 'request'} if \${url} ~= /mock${i}/ then ${action}`).join('\n')
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+  const args = [...body.matchAll(/argument: \|-\n\s+([^\n]+)/g)].map(match => match[1])
+  assert.equal(args.length, entries.length)
+  const echo = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'echo-response.js'), 'utf8')
+  for (let i = 0; i < entries.length; i++) {
+    const [, value, kind, status, type] = entries[i]
+    const decoded = new URLSearchParams(decodeURIComponent(args[i]))
+    assert.equal(decoded.get(kind), value)
+    assert.equal(decoded.get('status-code'), String(status))
+    assert.equal(decoded.get('type'), type)
+    let output
+    vm.runInNewContext(echo, {
+      $argument: args[i], $environment: { 'stash-version': 'test' },
+      console: { log() {} }, $done: result => { output = result },
+      $notification: { post() {} },
+      $httpClient: { get: (options, callback) => {
+        assert.equal(options.url, value)
+        callback(null, { status: 200, headers: { 'content-type': type } }, 'remote-body')
+      } },
+    })
+    for (let j = 0; j < 100 && !output; j++) await new Promise(resolve => setTimeout(resolve, 5))
+    assert.equal(output?.response?.status, status)
+    assert.equal(output.response.body, kind === 'url' ? 'remote-body' : value)
+    assert.ok(Object.values(output.response.headers).some(header => header.startsWith(type)))
+  }
+})
+
+test('Stash maps canonical Loon reject_dict, reject_array, and empty reject to native actions', async () => {
+  const source = [
+    'request if ${url} ~= /dict-200/i then reject_dict(200)',
+    'request if ${url} ~= /array-200/i then reject_array(200)',
+    'request if ${url} ~= /empty-200/i then reject(200)',
+    'request if ${url} ~= /dict-404/i then reject_dict(404)',
+    'response if ${url} ~= /space-200/i then response.body.mock("text", " ", 200)',
+  ].join('\n')
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  assert.match(body, /- >-[\s\S]*dict-200 - reject-dict/)
+  assert.match(body, /- >-[\s\S]*array-200 - reject-array/)
+  assert.match(body, /- >-[\s\S]*empty-200 - reject-200/)
+  assert.doesNotMatch(body, /match: \(\?i\)(?:dict-200|array-200|empty-200)/)
+  // Non-200 and a real single-space body keep the exact echo-response path.
+  assert.match(body, /match: \(\?i\)dict-404/)
+  assert.match(body, /status-code%3D404/)
+  assert.match(body, /match: \(\?i\)space-200/)
+  assert.match(body, /text%3D%2520/)
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+})
+
+test('Stash uses native reject only for exact empty text 404 mocks', async () => {
+  const source = [
+    'request if ${url} ~= /empty-404/ then reject(404)',
+    'request if ${url} ~= /text-404/ then reject(404, "")',
+    'response if ${url} ~= /space-404/ then response.body.mock("text", " ", 404)',
+    'response if ${url} ~= /json-404/ then response.body.mock("json", "{}", 404)',
+    'response if ${url} ~= /body-404/ then response.body.mock("text", "custom", 404)',
+  ].join('\n')
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  assert.match(body, /empty-404 - reject\n/)
+  assert.match(body, /text-404 - reject\n/)
+  for (const name of ['space-404', 'json-404', 'body-404']) assert.ok(body.includes(`match: ${name}`))
+  assert.equal((body.match(/argument: \|-/g) || []).length, 3)
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+})
+
+test('real TestFlight source retains its sole body replacement and missing-policy notice', async () => {
+  const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'testflight_region_unlock.lpx'), 'utf8')
+  for (const target of ['stash-stoverride', 'surge-module', 'shadowrocket-module']) {
+    const { body, notifications } = await convert(source, target)
+    assert.ok(body.includes('storefrontId'))
+    assert.ok(body.includes('143441-19,29'))
+    assert.doesNotMatch(JSON.stringify(notifications), /正则缺少|Loon v2:/)
+    if (target === 'stash-stoverride') assert.match(JSON.stringify(notifications), /未指定策略/)
+    if (target === 'stash-stoverride') assert.equal((body.match(/request-replace-regex/g) || []).length, 1)
+    else assert.equal(sectionLines(body, 'Body Rewrite').length, 1)
+  }
+})
+
+test('body regex arguments preserve commas, quotes, classes, escapes, and paired arrays', async () => {
+  const patterns = [String.raw`/"a",/`, String.raw`/[/'",()|]+\/[\]a]/`, String.raw`/\[a\],\"x\"/i`]
+  for (const regex of patterns) {
+    const source = `request if \${url} ~= /install/ then request.body.replace(${regex}, "replacement")`
+    for (const target of ['stash-stoverride', 'surge-module']) {
+      const { body, notifications } = await convert(source, target)
+      assert.ok(body.includes('replacement'), `${regex}: ${JSON.stringify(notifications)}`)
+      assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+    }
+  }
+  const source = String.raw`request if ${'${url}'} ~= /install/ then request.body.replace([/"a",/, /[/'",()|]+/], ["one", "two"])`
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  assert.equal((body.match(/request-replace-regex/g) || []).length, 2)
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+})
+
+test('real Tieba object argument retains its key and enables the downstream video option', async () => {
+  const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'tieba_remove_ads.lpx'), 'utf8')
+  const stash = await convert(source, 'stash-stoverride')
+  const argument = [...stash.body.matchAll(/argument: \|-\n\s+([^\n]+)/g)].map(match => match[1]).find(value => value.startsWith('per_filter_video_thread='))
+  const options = Object.fromEntries(argument.split('&').map(item => {
+    const [key, value] = item.split('=')
+    return [key, value === 'true' ? true : value === 'false' ? false : value]
+  }))
+  assert.equal(options.per_filter_video_thread, true)
+  assert.doesNotMatch(JSON.stringify(stash.notifications), /不支持以下内容/)
+  for (const target of ['surge-module', 'shadowrocket-module']) {
+    const { body } = await convert(source, target)
+    assert.ok(body.includes('per_filter_video_thread="{{{per_filter_video_thread}}}"'))
+  }
+  const loon = await convert(source, 'loon-plugin')
+  assert.ok(loon.body.includes('{${per_filter_video_thread}}'))
+})
+
+test('Stash encodes object defaults without changing literal string arguments', async () => {
+  const source = [
+    '[Argument]',
+    'first=input, "a&b=c%20, d", tag=First',
+    'second=input, "引号\\\"/空 格", tag=Second',
+    '[Script]',
+    'request if ${url} ~= /object/ then script("https://example.com/object.js", {${first}, ${second}})',
+    'request if ${url} ~= /literal/ then script("https://example.com/literal.js", "first=literal&second=x")',
+  ].join('\n')
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  const args = [...body.matchAll(/argument: \|-\n\s+([^\n]+)/g)].map(match => match[1])
+  assert.equal(args[0], `first=${encodeURIComponent('a&b=c%20, d')}&second=${encodeURIComponent('引号"/空 格')}`)
+  assert.equal(new URLSearchParams(args[0]).get('first'), 'a&b=c%20, d')
+  assert.equal(args[1], 'first=literal&second=x')
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+})
+
+test('real HTTPDNS source preserves all four top-level USER-AGENT and logical rules', async () => {
+  const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'block_httpdns.lpx'), 'utf8')
+  const { body, notifications } = await convert(source, 'stash-stoverride')
+  for (const agent of ['httpdns*', 'httpsdns*', 'Httpdns*', 'Httpsdns*']) assert.ok(body.includes(`USER-AGENT,${agent},REJECT`))
+  assert.equal((body.match(/- USER-AGENT,/g) || []).length, 4)
+  assert.equal((body.match(/- AND,/g) || []).length, 2)
+  assert.doesNotMatch(JSON.stringify(notifications), /USER-AGENT/)
+  const variant = await convert('[Rule]\nuser-agent,"Agent With Space*",REJECT', 'stash-stoverride')
+  assert.ok(variant.body.includes('USER-AGENT,Agent With Space*,REJECT'))
+})
+
+test('real CosmosPodcast Loon plugin maps reject_dict and jq across every supported target', async () => {
+  const source = fs.readFileSync(path.join(__dirname, 'fixtures', 'cosmospodcast_remove_ads.lpx'), 'utf8')
+  const jqFragment = '.data |= map(select('
+
+  const stash = await convert(source, 'stash-stoverride')
+  assert.equal((stash.body.match(/- reject-dict/g) || []).length, 4)
+  assert.ok(stash.body.includes(jqFragment) && stash.body.includes('DISCOVERY_HEADER') && stash.body.includes('DISCOVERY_BANNER'))
+  assert.doesNotMatch(stash.body, /echoResponse/)
+  assert.doesNotMatch(JSON.stringify(stash.notifications), /不支持以下内容/)
+
+  for (const target of ['surge-module', 'shadowrocket-module']) {
+    const { body, notifications } = await convert(source, target)
+    const maps = sectionLines(body, 'Map Local')
+    assert.equal(maps.length, 4)
+    assert.ok(
+      maps.every(
+        line =>
+          line.includes('data-type=text') &&
+          line.includes('data="{}"') &&
+          line.includes('status-code=200') &&
+          line.includes('Content-Type:application/json')
+      )
+    )
+    assert.equal(sectionLines(body, 'Body Rewrite').length, 1)
+    assert.ok(body.includes(jqFragment))
+    assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容/)
+  }
+
+  const loon = await convert(source, 'loon-plugin')
+  assert.equal((loon.body.match(/then reject_dict\(200\)/g) || []).length, 4)
+  assert.ok(loon.body.includes(jqFragment) && loon.body.includes('DISCOVERY_BANNER'))
+  assert.doesNotMatch(JSON.stringify(loon.notifications), /不支持以下内容/)
+})
+
+test('failed multi-action rewrites roll back every intermediate output', async () => {
+  const source = [
+    'request if ${url} ~= /partial-map/ then reject_dict(200) | unknown()',
+    'request if ${url} ~= /partial-url/ then redirect(302, "https://example.com/new") | unknown()',
+    'response if ${url} ~= /partial-body/ then response.json.delete("ad") | response.header.set("X-Test", "yes") | unknown()',
+    'request if ${url} ~= /kept/ then redirect(302, "https://example.com/kept")',
+  ].join('\n')
+  for (const target of ['surge-module', 'shadowrocket-module', 'stash-stoverride']) {
+    const { body, notifications } = await convert(source, target)
+    assert.doesNotMatch(body, /partial-map|partial-url|partial-body/)
+    assert.match(body, /example.com\/kept/)
+    assert.match(JSON.stringify(notifications), /暂不支持 Loon v2 Action：unknown/)
+  }
+})
+
+test('Stash rejects control characters in body replacements without aborting later rules', async () => {
+  for (const control of ['\\t', '\\r', '\\r\\n']) {
+    const { body, notifications } = await convert([
+      `response if \${url} ~= /bad-control/ then response.body.replace(/old/, "first${control}second")`,
+      'request if ${url} ~= /kept/ then redirect(302, "https://example.com/kept")',
+    ].join('\n'), 'stash-stoverride')
+    assert.doesNotMatch(body, /bad-control/)
+    assert.match(body, /example.com\/kept/)
+    assert.match(JSON.stringify(notifications), /包含空白/)
+    assert.doesNotMatch(JSON.stringify(notifications), /JSON|SyntaxError/)
+  }
+})
+
+test('Stash adapter failure rolls back mocks already converted from the same line', async () => {
+  const { body, notifications } = await convert([
+    'request if ${url} ~= /partial-adapter/ then reject(201, "ok") | reject_img(404)',
+    'response if ${url} ~= /partial-base64/ then response.header.add("X-Test", "yes") | response.body.mock("png", "YWJj", 200, true)',
+    'request if ${url} ~= /kept/ then redirect(302, "https://example.com/kept")',
+  ].join('\n'), 'stash-stoverride')
+  assert.doesNotMatch(body, /partial-adapter|partial-base64|echoResponse|X-Test/)
+  assert.match(body, /example.com\/kept/)
+  assert.match(JSON.stringify(notifications), /非 200 状态码/)
+  assert.match(JSON.stringify(notifications), /Base64/)
+})
+
+test('Stash keeps commented intermediate mocks disabled and preserves their source notes', async () => {
+  const source = '#request if ${url} ~= /disabled-mock/ then reject(404, "off")\n# retained note\nrequest if ${url} ~= /enabled-mock/ then reject(201, "on")'
+  const { body } = await convert(source, 'stash-stoverride')
+  assert.match(body, /# retained note/)
+  assert.match(body, /#\s+- match: disabled-mock/)
+  assert.match(body, /\n    - match: enabled-mock/)
+  const removed = await convert(source, 'stash-stoverride', {}, 'loon-plugin', { del: 'true' })
+  assert.doesNotMatch(removed.body, /disabled-mock/)
+})
+
+test('Stash keeps real Rewrite and trigger limitations explicit', async () => {
+  const { body, notifications } = await convert([
+    'request if ${url} ~= /bad-gif/ then reject_img(404)',
+    'response if ${url} ~= /bad-base64/ then response.body.mock("png", "YWJj", 200, true)',
+    'response if ${url} ~= /bad-file/ then response.body.mock_file("json", "local.json", 200)',
+    'response if ${url} ~= /bad-condition/ && ${response.status} == 200 then response.json.delete("ad")',
+    'response if ${url} ~= /bad-space/ then response.body.replace(/old/, "two words")',
+    'network-changed then script("https://example.com/event.js")',
+    'request if ${url} ~= /good-gif/ then reject_img(200)',
+  ].join('\n'), 'stash-stoverride')
+  assert.doesNotMatch(body, /bad-gif|bad-base64|bad-file|bad-condition|bad-space|event.js/)
+  assert.match(body, /good-gif - reject-img/)
+  const text = JSON.stringify(notifications)
+  assert.match(text, /非 200 状态码/)
+  assert.match(text, /Base64/)
+  assert.match(text, /本地 Map Local/)
+  assert.match(text, /包含空白/)
+  assert.match(text, /无法等价转换|只转换单一/)
+  assert.match(text, /Stash 不支持该触发器/)
+})
 
 test('legacy Surge Script converts to native Loon v2 Script syntax', async () => {
   const { body, notifications } = await convert(
@@ -549,6 +837,49 @@ test('Loon 3.5.3 DOMAIN-WILDCARD rules are preserved for Loon and Surge targets'
     assert.match(JSON.stringify(unsupported.notifications), new RegExp(`${target.split('-')[0]}不支持以下内容`))
     assert.match(JSON.stringify(unsupported.notifications), /DOMAIN-WILDCARD/)
   }
+})
+
+test('Loon Mac process rules are preserved only when the Loon Mac UA is present', async () => {
+  const source = [
+    'PROCESS-NAME,Xcode,DIRECT',
+    'AND,((PROCESS-NAME,*Helper*),(DOMAIN-SUFFIX,example.com)),PROXY',
+    'DOMAIN-SUFFIX,example.com,DIRECT',
+  ].join('\n')
+  const macHeaders = { 'User-Agent': 'Loon/991 CFNetwork/3896.100.1.1.1 Darwin/27.0.0 Platform/macOS' }
+  const iosHeaders = { 'User-Agent': 'Loon/991 CFNetwork/3896.100.1.1.1 Darwin/27.0.0' }
+
+  const mac = await convert(source, 'loon-rule-set', {}, 'rule-set', {}, { parser: ruleParser, requestHeaders: macHeaders })
+  assert.match(mac.body, /#不支持的规则数量:0/)
+  assert.match(mac.body, /PROCESS-NAME,Xcode(?:\n|$)/)
+  assert.match(mac.body, /AND,\(\(PROCESS-NAME,\*Helper\*\),\(DOMAIN-SUFFIX,example\.com\)\),PROXY/)
+
+  const genericMac = await convert(source, 'rule-set', {}, 'rule-set', {}, { parser: ruleParser, requestHeaders: macHeaders })
+  assert.match(genericMac.body, /PROCESS-NAME,Xcode(?:\n|$)/)
+
+  const ios = await convert(source, 'loon-rule-set', {}, 'rule-set', {}, { parser: ruleParser, requestHeaders: iosHeaders })
+  const iosActiveRules = ios.body.slice(ios.body.indexOf('#-----------------以下为解析后的规则-----------------#'))
+  assert.match(ios.body, /#不支持的规则数量:2/)
+  assert.match(ios.body, /#PROCESS-NAME,Xcode,DIRECT(?:\n|$)/)
+  assert.match(ios.body, /#AND,\(\(PROCESS-NAME,\*Helper\*\),\(DOMAIN-SUFFIX,example\.com\)\),PROXY/)
+  assert.doesNotMatch(iosActiveRules, /PROCESS-NAME|AND,\(\(PROCESS-NAME/)
+
+  const plugin = await convert([
+    '#!name=Loon Mac process rules',
+    '[Rule]',
+    'PROCESS-NAME,Xcode,DIRECT',
+    'AND,((PROCESS-NAME,*Helper*),(DOMAIN-SUFFIX,example.com)),PROXY',
+  ].join('\n'), 'loon-plugin')
+  assert.match(plugin.body, /PROCESS-NAME,Xcode,DIRECT/)
+  assert.match(plugin.body, /AND,\(\(PROCESS-NAME,\*Helper\*\),\(DOMAIN-SUFFIX,example\.com\)\),PROXY/)
+  assert.doesNotMatch(JSON.stringify(plugin.notifications), /Loon不支持以下内容/)
+
+  const surge = await convert([
+    '#!name=Loon Mac process rules',
+    '[Rule]',
+    'PROCESS-NAME,Xcode,DIRECT',
+  ].join('\n'), 'surge-module')
+  assert.match(surge.body, /PROCESS-NAME,Xcode,DIRECT/)
+  assert.doesNotMatch(JSON.stringify(surge.notifications), /surge不支持以下内容|PROCESS-NAME,Xcode,DIRECT/)
 })
 
 test('rule-set empty keyword selectors do not filter every rule', async () => {
