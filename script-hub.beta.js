@@ -911,10 +911,7 @@ const htmls = `
           <a :href=" 'surge:///install-module?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">导入 Surge(远程模块)</a>
           <a :href=" 'scriptable:///run/SurgeModuleTool?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">导入 Surge(本地模块 需配合 Scriptable)</a>
           <a v-if="scriptingImportUrl" :href="scriptingImportUrl" target="_blank" style="margin: 0 0.5rem 0 0">导入 Surge(本地模块 需配合 Scripting)</a>
-          <span v-else style="color: red">请先填写下方 Scripting 脚本名</span>
           <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E7%9B%B8%E5%85%B3%E7%94%9F%E6%80%81:-Surge-%E6%A8%A1%E5%9D%97%E5%B7%A5%E5%85%B7" target="_blank">如何配合 Scriptable 导入</a></small>
-          <small>&#9432; 填写 Scripting 里显示的脚本名；首次使用时，先在该脚本设置页选择本地模块书签目录。</small>
-          <label style="display: inline-block; margin: 0.5rem 0">Scripting 脚本名：<input v-model.trim="scriptingScriptName" placeholder="例如：Surge 模块管理" style="max-width: 14rem" /></label>
           <a :href=" 'egern:///modules/new?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">导入 Egern(远程模块)</a>
         </template>
         <template v-if="result">
@@ -936,6 +933,12 @@ const htmls = `
             &nbsp;&nbsp;
             <button v-if="resetInfo">{{resetInfo}}</button>
             <button v-else @click="reset">重置</button>
+      <details v-if="target === 'surge-module'">
+        <summary>Scripting 导入设置</summary>
+        <small>&#9432; 填写 Scripting 里显示的脚本名；首次使用时，先在该脚本设置页选择本地模块书签目录。</small>
+        <label style="display: inline-block; margin: 0.5rem 0">Scripting 脚本名：<input v-model.trim="scriptingScriptName" placeholder="例如：Surge 模块管理" style="max-width: 14rem" /></label>
+        <small v-if="!scriptingScriptName" style="color: red">填写后才会生成 Scripting 导入链接。</small>
+      </details>
       </div>
       <br/>
 
