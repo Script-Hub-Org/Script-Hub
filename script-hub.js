@@ -910,9 +910,7 @@ const htmls = `
         <template v-if="result && target === 'surge-module' ">
           <a :href=" 'surge:///install-module?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">导入 Surge(远程模块)</a>
           <a :href=" 'scriptable:///run/SurgeModuleTool?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">导入 Surge(本地模块 需配合 Scriptable)</a>
-          <a :href=" 'scripting://run_single/' + encodeURIComponent('Surge模块管理') + '?action=import-surge-module&url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) + '&category=' + encodeURIComponent('Script Hub') " target="_blank" style="margin: 0 0.5rem 0 0">导入 Surge(本地模块 需配合 Scripting)</a>
           <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E7%9B%B8%E5%85%B3%E7%94%9F%E6%80%81:-Surge-%E6%A8%A1%E5%9D%97%E5%B7%A5%E5%85%B7" target="_blank">如何配合 Scriptable 导入</a></small>
-          <small>&#9432; Scripting 首次使用时，请先在“Surge模块管理”的设置页选择本地模块书签目录。</small>
           <a :href=" 'egern:///modules/new?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">导入 Egern(远程模块)</a>
         </template>
         <template v-if="result">
