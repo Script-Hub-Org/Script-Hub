@@ -1593,7 +1593,7 @@ const htmls = `
       scriptingImportUrl: function () {
         const scriptName = String(this.scriptingScriptName || '').trim()
         if (!scriptName || !this.result) return ''
-        return 'scripting://run/' + encodeURIComponent(scriptName)
+        return 'scripting://run_single/' + encodeURIComponent(scriptName)
           + '?sh_action=import-surge-module&sh_module_url=' + encodeURIComponent(this.result)
           + '&sh_module_name=' + encodeURIComponent(this.filename)
           + '&sh_module_category=' + encodeURIComponent('Script Hub')
