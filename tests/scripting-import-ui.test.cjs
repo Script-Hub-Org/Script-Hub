@@ -9,7 +9,7 @@ test('Beta Scripting local import uses a configured script name', () => {
   assert.match(source, /v-model\.trim="scriptingScriptName"/)
   assert.match(source, /localStorage\.getItem\('script-hub-scripting-script-name'\)/)
   assert.match(source, /encodeURIComponent\(scriptName\)/)
-  assert.match(source, /scripting:\/\/run\/\s*' \+ encodeURIComponent\(scriptName\)/)
+  assert.match(source, /scripting:\/\/run_single\/\s*' \+ encodeURIComponent\(scriptName\)/)
   assert.match(source, /sh_module_url=/)
   assert.doesNotMatch(source, /\?action=import-surge-module&url=/)
   assert.match(source, /<details v-if="target === 'surge-module'">\s*<summary>Scripting 导入设置<\/summary>/)
