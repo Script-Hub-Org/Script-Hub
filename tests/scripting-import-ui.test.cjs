@@ -12,5 +12,7 @@ test('Beta Scripting local import uses a configured script name', () => {
   assert.match(source, /scripting:\/\/run\/\s*' \+ encodeURIComponent\(scriptName\)/)
   assert.match(source, /sh_module_url=/)
   assert.doesNotMatch(source, /\?action=import-surge-module&url=/)
+  assert.match(source, /<details v-if="target === 'surge-module'">\s*<summary>Scripting 导入设置<\/summary>/)
+  assert.doesNotMatch(source, /请先填写下方 Scripting 脚本名/)
   assert.doesNotMatch(source, /run(?:_single)?\/\s*' \+ encodeURIComponent\('Surge 模块管理'\)/)
 })
