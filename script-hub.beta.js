@@ -933,17 +933,17 @@ const htmls = `
             &nbsp;&nbsp;
             <button v-if="resetInfo">{{resetInfo}}</button>
             <button v-else @click="reset">重置</button>
-      <details v-if="target === 'surge-module'">
-        <summary>Scripting 导入设置</summary>
-        <small>&#9432; 填写 Scripting 里显示的脚本名；首次使用时，先在该脚本设置页选择本地模块书签目录。</small>
-        <label style="display: inline-block; margin: 0.5rem 0">Scripting 脚本名：<input v-model.trim="scriptingScriptName" placeholder="例如：Surge 模块管理" style="max-width: 14rem" /></label>
-        <small v-if="!scriptingScriptName" style="color: red">填写后才会生成 Scripting 导入链接。</small>
-      </details>
       </div>
       <br/>
 
       <template v-if="!target || !type || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">什么时候应该启用脚本转换</a></small>
+        <details v-if="target === 'surge-module'">
+          <summary>Scripting 导入设置</summary>
+          <small>&#9432; 填写 Scripting 里显示的脚本名；首次使用时，先在该脚本设置页选择本地模块书签目录。</small>
+          <label style="display: inline-block; margin: 0.5rem 0">Scripting 脚本名：<input v-model.trim="scriptingScriptName" placeholder="例如：Surge模块管理" style="max-width: 14rem" /></label>
+          <small v-if="!scriptingScriptName" style="color: red">填写后才会生成 Scripting 导入链接。</small>
+        </details>
         <details>
           <summary>启用脚本转换</summary>
           <small> &#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">脚本转换 1 和 2 怎么选</a></small>
