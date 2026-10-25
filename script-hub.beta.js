@@ -1591,9 +1591,9 @@ const htmls = `
         const scriptName = String(this.scriptingScriptName || '').trim()
         if (!scriptName || !this.result) return ''
         return 'scripting://run/' + encodeURIComponent(scriptName)
-          + '?action=import-surge-module&url=' + encodeURIComponent(this.result)
-          + '&name=' + encodeURIComponent(this.filename)
-          + '&category=' + encodeURIComponent('Script Hub')
+          + '?sh_action=import-surge-module&sh_module_url=' + encodeURIComponent(this.result)
+          + '&sh_module_name=' + encodeURIComponent(this.filename)
+          + '&sh_module_category=' + encodeURIComponent('Script Hub')
       },
       frontendConvertDisabled: function () {
         return !/^Node\.js/i.test(init.env)
