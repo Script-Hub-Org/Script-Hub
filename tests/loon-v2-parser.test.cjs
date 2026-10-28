@@ -1134,6 +1134,7 @@ test('Surge Map Local Base64 responses infer a valid Loon body type', async () =
     [
       '[Map Local]',
       '^https?:\\/\\/api\\.vistopia\\.com\\.cn\\/api\\/v2\\/home\\/advertisement(\\?|$) data-type=base64 data="eyJzdGF0dXMiOiJzdWNjZXNzIiwiZGF0YSI6W119" status-code=200 header="Content-Type: application/json"',
+      '^https?:\\/\\/api\\.vistopia\\.com\\.cn\\/api\\/v2\\/other\\/pop-up(\\?|$) data-type=base64 data="eyJzdGF0dXMiOiJlcnJvciIsImRhdGEiOm51bGx9" status-code=404 header="Content-Type: application/json"',
       '^https?:\\/\\/example\\.com\\/image data-type=base64 data="iVBORw0KGgo=" status-code=201 header="Content-Type: image/png"',
     ].join('\n'),
     'loon-plugin',
@@ -1142,6 +1143,7 @@ test('Surge Map Local Base64 responses infer a valid Loon body type', async () =
   )
   const rewrites = sectionLines(body, 'Rewrite')
   assert.ok(rewrites.some(line => line.includes('advertisement') && line.includes('response.body.mock("json"') && line.includes(', 200, true)')))
+  assert.ok(rewrites.some(line => line.includes('pop-up') && line.includes('response.body.mock("json"') && line.includes(', 404, true)')))
   assert.ok(rewrites.some(line => line.includes('example\\.com') && line.includes('response.body.mock("png"') && line.includes(', 201, true)')))
   assert.doesNotMatch(body, /response\.body\.mock\("base64"|data-type=base64|mock-response-body/)
   assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|暂不支持 Loon v2 Action/)
