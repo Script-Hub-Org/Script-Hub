@@ -4912,6 +4912,11 @@ function getMockInfo(x, mark, y, exact = false) {
     }
     if (oritype === 'base64') {
       mockbase64 = true
+      // Surge uses data-type=base64 to describe the encoding, while Loon
+      // expects a real body type (json/text/png/...) plus a separate
+      // mock-data-is-base64 flag. Infer the Loon body type from the source
+      // Content-Type instead of emitting the invalid type "base64".
+      oritype = getLoonMockType(mockheader.replace(/^Content-Type\s*:\s*/i, ''))
     }
   }
   switch (targetApp) {

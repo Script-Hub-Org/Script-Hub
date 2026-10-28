@@ -1129,6 +1129,24 @@ test('Loon v2 response body mock and mock_file map to Surge Map Local', async ()
   assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|暂不支持 Loon v2 Action/)
 })
 
+test('Surge Map Local Base64 responses infer a valid Loon body type', async () => {
+  const { body, notifications } = await convert(
+    [
+      '[Map Local]',
+      '^https?:\\/\\/api\\.vistopia\\.com\\.cn\\/api\\/v2\\/home\\/advertisement(\\?|$) data-type=base64 data="eyJzdGF0dXMiOiJzdWNjZXNzIiwiZGF0YSI6W119" status-code=200 header="Content-Type: application/json"',
+      '^https?:\\/\\/example\\.com\\/image data-type=base64 data="iVBORw0KGgo=" status-code=201 header="Content-Type: image/png"',
+    ].join('\n'),
+    'loon-plugin',
+    {},
+    'surge-module'
+  )
+  const rewrites = sectionLines(body, 'Rewrite')
+  assert.ok(rewrites.some(line => line.includes('advertisement') && line.includes('response.body.mock("json"') && line.includes(', 200, true)')))
+  assert.ok(rewrites.some(line => line.includes('example\\.com') && line.includes('response.body.mock("png"') && line.includes(', 201, true)')))
+  assert.doesNotMatch(body, /response\.body\.mock\("base64"|data-type=base64|mock-response-body/)
+  assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|暂不支持 Loon v2 Action/)
+})
+
 test('Loon v2 request body mock converts inline text and diagnoses unsupported resources', async () => {
   const { body, notifications } = await convert(
     [
