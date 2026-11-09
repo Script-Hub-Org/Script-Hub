@@ -299,13 +299,19 @@ test('commented native Loon v2 Rewrite stays independent from the next rule', as
 
 test('Loon v2 response maps to Surge without guessing body buffering', async () => {
   const { body } = await convert(
-    'response if ${url} ~= /\\/api\\/v1\\/data/i then script("https://example.com/a.js") with requires_body=true, binary_body_mode=true, timeout=12',
+    [
+      'tab=switch, false, true, tag=移除创建按钮',
+      'useractivity=switch, true, false, tag=启用接力',
+      'response if ${url} ~= /\\/api\\/v1\\/data/i then script("https://example.com/a.js", {${tab}, ${useractivity}}) with requires_body=true, binary_body_mode=true, timeout=12',
+    ].join('\n'),
     'surge-module'
   )
   assert.match(body, /type=http-response/)
   assert.match(body, /requires-body=true/)
   assert.match(body, /binary-body-mode=true/)
   assert.match(body, /timeout=12/)
+  assert.match(body, /argument=tab="\{\{\{tab\}\}\}"&useractivity="\{\{\{useractivity\}\}\}"/)
+  assert.doesNotMatch(body, /\{\{\{\{\{/)
   assert.doesNotMatch(body, /engine=webview/)
 })
 
@@ -658,6 +664,22 @@ test('Loon v2 native Rewrite is preserved in the Loon target section', async () 
   assert.doesNotMatch(body, /\[Script\][\s\S]*response if \$\{url\}/)
 })
 
+test('Loon v2 capture aliases map to Surge rewrite captures and module arguments', async () => {
+  const { body, notifications } = await convert(
+    [
+      'app=select, "tg", "sg", tag=客户端',
+      'request if ${url} ~= /^https:\\/\\/t\\.me\\/([A-Za-z][A-Za-z0-9_]{3,30}[A-Za-z0-9])\\/?$/ as item then redirect(307, "${app}://resolve?domain=${item.1}")',
+      'request if ${url} ~= /(^https:\\/\\/c\\.pc\\.qq\\.com\\/middlem\\.html\\?pfurl=)(http.*)(&pfuin=.*)/i as urlMatch then redirect(307, "${urlMatch.2}")',
+      'request if ${url} ~= /^https:\\/\\/spclient\\.wg\\.spotify\\.com\\/artistview\\/v1\\/artist\\/(.*)&platform=iphone/i as urlMatch then url.replace("https://spclient.wg.spotify.com/artistview/v1/artist/${urlMatch.1}&platform=ipad")',
+    ].join('\n'),
+    'surge-module'
+  )
+  assert.match(body, /\{\{\{app\}\}\}:\/\/resolve\?domain=\$1 307/)
+  assert.ok(body.includes('$2 307'))
+  assert.ok(body.includes('https://spclient.wg.spotify.com/artistview/v1/artist/$1&platform=ipad header'))
+  assert.doesNotMatch(JSON.stringify(notifications), /不支持以下内容|Loon v2.*失败/)
+})
+
 test('legacy URL rewrites upgrade to native Loon v2 actions', async () => {
   const { body, notifications } = await convert(
     [
@@ -717,14 +739,16 @@ test('Loon v2 response body mock and mock_file map to Surge Map Local', async ()
       'response if ${url} ~= /\\/inline\\// then response.body.mock("json", `{"code":0}`, 201)',
       'response if ${url} ~= /\\/asset\\// then response.body.mock_file("png", "https://example.com/a.png", 204)',
       'response if ${url} ~= /\\/base64\\// then response.body.mock("png", "iVBORw0KGgo=", 200, true)',
+      'response if ${url} ~= /\\/empty\\// then response.body.mock("text", "", 200)',
     ].join('\n'),
     'surge-module'
   )
   const mapLines = sectionLines(body, 'Map Local')
-  assert.equal(mapLines.length, 3)
+  assert.equal(mapLines.length, 4)
   assert.ok(mapLines.some(line => line.includes('data-type=text') && line.includes('data="{\\"code\\":0}"') && line.includes('status-code=201')))
   assert.ok(mapLines.some(line => line.includes('data-type=file') && line.includes('data="https://example.com/a.png"') && line.includes('status-code=204')))
   assert.ok(mapLines.some(line => line.includes('data-type=base64') && line.includes('data="iVBORw0KGgo="')))
+  assert.ok(mapLines.some(line => line.includes('data-type=text') && line.includes('data=""') && line.includes('status-code=200')))
   assert.match(body, /Content-Type:application\/json/)
   assert.match(body, /Content-Type:image\/png/)
   assert.doesNotMatch(JSON.stringify(notifications), /无法等价转换|暂不支持 Loon v2 Action/)
