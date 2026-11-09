@@ -2593,7 +2593,14 @@ function normalizeLoonV2Argument(value, targetApp) {
 function parseLoonV2UrlCondition(condition) {
   const source = stripLoonV2OuterParentheses(condition)
   const regexMatched = source.match(/^\$\{\s*url\s*\}\s*~=\s*([\s\S]+)$/i)
-  if (regexMatched) return readLoonV2Regex(regexMatched[1])
+  if (regexMatched) {
+    const rawRegex = regexMatched[1].trim()
+    const alias = rawRegex.match(/\s+as\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/i)
+    const regex = alias ? rawRegex.slice(0, alias.index).trim() : rawRegex
+    const result = readLoonV2Regex(regex)
+    if (result.reason) return result
+    return alias ? { ...result, captureAlias: alias[1] } : result
+  }
 
   const equalMatched = source.match(/^\$\{\s*url\s*\}\s*==\s*([\s\S]+)$/i)
   if (equalMatched) {
@@ -2605,6 +2612,28 @@ function parseLoonV2UrlCondition(condition) {
   }
 
   return { reason: '当前只转换单一 ${url} ~= /正则/ 或 ${url} == "URL" 条件' }
+}
+
+function normalizeLoonV2Replacement(value, captureAlias, targetApp) {
+  let normalized = `${value ?? ''}`
+  let unresolvedCapture = ''
+  normalized = normalized.replace(/\$\{\s*([A-Za-z_][A-Za-z0-9_]*)\.(\d+)\s*\}/g, (match, alias, index) => {
+    if (!captureAlias || alias !== captureAlias) {
+      unresolvedCapture = alias
+      return match
+    }
+    return `$${index}`
+  })
+  if (unresolvedCapture) {
+    return { reason: `替换值引用了未声明的 Loon 捕获别名：${unresolvedCapture}` }
+  }
+
+  if (targetApp === 'surge-module' || targetApp === 'shadowrocket-module') {
+    // 交给输出阶段统一将已声明的模块参数提升为 {{{name}}}，避免与
+    // sgArg 的最终归一化重复套用占位符。
+    normalized = normalized.replace(/\$\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}/g, '{$1}')
+  }
+  return { value: normalized }
 }
 
 function parseLoonV2Options(value) {
@@ -3093,15 +3122,15 @@ function parseLoonV2BodyMockAction(name, phase, args) {
     'mp4',
     'form-data',
   ])
+  const isFile = name.endsWith('_file')
   if (contentType.reason || source.reason) return { reason: contentType.reason || source.reason }
   if (typeof contentType.value !== 'string' || !supportedTypes.has(contentType.value)) {
     return { reason: `${name} 内容类型不受支持` }
   }
-  if (typeof source.value !== 'string' || !source.value) {
-    return { reason: `${name} Body 或资源路径必须是非空字符串` }
+  if (typeof source.value !== 'string' || (isFile && !source.value)) {
+    return { reason: `${name} ${isFile ? '资源路径' : 'Body'}必须是${isFile ? '非空' : ''}字符串` }
   }
 
-  const isFile = name.endsWith('_file')
   let status = 200
   let base64 = false
   if (phase === 'request') {
@@ -3527,14 +3556,18 @@ async function normalizeLoonV2RewriteToSurge(line, targetApp, sourceNum, markOve
         if (![302, 307].includes(status.value) || typeof target.value !== 'string') {
           return { unsupported: true, reason: 'Surge 只支持 302/307 且 redirect URL 必须是字符串' }
         }
-        rwBox.push({ mark, noteK: '', rwptn: pattern, rwvalue: target.value, rwtype: `${status.value}` })
+        const replacement = normalizeLoonV2Replacement(target.value, condition.captureAlias, targetApp)
+        if (replacement.reason) return { unsupported: true, reason: replacement.reason }
+        rwBox.push({ mark, noteK: '', rwptn: pattern, rwvalue: replacement.value, rwtype: `${status.value}` })
       } else {
         if (args.length !== 1) return { unsupported: true, reason: 'url.replace 需要 replacement 参数' }
         const target = parseLoonV2Literal(args[0], 'url.replace replacement')
         if (target.reason || typeof target.value !== 'string') {
           return { unsupported: true, reason: target.reason || 'url.replace replacement 必须是字符串' }
         }
-        rwBox.push({ mark, noteK: '', rwptn: pattern, rwvalue: target.value, rwtype: 'header' })
+        const replacement = normalizeLoonV2Replacement(target.value, condition.captureAlias, targetApp)
+        if (replacement.reason) return { unsupported: true, reason: replacement.reason }
+        rwBox.push({ mark, noteK: '', rwptn: pattern, rwvalue: replacement.value, rwtype: 'header' })
       }
       continue
     }
@@ -3779,7 +3812,9 @@ function normalizeScriptArgument(jsarg, targetApp) {
   if (!jsarg) return jsarg
   const loonKeys = getLoonArgumentKeys(jsarg)
   if ((targetApp == 'surge-module' || targetApp == 'shadowrocket-module') && loonKeys.length > 0) {
-    return loonKeys.map(key => `${key}="{{{${key}}}}"`).join('&')
+    // 输出阶段会统一将已声明参数提升为 {{{name}}}；这里保留单层模板，
+    // 避免后续的通用模板归一化重复套用花括号。
+    return loonKeys.map(key => `${key}="{${key}}"`).join('&')
   }
   if (targetApp == 'loon-plugin') {
     if (isJsonObjectArgument(jsarg)) return `[${formatLoonJsonArgument(jsarg)}]`
