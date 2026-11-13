@@ -901,7 +901,7 @@ const htmls = `
 
     <!-- position: fixed; -->
     <div style="padding: 1rem;bottom: 0rem;margin-right: 0rem;background-color: var(--kbg);/* border: 1px solid var(--border); */border-radius: var(--standard-border-radius);">
-        <span v-if="result" style="color: red">请勿打开链接之后复制浏览器地址栏的链接 浏览器地址栏中的链接可能未编码 可能会导致导入参数异常</span><br/><span v-if="src && src.includes('.lpx')" style="color: red">⚠️ 你填入的可能是 Loon 加密的私有插件(.lpx) Script Hub 无法处理</span><br/>
+        <span v-if="result" style="color: red">请勿打开链接之后复制浏览器地址栏的链接 浏览器地址栏中的链接可能未编码 可能会导致导入参数异常</span><br/>
         <a v-if="result" :href="result" target="_blank" style="margin: 0 0.5rem 0 0">打开链接</a>
         <a v-if="previewResult" :href="previewResult" target="_blank" style="margin: 0 0.5rem 0 0">预览结果</a>
         <a v-if="result && target === 'shadowrocket-module' " :href=" 'https://api.boxjs.app/shadowrocket/install?module=' + encodeURIComponent(result) " target="_blank" style="margin: 0 0.5rem 0 0">导入(Shadowrocket)</a>
@@ -910,6 +910,7 @@ const htmls = `
         <template v-if="result && target === 'surge-module' ">
           <a :href=" 'surge:///install-module?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">导入 Surge(远程模块)</a>
           <a :href=" 'scriptable:///run/SurgeModuleTool?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">导入 Surge(本地模块 需配合 Scriptable)</a>
+          <a v-if="scriptingImportUrl" :href="scriptingImportUrl" target="_blank" style="margin: 0 0.5rem 0 0">导入 Surge(本地模块 需配合 Scripting)</a>
           <small>&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E7%9B%B8%E5%85%B3%E7%94%9F%E6%80%81:-Surge-%E6%A8%A1%E5%9D%97%E5%B7%A5%E5%85%B7" target="_blank">如何配合 Scriptable 导入</a></small>
           <a :href=" 'egern:///modules/new?url=' + encodeURIComponent(result) + '&name=' + encodeURIComponent(filename) " target="_blank" style="margin: 0 0.5rem 0 0">导入 Egern(远程模块)</a>
         </template>
@@ -937,6 +938,12 @@ const htmls = `
 
       <template v-if="!target || !type || (!target.endsWith('rule-set') && !target.includes('domain-set') && !target.endsWith('-script') && target !== 'plain-text' )">
         <small style=" position: relative; top: -4px;">&nbsp;&#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">什么时候应该启用脚本转换</a></small>
+        <details v-if="target === 'surge-module'">
+          <summary>Scripting 导入设置</summary>
+          <small>&#9432; 填写 Scripting 里显示的脚本名；首次使用时，先在该脚本设置页选择本地模块书签目录。</small>
+          <label style="display: inline-block; margin: 0.5rem 0">Scripting 脚本名：<input v-model.trim="scriptingScriptName" placeholder="例如：Surge模块管理" style="max-width: 14rem" /></label>
+          <small v-if="!scriptingScriptName" style="color: red">填写后才会生成 Scripting 导入链接。</small>
+        </details>
         <details>
           <summary>启用脚本转换</summary>
           <small> &#9432; <a href="https://github.com/Script-Hub-Org/Script-Hub/wiki/%E6%88%91%E5%BA%94%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89%E6%8B%A9%E6%9D%A5%E6%BA%90%E7%B1%BB%E5%9E%8B%E5%92%8C%E7%9B%AE%E6%A0%87%E7%B1%BB%E5%9E%8B#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%A6%81%E5%BC%80%E5%90%AF%E8%84%9A%E6%9C%AC%E8%BD%AC%E6%8D%A2" target="_blank">脚本转换 1 和 2 怎么选</a></small>
@@ -1361,6 +1368,13 @@ const htmls = `
     noNtf: false,
     jqEnabled: true,
     frontendConvert: false,
+    scriptingScriptName: (() => {
+      try {
+        return localStorage.getItem('script-hub-scripting-script-name') || ''
+      } catch (_) {
+        return ''
+      }
+    })(),
     sni: '',
     pm: '',
     wrap_response: false,
@@ -1569,8 +1583,21 @@ const htmls = `
           this.autoResize(this.inputType === 'local-text' ? 'textTextarea' : 'srcTextarea')
         })
       },
+      scriptingScriptName(v) {
+        try {
+          localStorage.setItem('script-hub-scripting-script-name', String(v || '').trim())
+        } catch (_) {}
+      },
   },
     computed: {
+      scriptingImportUrl: function () {
+        const scriptName = String(this.scriptingScriptName || '').trim()
+        if (!scriptName || !this.result) return ''
+        return 'scripting://run_single/' + encodeURIComponent(scriptName)
+          + '?sh_action=import-surge-module&sh_module_url=' + encodeURIComponent(this.result)
+          + '&sh_module_name=' + encodeURIComponent(this.filename)
+          + '&sh_module_category=' + encodeURIComponent('Script Hub')
+      },
       frontendConvertDisabled: function () {
         return !/^Node\.js/i.test(init.env)
       },
@@ -1635,7 +1662,8 @@ const htmls = `
       previewResult: function () {
         try {
           const array = this.result.split('/_end_/')
-          return array[0] + '/_end_/' + array[1].replace('?', '.txt?')
+          const preview = array[0] + '/_end_/' + array[1].replace('?', '.txt?')
+          return preview + (preview.includes('?') ? '&' : '?') + 'noNtf=true'
         } catch (e) {
           return ''
         }
