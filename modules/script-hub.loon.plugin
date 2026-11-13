@@ -18,7 +18,7 @@ DOMAIN,scripthub.vercel.app,PROXY
 [Script]
 request if ${url} ~= /^https?:\/\/script\.hub\/($|edit\/|reload)/i then script("https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/script-hub.js") with tag="Script Hub: 前端", timeout=300
 
-request if ${url} ~= /^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|loon-plugin|all-module)/i then script("https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/Rewrite-Parser.js") with tag="Script Hub: 重写转换", timeout=300
+request if ${url} ~= /^https?:\/\/script\.hub\/file\/_start_\/.+type=(?:qx-rewrite|surge-module|shadowrocket-module|loon-plugin|all-module)/i then script("https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/Rewrite-Parser.js") with tag="Script Hub: 重写转换", timeout=300
 
 request if ${url} ~= /^https?:\/\/script\.hub\/file\/_start_\/.+type=rule-set/i then script("https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/rule-parser.js") with tag="Script Hub: 规则集转换", timeout=300
 
