@@ -963,6 +963,18 @@ test('Beta does not double-wrap declared Surge template arguments', async () => 
   }
 })
 
+test('Beta template wrapping avoids WebKit-incompatible RegExp lookbehind', async () => {
+  assert.doesNotMatch(parser, /\(\?</)
+
+  const source = [
+    '#!name=相邻模板参数',
+    '[Rule]',
+    'DOMAIN,adjacent.example,{{{first}}}{{{second}}}',
+  ].join('\n')
+  const { body } = await convert(source, 'surge-module', {}, 'surge-module')
+  assert.match(body, /DOMAIN,adjacent\.example,\{\{\{first\}\}\}\{\{\{second\}\}\}/)
+})
+
 test('Loon v2 network-changed maps to a Surge event script', async () => {
   const { body } = await convert(
     'network-changed then script("https://example.com/network.js") with tag="Network"',

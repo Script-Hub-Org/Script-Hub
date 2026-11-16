@@ -6,9 +6,10 @@ const test = require('node:test')
 const root = path.join(__dirname, '..')
 const read = relative => fs.readFileSync(path.join(root, relative), 'utf8')
 
-test('stable runtime files are promoted from the current Beta implementation', () => {
+test('stable and Beta runtime files remain available as independent maintenance lines', () => {
   for (const name of ['script-hub', 'rule-parser', 'script-converter', 'Rewrite-Parser']) {
-    assert.equal(read(name + '.js'), read(name + '.beta.js'), name + '.js must match its Beta implementation')
+    assert.ok(read(name + '.js').trim(), name + '.js must remain available')
+    assert.ok(read(name + '.beta.js').trim(), name + '.beta.js must remain available')
   }
 })
 
