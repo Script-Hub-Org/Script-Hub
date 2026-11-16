@@ -2171,8 +2171,7 @@ ${providers}
     for (const key of surgeTemplateKeys) {
       // Only wrap a standalone single-brace token. A triple-brace token
       // already contains the same `{key}` substring and must not be wrapped twice.
-      const token = new RegExp(`(?<!\\{)\\{${escapeRegExp(key)}\\}(?!\\})`, 'g')
-      body = body.replace(token, '{{{' + key + '}}}')
+      body = wrapStandaloneTemplateToken(body, key)
     }
   } else if (isLooniOS) {
     body = body.replaceAll('{{{', '{').replaceAll('}}}', '}')
@@ -3864,7 +3863,7 @@ function normalizeTemplateValue(value, targetApp) {
   if (!value) return value
   value = stripWrapQuote(value)
   if (targetApp == 'surge-module' || targetApp == 'shadowrocket-module') {
-    return value.replace(/(?<!\{)\{([^{}]+)\}(?!\})/g, '{{{$1}}}')
+    return wrapStandaloneTemplateValues(value)
   }
   if (targetApp == 'loon-plugin') {
     return value.replace(/\{\{\{([^{}]+)\}\}\}/g, '{$1}')
@@ -4542,6 +4541,17 @@ function buildSurgeArgumentsDesc(args, ruleToggleArgs = new Map()) {
 
 function escapeRegExp(str) {
   return `${str}`.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// Avoid RegExp lookbehind here: older iOS JavaScriptCore versions reject it
+// with "invalid group specifier name" before the script can run.
+function wrapStandaloneTemplateToken(value, key) {
+  const token = new RegExp(`(^|[^\\{])\\{${escapeRegExp(key)}\\}(?!\\})`, 'g')
+  return value.replace(token, (_, prefix) => `${prefix}{{{${key}}}}`)
+}
+
+function wrapStandaloneTemplateValues(value) {
+  return value.replace(/(^|[^\{])\{([^{}]+)\}(?!\})/g, (_, prefix, key) => `${prefix}{{{${key}}}}`)
 }
 
 function normalizeArgumentsDescLine(str) {
