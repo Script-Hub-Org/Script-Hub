@@ -29,7 +29,7 @@ Advanced Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and Shadowro
 
 • 支持将 Loon 插件解析至 Surge Shadowrocket Stash
 
-• Beta 支持将 Loon 3.5.1+ Script v2 转换为 Surge/Egern、Shadowrocket、Stash 或 Loon 插件
+• 正式版已包含经过验证的 Loon 3.5.1+ Script v2 转换能力；Beta 继续用于新能力和兼容性测试
 
 • 支持 QX & Surge & Loon & Shadowrocket & Clash 规则集解析，适用 app: Surge Shadowrocket Stash Loon
 
@@ -51,9 +51,18 @@ Advanced Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and Shadowro
 
 [安装体验请查看文档](https://github.com/Script-Hub-Org/Script-Hub/wiki)
 
-## Loon Script v2 跨端转换（Beta）
+## 正式版与测试版
 
-Beta 支持 Loon Script v2 的 `request`、`response`、`cron`、`network-changed`、`generic` 触发器，可转换为 Surge/Egern、Shadowrocket 和 Stash；转换为 Loon 时保留原生 v2 语法。
+当前正式版已经完成经过验证的 Beta 能力合并，但两条维护线仍然保持分离：
+
+- 正式版模块使用 `script-hub.js`、`rule-parser.js`、`script-converter.js`、`Rewrite-Parser.js` 等稳定入口，面向日常使用。
+- Beta 模块继续使用对应的 `*.beta.js` 文件，用于新能力验证和兼容性迭代。
+
+稳定模块继续调用稳定脚本，Beta 模块继续调用 Beta 脚本；这次合并是稳定化当前能力，不代表 Beta 停止维护。
+
+## Loon Script v2 跨端转换
+
+当前正式版已包含经过验证的 Loon Script v2 的 `request`、`response`、`cron`、`network-changed`、`generic` 触发器，可转换为 Surge/Egern、Shadowrocket 和 Stash；转换为 Loon 时保留原生 v2 语法。Beta 继续用于后续能力验证。
 
 会保留可映射的 `timeout`、`enable`、`requires_body`、`binary_body_mode` 和脚本参数。`binary_body_mode` 不等同于 `requires_body`，需要完整响应体时请在源脚本显式设置 `requires_body=true`。WASM、加密逻辑和脚本内容不会被解密或改写，只转换宿主配置。
 
@@ -61,7 +70,7 @@ Surge/Shadowrocket 支持 Loon Rewrite Action 的 `reject*`、`response.json.*`�
 
 不兼容项（如方法、响应状态码、Header 组合条件、`debug`）会进入提示。`network-changed` 映射为 Surge/Shadowrocket 的 `event-name=network-changed`，Stash 保留诊断；`img_url` 在 Loon 保留，Stash Generic 映射为 Tile `icon`，其他目标提示不支持。Shadowrocket 不支持 Generic/Tile Script；Stash 动态 `enable` 会转为注释。Loon 原生 v2 与旧式 Script 混排时保持源顺序。
 
-Beta 模块使用官方 `main` 解析器，回归测试：
+稳定版与 Beta 版均使用官方 `main` 中对应的解析器文件，回归测试：
 
 ```bash
 npm run test:loon-v2
