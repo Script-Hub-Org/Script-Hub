@@ -669,9 +669,19 @@ if (binaryInfo != null && binaryInfo.length > 0) {
     }
 
     if (/\s((request|response)-body-json-jq)\s|\surl\sjsonjq-(response|request)-body/.test(_x)) {
-      let [_, regex, type, value] = _x.match(
+      // QX allows a rewrite rule to be disabled by prefixing the whole line
+      // with '#'. Parse the uncommented rule only when it is retained. The
+      // previous code parsed `_x` directly after `del=true` had blanked `x`,
+      // which could leave a disabled JSON-JQ rule in `rwbodyBox` and emit an
+      // invalid bare `http-response-jq` line in Surge output.
+      if (delNoteSc && isCommented) continue
+      const jsonJqSource = _x.trim().replace(/^(#|;|\/\/)[ \t]*/, '')
+      const jsonJqMatch = jsonJqSource.match(
         /^(.*?)\s+?(?:url\s+?jsonjq-)?(request|response)-body(?:-json-jq)?\s+?(.*?)\s*$/
       )
+      if (!jsonJqMatch) continue
+      let [_, regex, type, value] = jsonJqMatch
+      const noteK = isCommented ? '#' : ''
       if (jqEnabled && (isSurgeiOS || isStashiOS || isShadowrocket)) {
         const jqPath = value.match(/jq-path="(.+?)"/)?.[1]
         if (jqPath) {
@@ -690,6 +700,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
             type: `http-${type}-jq`,
             regex,
             value: value.startsWith("'") && value.endsWith("'") ? value : `'${value}'`,
+            noteK,
           })
         }
       } else if (isLooniOS) {
@@ -697,7 +708,7 @@ if (binaryInfo != null && binaryInfo.length > 0) {
           URLRewrite.push(_x)
         } else {
           URLRewrite.push(
-            `${regex} ${type}-body-json-jq ${value.startsWith("'") && value.endsWith("'") ? value : `'${value}'`}`
+            `${noteK}${regex} ${type}-body-json-jq ${value.startsWith("'") && value.endsWith("'") ? value : `'${value}'`}`
           )
         }
       }

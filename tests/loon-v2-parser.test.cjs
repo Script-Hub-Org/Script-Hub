@@ -591,6 +591,28 @@ test('del toggles commented Body Rewrite entries consistently', async () => {
   assert.doesNotMatch(loonRemoved.body, /disabled/)
 })
 
+test('QX JSON-JQ comments stay valid or are removed without emitting a bare Surge action', async () => {
+  const source = [
+    '#!name=json jq comment handling',
+    '^https:\\/\\/example\\.com\\/active url jsonjq-response-body .data.active = true',
+    '#^https:\\/\\/example\\.com\\/disabled url jsonjq-response-body .data.disabled = true',
+    '^https:\\/\\/example\\.com\\/active-two url jsonjq-response-body .data.other = true',
+  ].join('\n')
+
+  const preserved = await convert(source, 'surge-module', {}, 'qx-rewrite', { jqEnabled: 'true' })
+  assert.ok(preserved.body.includes("#http-response-jq ^https:\\/\\/example\\.com\\/disabled "))
+  assert.doesNotMatch(preserved.body, /http-response-jq #/)
+  assert.doesNotMatch(preserved.body, /^http-response-jq\s*$/m)
+
+  const removed = await convert(source, 'surge-module', {}, 'qx-rewrite', {
+    del: 'true',
+    jqEnabled: 'true',
+  })
+  assert.doesNotMatch(removed.body, /disabled/)
+  assert.equal((removed.body.match(/^http-response-jq\s+/gm) || []).length, 2)
+  assert.doesNotMatch(removed.body, /^http-response-jq\s*$/m)
+})
+
 test('commented native Loon v2 Rewrite stays independent from the next rule', async () => {
   const source = [
     '#!name=delete commented native rewrite',
