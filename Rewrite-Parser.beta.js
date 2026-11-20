@@ -1260,6 +1260,15 @@ if (binaryInfo != null && binaryInfo.length > 0) {
       modInfoObj['name'] = nName == null ? modInfoObj['name'] : name
       modInfoObj['desc'] = nName == null ? modInfoObj['desc'] : desc
       modInfoObj['category'] = category == null ? modInfoObj['category'] : category
+      // Stash uses `category` for the display category. Surge modules may
+      // declare both `#!category` and `#!tag`, but `tag` is mapped to the
+      // same Stash key below. Prefer the explicit category and use tag or
+      // keyword only as a fallback so the generated YAML has one key.
+      if (isStashiOS) {
+        modInfoObj['category'] = modInfoObj['category'] || modInfoObj['tag'] || modInfoObj['keyword']
+        delete modInfoObj['tag']
+        delete modInfoObj['keyword']
+      }
       if (icon == null) {
         modInfoObj['icon'] = iconReplace == '禁用' ? modInfoObj['icon'] : randomicon
       } else {
